@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh repo view:*)",
+      "Bash(gh label list:*)",
+      "Bash(gh api:*)",
+      "Bash(export GH_TOKEN=\"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\")",
+      "Bash(~/.local/bin/gh.exe repo view)",
+      "Bash(~/.local/bin/gh.exe label list)",
+      "Bash(~/.local/bin/gh.exe api repos/:owner/:repo/branches)",
+      "Bash(git checkout:*)",
+      "Bash(git push:*)",
+      "Bash(GH=~/.local/bin/gh.exe)",
+      "Bash($GH label create \"backend\" --color \"0075ca\" --description \"Backend task\" --force)",
+      "Bash($GH label create \"frontend\" --color \"e4e669\" --description \"Frontend task\" --force)",
+      "Bash($GH label create \"qa\" --color \"d93f0b\" --description \"QA / Testing\" --force)",
+      "Bash($GH label create \"devops\" --color \"5319e7\" --description \"Infrastructure\" --force)",
+      "Bash($GH label create \"in-progress\" --color \"fbca04\" --description \"Being worked on\" --force)",
+      "Bash($GH label create \"blocked\" --color \"b60205\" --description \"Blocked\" --force)",
+      "Bash($GH label create \"ready-for-qa\" --color \"0e8a16\" --description \"Ready for QA review\" --force)",
+      "Bash($GH label create \"approved\" --color \"0e8a16\" --description \"QA approved\" --force)",
+      "Bash($GH label create \"priority:high\" --color \"e11d48\" --force)",
+      "Bash($GH label create \"priority:medium\" --color \"f97316\" --force)",
+      "Bash($GH label create \"priority:low\" --color \"84cc16\" --force)"
+    ]
+  }
+}
