@@ -8,6 +8,8 @@ import { LoginPage } from '@/pages/LoginPage'
 import { RegisterPage } from '@/pages/RegisterPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+import { IngresosPage } from '@/pages/IngresosPage'
+import { EgresosPage } from '@/pages/EgresosPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,8 +38,8 @@ export function App(): JSX.Element {
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
               <Route path="/" element={<DashboardPage />} />
-              <Route path="/ingresos" element={<div className="p-4">Ingresos - Issue #8</div>} />
-              <Route path="/egresos" element={<div className="p-4">Egresos - Issue #8</div>} />
+              <Route path="/ingresos" element={<IngresosPage />} />
+              <Route path="/egresos" element={<EgresosPage />} />
               <Route path="/presupuestos" element={<div className="p-4">Presupuestos - Issue futuro</div>} />
               <Route path="/reportes" element={<div className="p-4">Reportes - Issue futuro</div>} />
               <Route path="/configuracion" element={<div className="p-4">Configuracion - Issue futuro</div>} />
