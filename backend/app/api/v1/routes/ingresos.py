@@ -1,13 +1,12 @@
 from datetime import date
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app.api.deps import get_current_user, get_db
+from app.core.security import get_current_user, get_raw_token
 from app.schemas.common import PaginatedResponse
 from app.schemas.ingreso import IngresoCreate, IngresoResponse, IngresoUpdate
-from app.services.ingresos import IngresosService
+from app.services import ingresos as svc
 
 router = APIRouter(prefix="/ingresos", tags=["ingresos"])
 
@@ -20,15 +19,15 @@ async def list_ingresos(
     moneda: str | None = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    db: AsyncSession = Depends(get_db),
+    token: str = Depends(get_raw_token),
     current_user: dict = Depends(get_current_user),
-) -> PaginatedResponse[IngresoResponse]:
-    service = IngresosService(db)
-    return await service.list_paginated(
-        user_id=UUID(current_user["user_id"]),
-        fecha_desde=fecha_desde,
-        fecha_hasta=fecha_hasta,
-        categoria_id=categoria_id,
+) -> dict:
+    return svc.list_ingresos(
+        user_jwt=token,
+        user_id=current_user["user_id"],
+        fecha_desde=str(fecha_desde) if fecha_desde else None,
+        fecha_hasta=str(fecha_hasta) if fecha_hasta else None,
+        categoria_id=str(categoria_id) if categoria_id else None,
         moneda=moneda,
         page=page,
         page_size=page_size,
@@ -38,45 +37,57 @@ async def list_ingresos(
 @router.post("", response_model=IngresoResponse, status_code=201)
 async def create_ingreso(
     data: IngresoCreate,
-    db: AsyncSession = Depends(get_db),
+    token: str = Depends(get_raw_token),
     current_user: dict = Depends(get_current_user),
-) -> IngresoResponse:
-    service = IngresosService(db)
-    return await service.create(user_id=UUID(current_user["user_id"]), data=data)
+) -> dict:
+    payload = data.model_dump()
+    payload["categoria_id"] = str(payload["categoria_id"])
+    if payload.get("subcategoria_id"):
+        payload["subcategoria_id"] = str(payload["subcategoria_id"])
+    payload["fecha"] = str(payload["fecha"])
+    payload["monto"] = str(payload["monto"])
+    return svc.create_ingreso(token, current_user["user_id"], payload)
 
 
 @router.get("/{ingreso_id}", response_model=IngresoResponse)
 async def get_ingreso(
     ingreso_id: UUID,
-    db: AsyncSession = Depends(get_db),
+    token: str = Depends(get_raw_token),
     current_user: dict = Depends(get_current_user),
-) -> IngresoResponse:
-    service = IngresosService(db)
-    return await service.get_by_id(
-        ingreso_id=ingreso_id, user_id=UUID(current_user["user_id"])
-    )
+) -> dict:
+    result = svc.get_ingreso(token, str(ingreso_id), current_user["user_id"])
+    if not result:
+        raise HTTPException(status_code=404, detail="Ingreso no encontrado.")
+    return result
 
 
 @router.put("/{ingreso_id}", response_model=IngresoResponse)
 async def update_ingreso(
     ingreso_id: UUID,
     data: IngresoUpdate,
-    db: AsyncSession = Depends(get_db),
+    token: str = Depends(get_raw_token),
     current_user: dict = Depends(get_current_user),
-) -> IngresoResponse:
-    service = IngresosService(db)
-    return await service.update(
-        ingreso_id=ingreso_id, user_id=UUID(current_user["user_id"]), data=data
-    )
+) -> dict:
+    payload = data.model_dump(exclude_unset=True)
+    if "categoria_id" in payload and payload["categoria_id"]:
+        payload["categoria_id"] = str(payload["categoria_id"])
+    if "subcategoria_id" in payload and payload["subcategoria_id"]:
+        payload["subcategoria_id"] = str(payload["subcategoria_id"])
+    if "fecha" in payload and payload["fecha"]:
+        payload["fecha"] = str(payload["fecha"])
+    if "monto" in payload and payload["monto"] is not None:
+        payload["monto"] = str(payload["monto"])
+    result = svc.update_ingreso(token, str(ingreso_id), current_user["user_id"], payload)
+    if not result:
+        raise HTTPException(status_code=404, detail="Ingreso no encontrado.")
+    return result
 
 
 @router.delete("/{ingreso_id}", status_code=204)
 async def delete_ingreso(
     ingreso_id: UUID,
-    db: AsyncSession = Depends(get_db),
+    token: str = Depends(get_raw_token),
     current_user: dict = Depends(get_current_user),
 ) -> None:
-    service = IngresosService(db)
-    await service.soft_delete(
-        ingreso_id=ingreso_id, user_id=UUID(current_user["user_id"])
-    )
+    # Service raises HTTPException 404 if record does not exist
+    svc.delete_ingreso(token, str(ingreso_id), current_user["user_id"])

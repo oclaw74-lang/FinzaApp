@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+
+# Docker bind-mount artifacts (container copies of app code)
+app/app/
+tests/tests/
