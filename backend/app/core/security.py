@@ -71,3 +71,10 @@ async def get_current_user(
         "email": payload.get("email"),
         "role": payload.get("role"),
     }
+
+
+async def get_raw_token(
+    credentials: HTTPAuthorizationCredentials = Depends(security_scheme),
+) -> str:
+    """Returns the raw JWT token to pass to the Supabase client."""
+    return credentials.credentials

@@ -3,8 +3,6 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
-    DATABASE_URL: str = ""
-    DATABASE_URL_SYNC: str = ""
     JWT_SECRET: str = ""
     SUPABASE_URL: str = ""
     SUPABASE_ANON_KEY: str = ""

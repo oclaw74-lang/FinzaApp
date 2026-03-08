@@ -1,75 +1,43 @@
-from datetime import datetime, timezone
-from uuid import UUID
-
-from sqlalchemy import and_, or_, select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.exceptions import ForbiddenError, NotFoundError
-from app.models.categoria import Categoria
-from app.schemas.categoria import CategoriaCreate, CategoriaResponse, CategoriaUpdate
+from app.core.supabase_client import get_user_client
 
 
-class CategoriasService:
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
+def list_categorias(user_jwt: str, tipo: str | None = None) -> list[dict]:
+    client = get_user_client(user_jwt)
+    query = client.table("categorias").select("*").order("nombre")
+    if tipo:
+        query = query.eq("tipo", tipo)
+    response = query.execute()
+    return response.data
 
-    async def list_for_user(
-        self, user_id: UUID, tipo: str | None = None
-    ) -> list[CategoriaResponse]:
-        query = select(Categoria).where(
-            and_(
-                or_(Categoria.user_id == user_id, Categoria.user_id.is_(None)),
-                Categoria.deleted_at.is_(None),
-            )
-        )
-        if tipo:
-            query = query.where(Categoria.tipo == tipo)
-        query = query.order_by(Categoria.es_sistema.desc(), Categoria.nombre)
-        result = await self.db.execute(query)
-        return [CategoriaResponse.model_validate(c) for c in result.scalars().all()]
 
-    async def create(self, user_id: UUID, data: CategoriaCreate) -> CategoriaResponse:
-        categoria = Categoria(
-            user_id=user_id,
-            nombre=data.nombre,
-            tipo=data.tipo,
-            icono=data.icono,
-            color=data.color,
-            es_sistema=False,
-        )
-        self.db.add(categoria)
-        await self.db.flush()
-        await self.db.refresh(categoria)
-        return CategoriaResponse.model_validate(categoria)
+def get_categoria(user_jwt: str, categoria_id: str) -> dict | None:
+    client = get_user_client(user_jwt)
+    response = (
+        client.table("categorias")
+        .select("*")
+        .eq("id", categoria_id)
+        .maybe_single()
+        .execute()
+    )
+    return response.data
 
-    async def update(
-        self, categoria_id: UUID, user_id: UUID, data: CategoriaUpdate
-    ) -> CategoriaResponse:
-        categoria = await self._get_owned(categoria_id, user_id)
-        if data.nombre is not None:
-            categoria.nombre = data.nombre
-        if data.icono is not None:
-            categoria.icono = data.icono
-        if data.color is not None:
-            categoria.color = data.color
-        await self.db.flush()
-        await self.db.refresh(categoria)
-        return CategoriaResponse.model_validate(categoria)
 
-    async def soft_delete(self, categoria_id: UUID, user_id: UUID) -> None:
-        categoria = await self._get_owned(categoria_id, user_id)
-        categoria.deleted_at = datetime.now(timezone.utc)
-        await self.db.flush()
+def create_categoria(user_jwt: str, user_id: str, data: dict) -> dict:
+    client = get_user_client(user_jwt)
+    payload = {**data, "user_id": user_id}
+    response = client.table("categorias").insert(payload).execute()
+    return response.data[0]
 
-    async def _get_owned(self, categoria_id: UUID, user_id: UUID) -> Categoria:
-        result = await self.db.execute(
-            select(Categoria).where(
-                and_(Categoria.id == categoria_id, Categoria.deleted_at.is_(None))
-            )
-        )
-        categoria = result.scalar_one_or_none()
-        if not categoria:
-            raise NotFoundError("Categoria no encontrada.")
-        if categoria.es_sistema or categoria.user_id != user_id:
-            raise ForbiddenError("No puedes modificar esta categoria.")
-        return categoria
+
+def update_categoria(user_jwt: str, categoria_id: str, data: dict) -> dict | None:
+    client = get_user_client(user_jwt)
+    response = (
+        client.table("categorias").update(data).eq("id", categoria_id).execute()
+    )
+    return response.data[0] if response.data else None
+
+
+def delete_categoria(user_jwt: str, categoria_id: str) -> bool:
+    client = get_user_client(user_jwt)
+    client.table("categorias").delete().eq("id", categoria_id).execute()
+    return True
