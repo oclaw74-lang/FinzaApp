@@ -46,4 +46,5 @@ async def delete_categoria(
     token: str = Depends(get_raw_token),
     current_user: dict = Depends(get_current_user),
 ) -> None:
-    svc.delete_categoria(token, categoria_id)
+    # Service raises HTTPException 404 if record does not exist
+    svc.delete_categoria(token, current_user["user_id"], categoria_id)

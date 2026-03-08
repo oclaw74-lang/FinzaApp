@@ -89,4 +89,5 @@ async def delete_ingreso(
     token: str = Depends(get_raw_token),
     current_user: dict = Depends(get_current_user),
 ) -> None:
+    # Service raises HTTPException 404 if record does not exist
     svc.delete_ingreso(token, str(ingreso_id), current_user["user_id"])
