@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-gray-900 font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+  }
+}
+
+@layer components {
+  .finza-card {
+    @apply bg-white border border-border rounded-card shadow-card p-6;
+  }
+  .finza-input {
+    @apply bg-flow-light border-2 border-transparent rounded-lg px-4 py-3 text-base focus:outline-none focus:border-finza-blue transition-colors;
+  }
+  .money {
+    @apply font-mono font-medium;
+  }
+}
