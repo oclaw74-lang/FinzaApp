@@ -11,6 +11,7 @@ import { NotFoundPage } from '@/pages/NotFoundPage'
 import { IngresosPage } from '@/pages/IngresosPage'
 import { EgresosPage } from '@/pages/EgresosPage'
 import { PrestamosPage } from '@/pages/PrestamosPage'
+import { MetasPage } from '@/pages/MetasPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,7 @@ export function App(): JSX.Element {
               <Route path="/ingresos" element={<IngresosPage />} />
               <Route path="/egresos" element={<EgresosPage />} />
               <Route path="/prestamos" element={<PrestamosPage />} />
+              <Route path="/metas" element={<MetasPage />} />
               <Route path="/presupuestos" element={<div className="p-4">Presupuestos - Issue futuro</div>} />
               <Route path="/reportes" element={<div className="p-4">Reportes - Issue futuro</div>} />
               <Route path="/configuracion" element={<div className="p-4">Configuracion - Issue futuro</div>} />
