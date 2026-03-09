@@ -1,92 +1,130 @@
-import type { LucideProps } from 'lucide-react'
-import { BarChart3, TrendingUp, TrendingDown, Wallet } from 'lucide-react'
-import type { ForwardRefExoticComponent, RefAttributes } from 'react'
+import { useState } from 'react'
+import { AlertCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { MoneyDisplay } from '@/components/shared/MoneyDisplay'
+import { useDashboard } from '@/features/dashboard/hooks/useDashboard'
+import { KpiCards } from '@/features/dashboard/components/KpiCards'
+import { CategoryPieChart } from '@/features/dashboard/components/CategoryPieChart'
+import { MonthlyChart } from '@/features/dashboard/components/MonthlyChart'
+import { RecentTransactions } from '@/features/dashboard/components/RecentTransactions'
+import { MonthlySummary } from '@/features/dashboard/components/MonthlySummary'
 
-interface KpiCard {
-  title: string
-  amount: number
-  currency: string
-  type: 'neutral' | 'ingreso' | 'egreso'
-  icon: ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & RefAttributes<SVGSVGElement>>
-  description: string
+function getInitialPeriod(): { mes: number; year: number } {
+  const now = new Date()
+  return { mes: now.getMonth() + 1, year: now.getFullYear() }
 }
 
-const kpiCards: KpiCard[] = [
-  {
-    title: 'Balance del Mes',
-    amount: 0,
-    currency: 'DOP',
-    type: 'neutral',
-    icon: Wallet,
-    description: 'Ingresos - Egresos',
-  },
-  {
-    title: 'Total Ingresos',
-    amount: 0,
-    currency: 'DOP',
-    type: 'ingreso',
-    icon: TrendingUp,
-    description: 'Este mes',
-  },
-  {
-    title: 'Total Egresos',
-    amount: 0,
-    currency: 'DOP',
-    type: 'egreso',
-    icon: TrendingDown,
-    description: 'Este mes',
-  },
-  {
-    title: 'Transacciones',
-    amount: 0,
-    currency: 'DOP',
-    type: 'neutral',
-    icon: BarChart3,
-    description: 'Este mes',
-  },
-]
+function prevMonth(mes: number, year: number): { mes: number; year: number } {
+  if (mes === 1) return { mes: 12, year: year - 1 }
+  return { mes: mes - 1, year }
+}
+
+function nextMonth(mes: number, year: number): { mes: number; year: number } {
+  if (mes === 12) return { mes: 1, year: year + 1 }
+  return { mes: mes + 1, year }
+}
 
 export function DashboardPage(): JSX.Element {
+  const [period, setPeriod] = useState(getInitialPeriod)
+
+  const { data, isLoading, isError, error } = useDashboard({
+    mes: period.mes,
+    year: period.year,
+  })
+
+  const handlePrev = (): void => {
+    setPeriod((p) => prevMonth(p.mes, p.year))
+  }
+
+  const handleNext = (): void => {
+    const now = new Date()
+    const isCurrentMonth =
+      period.mes === now.getMonth() + 1 && period.year === now.getFullYear()
+    if (!isCurrentMonth) {
+      setPeriod((p) => nextMonth(p.mes, p.year))
+    }
+  }
+
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 text-sm mt-1">Resumen financiero del mes</p>
+      {/* Page header */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-500 text-sm mt-1">Resumen financiero del mes</p>
+        </div>
+        <MonthlySummary
+          mes={period.mes}
+          year={period.year}
+          onPrev={handlePrev}
+          onNext={handleNext}
+        />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-        {kpiCards.map(({ title, amount, currency, type, icon: Icon, description }) => (
-          <Card key={title}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-gray-500">{title}</CardTitle>
-                <div className="w-9 h-9 rounded-lg bg-flow-light flex items-center justify-center">
-                  <Icon size={18} className="text-finza-blue" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {type === 'neutral' && title === 'Transacciones' ? (
-                <p className="text-3xl font-bold text-gray-900 font-mono">{amount}</p>
-              ) : (
-                <MoneyDisplay amount={amount} currency={currency} type={type} size="xl" />
-              )}
-              <p className="text-xs text-gray-400 mt-1">{description}</p>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Error state */}
+      {isError && (
+        <div
+          className="flex items-center gap-3 p-4 mb-6 bg-red-50 border border-red-200 rounded-lg text-red-700"
+          role="alert"
+        >
+          <AlertCircle size={18} className="flex-shrink-0" />
+          <p className="text-sm">
+            {(error as Error)?.message ?? 'Error al cargar el dashboard. Intenta de nuevo.'}
+          </p>
+        </div>
+      )}
+
+      {/* KPI cards */}
+      <div className="mb-8">
+        <KpiCards
+          kpis={
+            data?.kpis ?? {
+              total_ingresos: 0,
+              total_egresos: 0,
+              balance: 0,
+              ahorro_estimado: 0,
+            }
+          }
+          isLoading={isLoading}
+        />
       </div>
 
+      {/* Charts row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Tendencia mensual</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MonthlyChart
+              data={data?.monthly_trend ?? []}
+              isLoading={isLoading}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Egresos por categoria</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CategoryPieChart
+              data={data?.categoria_breakdown ?? []}
+              isLoading={isLoading}
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent transactions */}
       <Card>
         <CardHeader>
-          <CardTitle>Resumen por categorias</CardTitle>
+          <CardTitle>Ultimas transacciones</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-400 text-center py-8">
-            Los datos del dashboard estaran disponibles en Issue #9.
-          </p>
+          <RecentTransactions
+            transactions={data?.recent_transactions ?? []}
+            isLoading={isLoading}
+          />
         </CardContent>
       </Card>
     </div>
