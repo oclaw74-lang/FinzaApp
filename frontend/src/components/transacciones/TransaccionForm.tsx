@@ -73,8 +73,12 @@ export function TransaccionForm({
     },
   })
 
+  const handleFormSubmit = handleSubmit((data) =>
+    onSubmit(data as IngresoFormData | EgresoFormData)
+  )
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+    <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
       {/* Categoria */}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="categoria_id" className="text-sm font-medium text-gray-700">
