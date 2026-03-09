@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { BarChart3, TrendingUp, TrendingDown, Settings, Target, FileText, X } from 'lucide-react'
+import { BarChart3, TrendingUp, TrendingDown, Settings, Target, FileText, X, HandCoins } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUiStore } from '@/store/uiStore'
 
@@ -7,6 +7,7 @@ const navItems = [
   { to: '/', icon: BarChart3, label: 'Dashboard' },
   { to: '/ingresos', icon: TrendingUp, label: 'Ingresos' },
   { to: '/egresos', icon: TrendingDown, label: 'Egresos' },
+  { to: '/prestamos', icon: HandCoins, label: 'Prestamos' },
   { to: '/presupuestos', icon: Target, label: 'Presupuestos' },
   { to: '/reportes', icon: FileText, label: 'Reportes' },
   { to: '/configuracion', icon: Settings, label: 'Configuracion' },
