@@ -1,9 +1,10 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { supabase } from '@/lib/supabase'
+import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { APP_NAME, APP_TAGLINE } from '@/lib/constants'
@@ -17,7 +18,15 @@ type LoginForm = z.infer<typeof loginSchema>
 
 export function LoginPage(): JSX.Element {
   const navigate = useNavigate()
+  const { session, isLoading, setSession } = useAuthStore()
   const [serverError, setServerError] = useState<string | null>(null)
+
+  // Redirect already-authenticated users away from login
+  useEffect(() => {
+    if (!isLoading && session) {
+      navigate('/', { replace: true })
+    }
+  }, [session, isLoading, navigate])
 
   const {
     register,
@@ -27,7 +36,7 @@ export function LoginPage(): JSX.Element {
 
   const onSubmit = async (data: LoginForm): Promise<void> => {
     setServerError(null)
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
       email: data.email,
       password: data.password,
     })
@@ -37,7 +46,17 @@ export function LoginPage(): JSX.Element {
       return
     }
 
+    // Explicitly update store before navigating to avoid race condition
+    // where ProtectedRoute renders before onAuthStateChange fires
+    if (authData.session) {
+      setSession(authData.session)
+    }
     navigate('/')
+  }
+
+  // Don't render form if already authenticated (handles redirect)
+  if (!isLoading && session) {
+    return <Navigate to="/" replace />
   }
 
   return (

@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 from functools import lru_cache
 
 import httpx
@@ -7,6 +8,11 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.config import settings
+
+# Allow up to 60 seconds of clock skew between Docker container and Supabase servers.
+# Docker containers can drift relative to the host clock, causing ImmatureSignatureError
+# when iat/nbf in the JWT is slightly ahead of the container's local clock.
+JWT_LEEWAY = timedelta(seconds=60)
 
 security_scheme = HTTPBearer()
 
@@ -47,6 +53,7 @@ async def get_current_user(
                 settings.JWT_SECRET,
                 algorithms=["HS256"],
                 audience="authenticated",
+                leeway=JWT_LEEWAY,
             )
         else:
             # Current Supabase: ECC P-256 / ES256 — verified via public JWKS
@@ -56,6 +63,7 @@ async def get_current_user(
                 public_key,
                 algorithms=["ES256"],
                 audience="authenticated",
+                leeway=JWT_LEEWAY,
             )
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expirado.")

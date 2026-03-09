@@ -26,8 +26,21 @@ export function App(): JSX.Element {
 
   useEffect(() => {
     let cleanup: (() => void) | undefined
-    initialize().then((fn) => { cleanup = fn })
-    return () => { cleanup?.() }
+    let cancelled = false
+
+    initialize().then((fn) => {
+      if (cancelled) {
+        // Strict Mode unmounted before promise resolved — unsubscribe immediately
+        fn()
+      } else {
+        cleanup = fn
+      }
+    })
+
+    return () => {
+      cancelled = true
+      cleanup?.()
+    }
   }, [initialize])
 
   return (
