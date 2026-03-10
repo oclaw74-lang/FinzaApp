@@ -72,7 +72,11 @@
   .finza-card {
     @apply bg-[var(--surface)] rounded-xl border border-[var(--border)] p-5;
     box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.2s, transform 0.2s;
+    transition: box-shadow 200ms ease, transform 200ms ease;
+  }
+  .finza-card:hover {
+    box-shadow: 0 8px 32px rgba(54, 96, 146, 0.12);
+    transform: translateY(-1px);
   }
   .finza-card-hover {
     @apply bg-[var(--surface)] rounded-xl border border-[var(--border)] p-5;
@@ -97,5 +101,32 @@
   }
   .money {
     @apply font-mono font-medium;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+    letter-spacing: -0.01em;
+  }
+  .finza-kpi-primary {
+    background: linear-gradient(135deg, #1e3a5f 0%, #366092 100%);
+    color: white;
+    border: none !important;
+  }
+  .finza-kpi-primary * {
+    color: white !important;
+  }
+  .finza-kpi-green {
+    background: linear-gradient(135deg, #0a4a2a 0%, #00802a 100%);
+    color: white;
+    border: none !important;
+  }
+  .finza-kpi-green * {
+    color: white !important;
+  }
+  .finza-kpi-red {
+    background: linear-gradient(135deg, #4a0a0a 0%, #cc0000 100%);
+    color: white;
+    border: none !important;
+  }
+  .finza-kpi-red * {
+    color: white !important;
   }
 }

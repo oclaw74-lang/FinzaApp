@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Tag,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUiStore } from '@/store/uiStore'
@@ -26,6 +27,7 @@ const navItems = [
   { to: '/prestamos', icon: HandCoins, labelKey: 'nav.prestamos' },
   { to: '/metas', icon: PiggyBank, labelKey: 'nav.metas' },
   { to: '/presupuestos', icon: Target, labelKey: 'nav.presupuestos' },
+  { to: '/categorias', icon: Tag, labelKey: 'nav.categorias' },
   { to: '/reportes', icon: FileText, labelKey: 'nav.reportes' },
   { to: '/configuracion', icon: Settings, labelKey: 'nav.configuracion' },
 ]
@@ -130,7 +132,7 @@ export function Sidebar(): JSX.Element {
                   'flex items-center gap-3 rounded-xl mb-0.5 text-sm font-medium transition-all duration-150',
                   sidebarCollapsed ? 'justify-center w-11 h-11 mx-auto' : 'px-3 py-2.5',
                   isActive
-                    ? 'bg-[var(--accent)] text-white shadow-lg'
+                    ? 'bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/70 text-white shadow-lg shadow-[var(--accent)]/20'
                     : 'text-[var(--sidebar-muted)] hover:bg-white/10 hover:text-white'
                 )
               }

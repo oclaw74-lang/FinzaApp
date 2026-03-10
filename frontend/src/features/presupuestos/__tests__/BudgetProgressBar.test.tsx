@@ -8,28 +8,28 @@ describe('BudgetProgressBar', () => {
     expect(screen.getByRole('progressbar')).toBeInTheDocument()
   })
 
-  it('shows green color when porcentaje < 80', () => {
+  it('shows blue gradient when porcentaje < 80', () => {
     render(<BudgetProgressBar porcentaje={50} />)
     const bar = screen.getByRole('progressbar')
-    expect(bar.className).toContain('bg-prosperity-green')
+    expect(bar.style.background).toContain('366092')
   })
 
-  it('shows yellow color when porcentaje is between 80 and 99', () => {
+  it('shows yellow gradient when porcentaje is between 80 and 99', () => {
     render(<BudgetProgressBar porcentaje={85} />)
     const bar = screen.getByRole('progressbar')
-    expect(bar.className).toContain('bg-golden-flow')
+    expect(bar.style.background).toContain('FFC000')
   })
 
-  it('shows red color when porcentaje >= 100', () => {
+  it('shows red gradient when porcentaje >= 100', () => {
     render(<BudgetProgressBar porcentaje={100} />)
     const bar = screen.getByRole('progressbar')
-    expect(bar.className).toContain('bg-alert-red')
+    expect(bar.style.background).toContain('cc0000')
   })
 
-  it('shows red color when porcentaje > 100', () => {
+  it('shows red gradient when porcentaje > 100', () => {
     render(<BudgetProgressBar porcentaje={120} />)
     const bar = screen.getByRole('progressbar')
-    expect(bar.className).toContain('bg-alert-red')
+    expect(bar.style.background).toContain('cc0000')
   })
 
   it('sets aria-valuenow to rounded porcentaje', () => {
@@ -63,15 +63,15 @@ describe('BudgetProgressBar', () => {
     ).toBeInTheDocument()
   })
 
-  it('shows yellow color at exactly 80%', () => {
+  it('shows yellow gradient at exactly 80%', () => {
     render(<BudgetProgressBar porcentaje={80} />)
     const bar = screen.getByRole('progressbar')
-    expect(bar.className).toContain('bg-golden-flow')
+    expect(bar.style.background).toContain('FFC000')
   })
 
-  it('shows green when porcentaje is 0', () => {
+  it('shows blue gradient when porcentaje is 0', () => {
     render(<BudgetProgressBar porcentaje={0} />)
     const bar = screen.getByRole('progressbar')
-    expect(bar.className).toContain('bg-prosperity-green')
+    expect(bar.style.background).toContain('366092')
   })
 })

@@ -249,7 +249,7 @@ export function EgresosPage(): JSX.Element {
                   <tr
                     key={item.id}
                     className={cn(
-                      'border-b border-[var(--border)] last:border-0 hover:bg-[var(--surface-raised)] transition-colors group',
+                      'border-b border-[var(--border)] last:border-0 hover:bg-[var(--surface-raised)] transition-colors group border-l-2 border-l-[#FF0000]',
                       i % 2 !== 0 ? 'bg-[var(--surface-raised)]/40' : ''
                     )}
                   >
