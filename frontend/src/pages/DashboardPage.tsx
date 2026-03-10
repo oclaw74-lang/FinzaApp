@@ -64,7 +64,7 @@ export function DashboardPage(): JSX.Element {
       {/* Hero balance card */}
       <div className="relative overflow-hidden rounded-2xl p-6 sm:p-8 mb-6
         text-white shadow-xl"
-        style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #6d28d9 100%)' }}
+        style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #366092 100%)' }}
       >
         {/* Decorative orbs */}
         <div className="absolute -top-8 -right-8 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
@@ -147,6 +147,7 @@ export function DashboardPage(): JSX.Element {
               iconBg="var(--success-muted)"
               valueColorClass="text-[var(--success)]"
               subtitle={t('dashboard.vsLastMonth')}
+              className="border-l-4 border-[#00B050]"
             />
             <KpiCard
               title={t('dashboard.expenses')}
@@ -156,6 +157,7 @@ export function DashboardPage(): JSX.Element {
               iconBg="var(--danger-muted)"
               valueColorClass="text-[var(--danger)]"
               subtitle={t('dashboard.vsLastMonth')}
+              className="border-l-4 border-[#FF0000]"
             />
             <KpiCard
               title="Metas activas"

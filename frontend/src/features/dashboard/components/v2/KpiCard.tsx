@@ -10,6 +10,7 @@ interface KpiCardProps {
   iconBg: string
   valueColorClass?: string
   subtitle?: string
+  className?: string
 }
 
 function VariationBadge({ pct }: { pct: number }): JSX.Element {
@@ -61,9 +62,10 @@ export function KpiCard({
   iconBg,
   valueColorClass = 'text-[var(--text-primary)]',
   subtitle,
+  className,
 }: KpiCardProps): JSX.Element {
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium text-[var(--text-muted)]">
