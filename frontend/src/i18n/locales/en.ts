@@ -2,7 +2,7 @@ const en = {
   nav: {
     dashboard: 'Dashboard', ingresos: 'Income', egresos: 'Expenses',
     prestamos: 'Loans', metas: 'Goals', presupuestos: 'Budgets',
-    reportes: 'Reports', configuracion: 'Settings',
+    reportes: 'Reports', configuracion: 'Settings', categorias: 'Categories',
   },
   common: {
     save: 'Save', cancel: 'Cancel', create: 'Create', edit: 'Edit',
@@ -72,6 +72,7 @@ const en = {
     noPrestamosDesc: 'Record a loan to start tracking it',
     status: { pendiente: 'Pending', pagado: 'Paid', vencido: 'Overdue' },
     created: 'Loan recorded', updated: 'Loan updated', deleted: 'Loan deleted',
+    pagoRegistrado: 'Payment registered successfully',
   },
   metas: {
     title: 'Savings goals', newMeta: 'New goal',
@@ -88,6 +89,26 @@ const en = {
     noPresupuestos: 'No budgets', noPresupuestosDesc: 'Create a budget to control your spending',
     alert: 'Alert', exceeded: 'Exceeded',
     created: 'Budget created', updated: 'Budget updated', deleted: 'Budget deleted',
+  },
+  categorias: {
+    title: 'Categories',
+    subtitle: 'Manage your income and expense categories',
+    nueva: 'New category',
+    editarTitulo: 'Edit category',
+    nombre: 'Name',
+    tipo: 'Type',
+    icono: 'Icon (emoji)',
+    sistema: 'System',
+    personalizada: 'Custom',
+    created: 'Category created',
+    updated: 'Category updated',
+    deleted: 'Category deleted',
+    deleteConfirm: 'Delete this category? This action cannot be undone.',
+    noCategorias: 'No custom categories',
+    noCategoriasDesc: 'Create your first custom category',
+    ingreso: 'Income',
+    egreso: 'Expense',
+    ambos: 'Both',
   },
 }
 

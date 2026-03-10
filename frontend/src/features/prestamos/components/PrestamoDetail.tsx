@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { X, Pencil, Trash2, Plus } from 'lucide-react'
+import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { formatMoney, formatDate, cn } from '@/lib/utils'
 import { PagoForm } from './PagoForm'
 import type { PagoFormData } from './PagoForm'
 import { useDeletePago, useRegistrarPago, usePrestamoDetalle } from '@/hooks/usePrestamos'
 import type { Prestamo, EstadoPrestamo } from '@/types/prestamo'
+import { getApiErrorMessage } from '@/lib/apiError'
 
 interface PrestamoDetailProps {
   prestamoId: string
@@ -40,6 +43,7 @@ export function PrestamoDetail({
   onEdit,
   onDelete,
 }: PrestamoDetailProps): JSX.Element {
+  const { t } = useTranslation()
   const [showPagoForm, setShowPagoForm] = useState(false)
 
   const { data: prestamo, isLoading, isError } = usePrestamoDetalle(prestamoId)
@@ -49,8 +53,13 @@ export function PrestamoDetail({
   const displayPrestamo = prestamo ?? prestamoCache
 
   const handleRegistrarPago = async (data: PagoFormData): Promise<void> => {
-    await registrarPago.mutateAsync(data)
-    setShowPagoForm(false)
+    try {
+      await registrarPago.mutateAsync(data)
+      setShowPagoForm(false)
+      toast.success(t('prestamos.pagoRegistrado'))
+    } catch (error) {
+      toast.error(getApiErrorMessage(error))
+    }
   }
 
   const handleDeletePago = async (pagoId: string): Promise<void> => {

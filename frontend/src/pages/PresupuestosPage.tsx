@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Plus, Target } from 'lucide-react'
 import axios from 'axios'
 import { toast } from 'sonner'
+import { getApiErrorMessage } from '@/lib/apiError'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PresupuestoCard } from '@/features/presupuestos/components/PresupuestoCard'
@@ -143,10 +144,10 @@ export function PresupuestosPage(): JSX.Element {
       toast.success(t('presupuestos.created'))
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 409) {
-        setFormError('Ya existe un presupuesto para esta categoria en este mes')
+        setFormError(getApiErrorMessage(error, 'Ya existe un presupuesto para esta categoria'))
       } else {
-        setFormError('Error al crear el presupuesto. Intenta de nuevo.')
-        toast.error(t('common.error'))
+        setFormError(getApiErrorMessage(error, 'Error al crear el presupuesto. Intenta de nuevo.'))
+        toast.error(getApiErrorMessage(error))
       }
     }
   }
@@ -161,9 +162,9 @@ export function PresupuestosPage(): JSX.Element {
       })
       handleCloseEdit()
       toast.success(t('presupuestos.updated'))
-    } catch (_error) {
-      setFormError('Error al actualizar el presupuesto. Intenta de nuevo.')
-      toast.error(t('common.error'))
+    } catch (error) {
+      setFormError(getApiErrorMessage(error, 'Error al actualizar el presupuesto. Intenta de nuevo.'))
+      toast.error(getApiErrorMessage(error))
     }
   }
 
@@ -174,8 +175,8 @@ export function PresupuestosPage(): JSX.Element {
         await deletePresupuesto.mutateAsync(editingEstado.id)
         handleCloseEdit()
         toast.success(t('presupuestos.deleted'))
-      } catch {
-        toast.error(t('common.error'))
+      } catch (error) {
+        toast.error(getApiErrorMessage(error))
       }
     }
   }

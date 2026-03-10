@@ -18,6 +18,7 @@ import { EgresosPage } from '@/pages/EgresosPage'
 import { PrestamosPage } from '@/pages/PrestamosPage'
 import { MetasPage } from '@/pages/MetasPage'
 import { PresupuestosPage } from '@/pages/PresupuestosPage'
+import { CategoriasPage } from '@/pages/CategoriasPage'
 import { ConfiguracionPage } from '@/pages/ConfiguracionPage'
 
 const queryClient = new QueryClient({
@@ -67,6 +68,7 @@ export function App(): JSX.Element {
                 <Route path="/prestamos" element={<PrestamosPage />} />
                 <Route path="/metas" element={<MetasPage />} />
                 <Route path="/presupuestos" element={<PresupuestosPage />} />
+                <Route path="/categorias" element={<CategoriasPage />} />
                 <Route path="/reportes" element={<div className="p-4 text-[var(--text-primary)]">Reportes - Issue futuro</div>} />
                 <Route path="/configuracion" element={<ConfiguracionPage />} />
               </Route>
