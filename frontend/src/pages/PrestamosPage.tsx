@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, HandCoins } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { PrestamoResumenCards } from '@/features/prestamos/components/PrestamoResumenCards'
 import { PrestamoRow } from '@/features/prestamos/components/PrestamoRow'
@@ -23,16 +25,16 @@ function SkeletonRow(): JSX.Element {
     <div className="px-4 py-4 border-b border-border animate-pulse">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 flex-1">
-          <div className="w-2 h-2 rounded-full bg-gray-200 mt-1.5 flex-shrink-0" />
+          <Skeleton className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" />
           <div className="flex-1 space-y-2">
-            <div className="h-4 w-32 bg-gray-200 rounded" />
-            <div className="h-2 w-full bg-gray-200 rounded" />
-            <div className="h-3 w-16 bg-gray-200 rounded" />
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-2 w-full" />
+            <Skeleton className="h-3 w-16" />
           </div>
         </div>
         <div className="space-y-1 text-right">
-          <div className="h-4 w-24 bg-gray-200 rounded" />
-          <div className="h-3 w-16 bg-gray-200 rounded" />
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-3 w-16" />
         </div>
       </div>
     </div>
@@ -40,22 +42,24 @@ function SkeletonRow(): JSX.Element {
 }
 
 function EmptyState({ tipo }: { tipo: TipoPrestamo }): JSX.Element {
+  const { t } = useTranslation()
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
-      <HandCoins size={40} className="text-gray-300 mb-3" aria-hidden="true" />
-      <p className="text-sm font-medium text-gray-500">
+      <HandCoins size={40} className="text-[var(--text-muted)] opacity-40 mb-3" aria-hidden="true" />
+      <p className="text-sm font-medium text-[var(--text-primary)]">
         {tipo === 'me_deben'
           ? 'No hay prestamos donde te deban'
           : 'No hay prestamos donde debas'}
       </p>
-      <p className="text-xs text-gray-400 mt-1">
-        Registra un nuevo prestamo con el boton &ldquo;+ Nuevo&rdquo;
+      <p className="text-xs text-[var(--text-muted)] mt-1">
+        {t('prestamos.noPrestamosDesc')}
       </p>
     </div>
   )
 }
 
 export function PrestamosPage(): JSX.Element {
+  const { t } = useTranslation()
   const [tabActiva, setTabActiva] = useState<TabActiva>('me_deben')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [prestamoSeleccionado, setPrestamoSeleccionado] = useState<Prestamo | null>(null)
@@ -67,42 +71,56 @@ export function PrestamosPage(): JSX.Element {
   const updatePrestamo = useUpdatePrestamo()
   const deletePrestamo = useDeletePrestamo()
 
-  // Solo mostrar activos y vencidos en la lista principal — pagados con opacidad
   const prestamosOrdenados = [...prestamos].sort((a, b) => {
     const prioridad = { vencido: 0, activo: 1, pagado: 2 }
     return prioridad[a.estado] - prioridad[b.estado]
   })
 
   const handleCreate = async (data: PrestamoFormData): Promise<void> => {
-    await createPrestamo.mutateAsync({
-      ...data,
-      fecha_vencimiento: data.fecha_vencimiento || undefined,
-      descripcion: data.descripcion || undefined,
-      notas: data.notas || undefined,
-    })
-    setIsModalOpen(false)
+    try {
+      await createPrestamo.mutateAsync({
+        ...data,
+        fecha_vencimiento: data.fecha_vencimiento || undefined,
+        descripcion: data.descripcion || undefined,
+        notas: data.notas || undefined,
+      })
+      setIsModalOpen(false)
+      toast.success(t('prestamos.created'))
+    } catch {
+      toast.error(t('common.error'))
+    }
   }
 
   const handleEdit = async (data: PrestamoFormData): Promise<void> => {
     if (!prestamoEditando) return
-    await updatePrestamo.mutateAsync({
-      id: prestamoEditando.id,
-      persona: data.persona,
-      monto_original: data.monto_original,
-      moneda: data.moneda,
-      fecha_prestamo: data.fecha_prestamo,
-      fecha_vencimiento: data.fecha_vencimiento || undefined,
-      descripcion: data.descripcion || undefined,
-      notas: data.notas || undefined,
-    })
-    setPrestamoEditando(null)
+    try {
+      await updatePrestamo.mutateAsync({
+        id: prestamoEditando.id,
+        persona: data.persona,
+        monto_original: data.monto_original,
+        moneda: data.moneda,
+        fecha_prestamo: data.fecha_prestamo,
+        fecha_vencimiento: data.fecha_vencimiento || undefined,
+        descripcion: data.descripcion || undefined,
+        notas: data.notas || undefined,
+      })
+      setPrestamoEditando(null)
+      toast.success(t('prestamos.updated'))
+    } catch {
+      toast.error(t('common.error'))
+    }
   }
 
   const handleDelete = async (id: string): Promise<void> => {
     if (window.confirm('Eliminar este prestamo?')) {
-      await deletePrestamo.mutateAsync(id)
-      setDetailId(null)
-      setPrestamoSeleccionado(null)
+      try {
+        await deletePrestamo.mutateAsync(id)
+        setDetailId(null)
+        setPrestamoSeleccionado(null)
+        toast.success(t('prestamos.deleted'))
+      } catch {
+        toast.error(t('common.error'))
+      }
     }
   }
 
@@ -128,16 +146,16 @@ export function PrestamosPage(): JSX.Element {
   ]
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Prestamos</h1>
-          <p className="text-gray-500 text-sm mt-1">Gestiona tus prestamos y cobros</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t('prestamos.title')}</h1>
+          <p className="text-[var(--text-muted)] text-sm mt-1">Gestiona tus prestamos y cobros</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} variant="default">
-          <Plus size={18} className="mr-2" />
-          Nuevo
+        <Button onClick={() => setIsModalOpen(true)} variant="default" size="md">
+          <Plus size={16} />
+          {t('common.new')}
         </Button>
       </div>
 
@@ -147,34 +165,32 @@ export function PrestamosPage(): JSX.Element {
       </div>
 
       {/* Tabs + lista */}
-      <Card>
-        <CardHeader>
-          {/* Tabs */}
-          <div className="flex gap-1 border-b border-border -mb-4 pb-0">
-            {tabs.map((tab) => (
-              <button
-                key={tab.value}
-                type="button"
-                role="tab"
-                aria-selected={tabActiva === tab.value}
-                onClick={() => setTabActiva(tab.value)}
-                className={cn(
-                  'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
-                  tabActiva === tab.value
-                    ? 'border-finza-blue text-finza-blue'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </CardHeader>
+      <div className="finza-card p-0 overflow-hidden">
+        {/* Tabs */}
+        <div className="flex gap-1 border-b border-border px-4 pt-4">
+          {tabs.map((tab) => (
+            <button
+              key={tab.value}
+              type="button"
+              role="tab"
+              aria-selected={tabActiva === tab.value}
+              onClick={() => setTabActiva(tab.value)}
+              className={cn(
+                'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
+                tabActiva === tab.value
+                  ? 'border-finza-blue text-finza-blue'
+                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-        <CardContent>
+        <div className="p-0">
           {/* Error state */}
           {isError && (
-            <p className="text-sm text-gray-400 text-center py-4">
+            <p className="text-sm text-[var(--text-muted)] text-center py-4 px-4">
               El servidor no esta disponible. La lista se mostrara cuando el backend responda.
             </p>
           )}
@@ -195,9 +211,9 @@ export function PrestamosPage(): JSX.Element {
 
           {/* Lista */}
           {!isLoading && !isError && prestamosOrdenados.length > 0 && (
-            <CardTitle className="sr-only">
+            <span className="sr-only">
               Lista de prestamos — {tabActiva === 'me_deben' ? 'Me deben' : 'Yo debo'}
-            </CardTitle>
+            </span>
           )}
           {!isLoading && prestamosOrdenados.map((prestamo) => (
             <PrestamoRow
@@ -206,8 +222,8 @@ export function PrestamosPage(): JSX.Element {
               onClick={handleOpenDetail}
             />
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Modal crear */}
       <PrestamoModal

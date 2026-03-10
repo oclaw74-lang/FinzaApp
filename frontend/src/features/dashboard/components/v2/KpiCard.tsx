@@ -14,7 +14,7 @@ interface KpiCardProps {
 
 function VariationBadge({ pct }: { pct: number }): JSX.Element {
   if (pct === 0) {
-    return <span className="text-xs text-gray-400 font-medium">—</span>
+    return <span className="text-xs text-[var(--text-muted)] font-medium">—</span>
   }
 
   const isPositive = pct > 0
@@ -59,14 +59,14 @@ export function KpiCard({
   variationPct,
   icon,
   iconBg,
-  valueColorClass = 'text-gray-900',
+  valueColorClass = 'text-[var(--text-primary)]',
   subtitle,
 }: KpiCardProps): JSX.Element {
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium text-gray-500">
+          <CardTitle className="text-sm font-medium text-[var(--text-muted)]">
             {title}
           </CardTitle>
           <div
@@ -87,7 +87,7 @@ export function KpiCard({
             <VariationBadge pct={variationPct} />
           )}
           {subtitle && (
-            <p className="text-xs text-gray-400">{subtitle}</p>
+            <p className="text-xs text-[var(--text-muted)]">{subtitle}</p>
           )}
         </div>
       </CardContent>

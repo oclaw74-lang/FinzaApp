@@ -93,6 +93,7 @@ describe('PrestamoRow', () => {
 
   it('renders monto original and pendiente', () => {
     render(<PrestamoRow prestamo={mockPrestamoActivo} onClick={vi.fn()} />)
-    expect(screen.getByText(/de/i)).toBeInTheDocument()
+    // Verify the "de RD$X" pattern for monto_original
+    expect(screen.getAllByText(/de/i).length).toBeGreaterThan(0)
   })
 })

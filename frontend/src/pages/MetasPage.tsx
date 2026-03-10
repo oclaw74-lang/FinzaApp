@@ -1,6 +1,9 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, Target } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { MetasResumenCards } from '@/features/metas/components/MetasResumenCards'
 import { MetaCard } from '@/features/metas/components/MetaCard'
 import { MetaModal } from '@/features/metas/components/MetaModal'
@@ -14,36 +17,42 @@ function SkeletonCard(): JSX.Element {
     <div className="finza-card animate-pulse">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-gray-200" />
-          <div className="h-4 w-32 bg-gray-200 rounded" />
+          <Skeleton className="w-3 h-3 rounded-full" />
+          <Skeleton className="h-4 w-32" />
         </div>
-        <div className="h-5 w-16 bg-gray-200 rounded-full" />
+        <Skeleton className="h-5 w-16 rounded-full" />
       </div>
       <div className="flex justify-between mb-2">
-        <div className="h-6 w-24 bg-gray-200 rounded" />
-        <div className="h-4 w-20 bg-gray-200 rounded" />
+        <Skeleton className="h-6 w-24" />
+        <Skeleton className="h-4 w-20" />
       </div>
-      <div className="h-2 w-full bg-gray-200 rounded-full" />
-      <div className="h-3 w-16 bg-gray-200 rounded mt-1" />
+      <Skeleton className="h-2 w-full rounded-full" />
+      <Skeleton className="h-3 w-16 mt-1" />
     </div>
   )
 }
 
-function EmptyState(): JSX.Element {
+function EmptyState({ onNew }: { onNew: () => void }): JSX.Element {
+  const { t } = useTranslation()
   return (
     <div className="col-span-2 flex flex-col items-center justify-center py-16 text-center">
-      <Target size={48} className="text-gray-300 mb-4" aria-hidden="true" />
-      <p className="text-sm font-medium text-gray-500">
-        No tienes metas de ahorro todavia
+      <Target size={48} className="text-[var(--text-muted)] opacity-40 mb-4" aria-hidden="true" />
+      <p className="text-sm font-medium text-[var(--text-primary)]">
+        {t('metas.noMetas')}
       </p>
-      <p className="text-xs text-gray-400 mt-1">
-        Crea tu primera meta con el boton &ldquo;Nueva Meta&rdquo;
+      <p className="text-xs text-[var(--text-muted)] mt-1 mb-4">
+        {t('metas.noMetasDesc')}
       </p>
+      <Button onClick={onNew} size="md">
+        <Plus size={16} />
+        {t('metas.newMeta')}
+      </Button>
     </div>
   )
 }
 
 export function MetasPage(): JSX.Element {
+  const { t } = useTranslation()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [metaSeleccionada, setMetaSeleccionada] = useState<MetaAhorro | null>(null)
   const [metaEditando, setMetaEditando] = useState<MetaAhorro | null>(null)
@@ -55,38 +64,53 @@ export function MetasPage(): JSX.Element {
   const deleteMeta = useDeleteMeta()
 
   const handleCreate = async (data: MetaFormData): Promise<void> => {
-    await createMeta.mutateAsync({
-      nombre: data.nombre,
-      monto_objetivo: data.monto_objetivo,
-      fecha_inicio: data.fecha_inicio,
-      descripcion: data.descripcion || undefined,
-      fecha_objetivo: data.fecha_objetivo || undefined,
-      color: data.color || undefined,
-      icono: data.icono || undefined,
-    })
-    setIsModalOpen(false)
+    try {
+      await createMeta.mutateAsync({
+        nombre: data.nombre,
+        monto_objetivo: data.monto_objetivo,
+        fecha_inicio: data.fecha_inicio,
+        descripcion: data.descripcion || undefined,
+        fecha_objetivo: data.fecha_objetivo || undefined,
+        color: data.color || undefined,
+        icono: data.icono || undefined,
+      })
+      setIsModalOpen(false)
+      toast.success(t('metas.created'))
+    } catch {
+      toast.error(t('common.error'))
+    }
   }
 
   const handleEdit = async (data: MetaFormData): Promise<void> => {
     if (!metaEditando) return
-    await updateMeta.mutateAsync({
-      id: metaEditando.id,
-      nombre: data.nombre,
-      monto_objetivo: data.monto_objetivo,
-      fecha_inicio: data.fecha_inicio,
-      descripcion: data.descripcion || undefined,
-      fecha_objetivo: data.fecha_objetivo || undefined,
-      color: data.color || undefined,
-      icono: data.icono || undefined,
-    })
-    setMetaEditando(null)
+    try {
+      await updateMeta.mutateAsync({
+        id: metaEditando.id,
+        nombre: data.nombre,
+        monto_objetivo: data.monto_objetivo,
+        fecha_inicio: data.fecha_inicio,
+        descripcion: data.descripcion || undefined,
+        fecha_objetivo: data.fecha_objetivo || undefined,
+        color: data.color || undefined,
+        icono: data.icono || undefined,
+      })
+      setMetaEditando(null)
+      toast.success(t('metas.updated'))
+    } catch {
+      toast.error(t('common.error'))
+    }
   }
 
   const handleDelete = async (id: string): Promise<void> => {
     if (window.confirm('Eliminar esta meta de ahorro?')) {
-      await deleteMeta.mutateAsync(id)
-      setDetailId(null)
-      setMetaSeleccionada(null)
+      try {
+        await deleteMeta.mutateAsync(id)
+        setDetailId(null)
+        setMetaSeleccionada(null)
+        toast.success(t('metas.deleted'))
+      } catch {
+        toast.error(t('common.error'))
+      }
     }
   }
 
@@ -107,18 +131,18 @@ export function MetasPage(): JSX.Element {
   }
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Metas de ahorro</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t('metas.title')}</h1>
+          <p className="text-[var(--text-muted)] text-sm mt-1">
             Gestiona tus objetivos financieros
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} variant="default">
-          <Plus size={18} className="mr-2" />
-          Nueva Meta
+        <Button onClick={() => setIsModalOpen(true)} variant="default" size="md">
+          <Plus size={16} />
+          {t('metas.newMeta')}
         </Button>
       </div>
 
@@ -129,7 +153,7 @@ export function MetasPage(): JSX.Element {
 
       {/* Error state */}
       {isError && (
-        <p className="text-sm text-gray-400 text-center py-4 mb-4">
+        <p className="text-sm text-[var(--text-muted)] text-center py-4 mb-4">
           El servidor no esta disponible. Las metas se mostraran cuando el
           backend responda.
         </p>
@@ -137,7 +161,6 @@ export function MetasPage(): JSX.Element {
 
       {/* Grid de metas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Loading state */}
         {isLoading && !isError && (
           <>
             <SkeletonCard />
@@ -147,10 +170,10 @@ export function MetasPage(): JSX.Element {
           </>
         )}
 
-        {/* Empty state */}
-        {!isLoading && !isError && metas.length === 0 && <EmptyState />}
+        {!isLoading && !isError && metas.length === 0 && (
+          <EmptyState onNew={() => setIsModalOpen(true)} />
+        )}
 
-        {/* Lista de metas */}
         {!isLoading &&
           metas.map((meta) => (
             <MetaCard key={meta.id} meta={meta} onClick={handleOpenDetail} />

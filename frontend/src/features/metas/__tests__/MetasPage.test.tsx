@@ -144,7 +144,7 @@ describe('MetasPage', () => {
     setupMocks({ metasData: [] })
     render(<MetasPage />)
     expect(
-      screen.getByText(/no tienes metas de ahorro todavia/i)
+      screen.getByText(/sin metas de ahorro/i)
     ).toBeInTheDocument()
   })
 
