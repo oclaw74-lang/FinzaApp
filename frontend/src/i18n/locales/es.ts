@@ -2,7 +2,7 @@ const es = {
   nav: {
     dashboard: 'Dashboard', ingresos: 'Ingresos', egresos: 'Egresos',
     prestamos: 'Prestamos', metas: 'Metas', presupuestos: 'Presupuestos',
-    reportes: 'Reportes', configuracion: 'Configuracion',
+    reportes: 'Reportes', configuracion: 'Configuracion', categorias: 'Categorias',
   },
   common: {
     save: 'Guardar', cancel: 'Cancelar', create: 'Crear', edit: 'Editar',
@@ -73,6 +73,7 @@ const es = {
     noPrestamosDesc: 'Registra un prestamo para hacer seguimiento',
     status: { pendiente: 'Pendiente', pagado: 'Pagado', vencido: 'Vencido' },
     created: 'Prestamo registrado', updated: 'Prestamo actualizado', deleted: 'Prestamo eliminado',
+    pagoRegistrado: 'Pago registrado correctamente',
   },
   metas: {
     title: 'Metas de ahorro', newMeta: 'Nueva meta',
@@ -89,6 +90,26 @@ const es = {
     noPresupuestos: 'Sin presupuestos', noPresupuestosDesc: 'Crea un presupuesto para controlar tus gastos',
     alert: 'Alerta', exceeded: 'Excedido',
     created: 'Presupuesto creado', updated: 'Presupuesto actualizado', deleted: 'Presupuesto eliminado',
+  },
+  categorias: {
+    title: 'Categorias',
+    subtitle: 'Administra tus categorias de ingresos y egresos',
+    nueva: 'Nueva categoria',
+    editarTitulo: 'Editar categoria',
+    nombre: 'Nombre',
+    tipo: 'Tipo',
+    icono: 'Icono (emoji)',
+    sistema: 'Sistema',
+    personalizada: 'Personalizada',
+    created: 'Categoria creada',
+    updated: 'Categoria actualizada',
+    deleted: 'Categoria eliminada',
+    deleteConfirm: 'Eliminar esta categoria? Esta accion no se puede deshacer.',
+    noCategorias: 'Sin categorias personalizadas',
+    noCategoriasDesc: 'Crea tu primera categoria personalizada',
+    ingreso: 'Ingreso',
+    egreso: 'Egreso',
+    ambos: 'Ambos',
   },
 }
 

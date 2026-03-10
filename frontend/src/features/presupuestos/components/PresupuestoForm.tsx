@@ -97,7 +97,13 @@ export function PresupuestoForm({
             errors.categoria_id ? 'categoria-error' : undefined
           }
         >
-          <option value="">Selecciona una categoria...</option>
+          {loadingCategorias
+            ? <option value="">Cargando categorias...</option>
+            : <option value="">Selecciona una categoria...</option>
+          }
+          {!loadingCategorias && categoriasEgreso.length === 0 && (
+            <option value="" disabled>No hay categorias de egreso disponibles</option>
+          )}
           {categoriasEgreso.map((cat) => (
             <option key={cat.id} value={cat.id}>
               {cat.icono ? `${cat.icono} ` : ''}

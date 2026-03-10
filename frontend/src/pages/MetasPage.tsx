@@ -11,6 +11,7 @@ import { MetaDetail } from '@/features/metas/components/MetaDetail'
 import type { MetaFormData } from '@/features/metas/components/MetaForm'
 import { useMetas, useCreateMeta, useUpdateMeta, useDeleteMeta } from '@/hooks/useMetas'
 import type { MetaAhorro } from '@/types/meta_ahorro'
+import { getApiErrorMessage } from '@/lib/apiError'
 
 function SkeletonCard(): JSX.Element {
   return (
@@ -76,8 +77,8 @@ export function MetasPage(): JSX.Element {
       })
       setIsModalOpen(false)
       toast.success(t('metas.created'))
-    } catch {
-      toast.error(t('common.error'))
+    } catch (error) {
+      toast.error(getApiErrorMessage(error))
     }
   }
 
@@ -96,8 +97,8 @@ export function MetasPage(): JSX.Element {
       })
       setMetaEditando(null)
       toast.success(t('metas.updated'))
-    } catch {
-      toast.error(t('common.error'))
+    } catch (error) {
+      toast.error(getApiErrorMessage(error))
     }
   }
 
@@ -108,8 +109,8 @@ export function MetasPage(): JSX.Element {
         setDetailId(null)
         setMetaSeleccionada(null)
         toast.success(t('metas.deleted'))
-      } catch {
-        toast.error(t('common.error'))
+      } catch (error) {
+        toast.error(getApiErrorMessage(error))
       }
     }
   }
