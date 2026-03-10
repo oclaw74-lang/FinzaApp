@@ -3,11 +3,29 @@
 @tailwind utilities;
 
 @layer base {
-  * {
-    @apply border-border;
+  :root {
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --surface-raised: #ffffff;
+    --border: #e2e8f0;
+    --text-primary: #0f172a;
+    --text-muted: #64748b;
+    --sidebar: #0f2544;
+    --sidebar-fg: rgba(255,255,255,0.85);
   }
+  .dark {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface-raised: #293548;
+    --border: #334155;
+    --text-primary: #f1f5f9;
+    --text-muted: #94a3b8;
+    --sidebar: #060d1a;
+    --sidebar-fg: rgba(255,255,255,0.75);
+  }
+  * { @apply border-border; }
   body {
-    @apply bg-background text-gray-900 font-sans;
+    @apply bg-background text-[var(--text-primary)] font-sans;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -18,10 +36,19 @@
 
 @layer components {
   .finza-card {
-    @apply bg-white border border-border rounded-card shadow-card p-6;
+    @apply bg-surface border border-border rounded-card shadow-card p-6 transition-shadow duration-200 hover:shadow-card-hover;
+  }
+  .glass {
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .dark .glass {
+    background: rgba(30,41,59,0.7);
+    border-color: rgba(255,255,255,0.05);
   }
   .finza-input {
-    @apply bg-flow-light border-2 border-transparent rounded-lg px-4 py-3 text-base focus:outline-none focus:border-finza-blue transition-colors;
+    @apply bg-surface border border-border rounded-lg px-4 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-finza-blue/30 focus:border-finza-blue transition-colors placeholder:text-[var(--text-muted)];
   }
   .money {
     @apply font-mono font-medium;

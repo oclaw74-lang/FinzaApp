@@ -1,34 +1,38 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    './index.html',
-    './src/**/*.{js,ts,jsx,tsx}',
-  ],
+  darkMode: 'class',
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
-        'finza-blue': {
-          DEFAULT: '#366092',
-          light: '#5B9BD5',
-          dark: '#2A4D75',
-        },
-        'prosperity-green': '#00B050',
-        'golden-flow': '#FFC000',
-        'alert-red': '#FF0000',
-        'flow-light': '#D9E1F2',
-        border: '#E0E0E0',
-        background: '#F8F9FA',
+        // Brand (backward-compat)
+        'finza-blue': { DEFAULT: '#2563eb', light: '#60a5fa', dark: '#1d4ed8' },
+        'prosperity-green': '#10b981',
+        'golden-flow': '#f59e0b',
+        'alert-red': '#ef4444',
+        'flow-light': '#eff6ff',
+        // Semanticos via CSS vars
+        background: 'var(--bg)',
+        surface: 'var(--surface)',
+        'surface-raised': 'var(--surface-raised)',
+        border: 'var(--border)',
+        sidebar: 'var(--sidebar)',
+        'sidebar-foreground': 'var(--sidebar-fg)',
       },
-      fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
-      },
+      fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
       boxShadow: {
-        'card': '0 2px 8px rgba(54, 96, 146, 0.08)',
-        'card-hover': '0 4px 16px rgba(54, 96, 146, 0.16)',
+        card: '0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04)',
+        'card-hover': '0 4px 12px rgba(0,0,0,.10)',
+        glass: '0 8px 32px rgba(0,0,0,.12)',
       },
-      borderRadius: {
-        'card': '12px',
+      borderRadius: { card: '12px', xl2: '16px' },
+      animation: {
+        'fade-in': 'fadeIn .2s ease',
+        'slide-up': 'slideUp .2s ease',
+      },
+      keyframes: {
+        fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },
+        slideUp: { from: { opacity: '0', transform: 'translateY(8px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
       },
     },
   },

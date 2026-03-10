@@ -12,7 +12,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="flex flex-col gap-1.5">
         {label && (
-          <label htmlFor={inputId} className="text-sm font-medium text-gray-700">
+          <label htmlFor={inputId} className="text-sm font-medium text-[var(--text-primary)]">
             {label}
           </label>
         )}
@@ -21,7 +21,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           id={inputId}
           className={cn(
             'finza-input w-full',
-            error && 'border-alert-red focus:border-alert-red',
+            error && 'border-alert-red focus:ring-alert-red/30 focus:border-alert-red',
             className
           )}
           ref={ref}
