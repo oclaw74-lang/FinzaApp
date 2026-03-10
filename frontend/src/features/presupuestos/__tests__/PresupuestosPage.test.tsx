@@ -169,7 +169,7 @@ describe('PresupuestosPage', () => {
     setupMocks({ estadoData: [] })
     render(<PresupuestosPage />)
     expect(
-      screen.getByText(/no hay presupuestos asignados para este mes/i)
+      screen.getByText(/sin presupuestos/i)
     ).toBeInTheDocument()
   })
 

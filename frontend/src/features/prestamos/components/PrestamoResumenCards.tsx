@@ -40,15 +40,14 @@ export function PrestamoResumenCards(): JSX.Element {
 
       {/* Me deben */}
       <div className="finza-card border-l-4 border-prosperity-green">
-        <p className="text-sm font-medium text-gray-500 mb-1">Me deben</p>
+        <p className="text-sm font-medium text-[var(--text-muted)] mb-1">Me deben</p>
         <p
-          className="text-2xl font-bold money"
-          style={{ color: '#00B050' }}
+          className="text-2xl font-bold font-mono text-prosperity-green"
           aria-label={`Me deben ${formatMoney(resumen.total_me_deben)}`}
         >
           {formatMoney(resumen.total_me_deben)}
         </p>
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-[var(--text-muted)] mt-1">
           {resumen.cantidad_activos} activo{resumen.cantidad_activos !== 1 ? 's' : ''}
           {resumen.cantidad_vencidos > 0 && (
             <span className="text-alert-red ml-2">
@@ -60,15 +59,14 @@ export function PrestamoResumenCards(): JSX.Element {
 
       {/* Yo debo */}
       <div className="finza-card border-l-4 border-alert-red">
-        <p className="text-sm font-medium text-gray-500 mb-1">Yo debo</p>
+        <p className="text-sm font-medium text-[var(--text-muted)] mb-1">Yo debo</p>
         <p
-          className="text-2xl font-bold money"
-          style={{ color: '#FF0000' }}
+          className="text-2xl font-bold font-mono text-alert-red"
           aria-label={`Yo debo ${formatMoney(resumen.total_yo_debo)}`}
         >
           {formatMoney(resumen.total_yo_debo)}
         </p>
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-[var(--text-muted)] mt-1">
           Total pendiente
         </p>
       </div>

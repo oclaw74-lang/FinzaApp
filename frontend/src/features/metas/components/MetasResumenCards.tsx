@@ -45,30 +45,28 @@ export function MetasResumenCards(): JSX.Element {
 
       {/* Total ahorrado */}
       <div className="finza-card border-l-4 border-prosperity-green">
-        <p className="text-sm font-medium text-gray-500 mb-1">
+        <p className="text-sm font-medium text-[var(--text-muted)] mb-1">
           Total ahorrado
         </p>
         <p
-          className="text-2xl font-bold money"
-          style={{ color: '#00B050' }}
+          className="text-2xl font-bold font-mono text-prosperity-green"
           aria-label={`Total ahorrado ${formatMoney(resumen.total_ahorrado)}`}
         >
           {formatMoney(resumen.total_ahorrado)}
         </p>
-        <p className="text-xs text-gray-400 mt-1">En metas activas</p>
+        <p className="text-xs text-[var(--text-muted)] mt-1">En metas activas</p>
       </div>
 
       {/* Metas activas */}
       <div className="finza-card border-l-4 border-finza-blue">
-        <p className="text-sm font-medium text-gray-500 mb-1">Metas activas</p>
+        <p className="text-sm font-medium text-[var(--text-muted)] mb-1">Metas activas</p>
         <p
-          className="text-2xl font-bold"
-          style={{ color: '#366092' }}
+          className="text-2xl font-bold text-finza-blue"
           aria-label={`${resumen.metas_activas} metas activas`}
         >
           {resumen.metas_activas}
         </p>
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-[var(--text-muted)] mt-1">
           {resumen.metas_completadas} completada
           {resumen.metas_completadas !== 1 ? 's' : ''}
         </p>
@@ -76,17 +74,16 @@ export function MetasResumenCards(): JSX.Element {
 
       {/* Cumplimiento promedio */}
       <div className="finza-card border-l-4 border-golden-flow">
-        <p className="text-sm font-medium text-gray-500 mb-1">
+        <p className="text-sm font-medium text-[var(--text-muted)] mb-1">
           Cumplimiento promedio
         </p>
         <p
-          className="text-2xl font-bold"
-          style={{ color: '#FFC000' }}
+          className="text-2xl font-bold text-golden-flow"
           aria-label={`${Math.round(resumen.porcentaje_promedio_cumplimiento)}% cumplimiento promedio`}
         >
           {Math.round(resumen.porcentaje_promedio_cumplimiento)}%
         </p>
-        <p className="text-xs text-gray-400 mt-1">Sobre todas las metas</p>
+        <p className="text-xs text-[var(--text-muted)] mt-1">Sobre todas las metas</p>
       </div>
     </div>
   )

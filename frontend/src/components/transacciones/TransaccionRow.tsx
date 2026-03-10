@@ -30,10 +30,10 @@ export function TransaccionRow({
           aria-hidden="true"
         />
         <div className="min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">
+          <p className="text-sm font-medium text-[var(--text-primary)] truncate">
             {transaccion.descripcion ?? categoriaNombre}
           </p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-[var(--text-muted)]">
             {categoriaNombre} &middot; {formatDate(transaccion.fecha)}
           </p>
         </div>

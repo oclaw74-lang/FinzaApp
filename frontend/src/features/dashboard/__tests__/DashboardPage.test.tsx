@@ -130,18 +130,18 @@ describe('DashboardPage', () => {
 
   it('renders ingresos KPI with data', () => {
     render(<DashboardPage />)
-    expect(screen.getByText('Ingresos del mes')).toBeInTheDocument()
+    expect(screen.getByText('Ingresos')).toBeInTheDocument()
     expect(screen.getAllByText(/50,000/).length).toBeGreaterThan(0)
   })
 
   it('renders egresos KPI with data', () => {
     render(<DashboardPage />)
-    expect(screen.getByText('Egresos del mes')).toBeInTheDocument()
+    expect(screen.getByText('Egresos')).toBeInTheDocument()
   })
 
   it('renders balance KPI with data', () => {
     render(<DashboardPage />)
-    expect(screen.getByText('Balance del mes')).toBeInTheDocument()
+    expect(screen.getByText('Balance')).toBeInTheDocument()
   })
 
   it('renders tasa de ahorro KPI', () => {
@@ -164,7 +164,7 @@ describe('DashboardPage', () => {
 
   it('renders presupuestos section', () => {
     render(<DashboardPage />)
-    expect(screen.getByText('Presupuestos')).toBeInTheDocument()
+    expect(screen.getByText('Presupuestos activos')).toBeInTheDocument()
   })
 
   it('renders metas activas section', () => {
@@ -193,13 +193,13 @@ describe('DashboardPage', () => {
   it('shows empty state for transactions when list is empty', () => {
     setupMock({ data: { ...mockData, ultimas_transacciones: [] } })
     render(<DashboardPage />)
-    expect(screen.getAllByText(/no hay datos para este periodo/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/sin transacciones este mes/i).length).toBeGreaterThan(0)
   })
 
   it('shows empty state for metas when list is empty', () => {
     setupMock({ data: { ...mockData, metas_activas: [] } })
     render(<DashboardPage />)
-    expect(screen.getAllByText(/no hay datos para este periodo/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/sin datos/i).length).toBeGreaterThan(0)
   })
 
   it('changes mes when selector changes', () => {

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   TrendingUp,
   TrendingDown,
@@ -7,20 +8,17 @@ import {
   AlertCircle,
   CreditCard,
   CalendarClock,
+  BarChart3,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useDashboardV2 } from '@/hooks/useDashboardV2'
 import { KpiCard } from '@/features/dashboard/components/v2/KpiCard'
 import { TransaccionItem } from '@/features/dashboard/components/v2/TransaccionItem'
 import { EgresoCategoriaBar } from '@/features/dashboard/components/v2/EgresoCategoriaBar'
 import { MetaProgressItem } from '@/features/dashboard/components/v2/MetaProgressItem'
 import { BudgetProgressBar } from '@/features/presupuestos/components/BudgetProgressBar'
-import { formatDate, formatMoney } from '@/lib/utils'
-
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-]
+import { formatDate, formatMoney, MESES } from '@/lib/utils'
 
 function getInitialPeriod(): { mes: number; year: number } {
   const now = new Date()
@@ -32,6 +30,7 @@ function buildYearOptions(currentYear: number): number[] {
 }
 
 export function DashboardPage(): JSX.Element {
+  const { t } = useTranslation()
   const now = new Date()
   const currentYear = now.getFullYear()
 
@@ -41,14 +40,19 @@ export function DashboardPage(): JSX.Element {
   const { data, isLoading, isError, error } = useDashboardV2({ mes, year })
 
   const yearOptions = buildYearOptions(currentYear)
+  const monthName = MESES[mes - 1]
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {/* Page header */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">Resumen financiero del mes</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">
+            {t('dashboard.title')}
+          </h1>
+          <p className="text-[var(--text-muted)] text-sm mt-1">
+            {t('dashboard.thisMonth')}: {monthName} {year}
+          </p>
         </div>
 
         {/* Month / Year selector */}
@@ -60,9 +64,9 @@ export function DashboardPage(): JSX.Element {
               aria-label="Mes"
               value={mes}
               onChange={(e) => setMes(Number(e.target.value))}
-              className="block w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-finza-blue focus:outline-none focus:ring-1 focus:ring-finza-blue"
+              className="finza-input text-sm"
             >
-              {MONTH_NAMES.map((name, idx) => (
+              {MESES.map((name, idx) => (
                 <option key={name} value={idx + 1}>
                   {name}
                 </option>
@@ -77,7 +81,7 @@ export function DashboardPage(): JSX.Element {
               aria-label="Ano"
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
-              className="block w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-finza-blue focus:outline-none focus:ring-1 focus:ring-finza-blue"
+              className="finza-input text-sm"
             >
               {yearOptions.map((y) => (
                 <option key={y} value={y}>
@@ -92,7 +96,7 @@ export function DashboardPage(): JSX.Element {
       {/* Error state */}
       {isError && (
         <div
-          className="flex items-center gap-3 p-4 mb-6 bg-red-50 border border-red-200 rounded-lg text-red-700"
+          className="flex items-center gap-3 p-4 mb-6 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg text-red-700 dark:text-red-400"
           role="alert"
         >
           <AlertCircle size={18} className="flex-shrink-0" />
@@ -106,33 +110,33 @@ export function DashboardPage(): JSX.Element {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
         {isLoading ? (
           <>
-            <KpiCard.Skeleton />
-            <KpiCard.Skeleton />
-            <KpiCard.Skeleton />
-            <KpiCard.Skeleton />
+            <Skeleton className="h-32 rounded-card" />
+            <Skeleton className="h-32 rounded-card" />
+            <Skeleton className="h-32 rounded-card" />
+            <Skeleton className="h-32 rounded-card" />
           </>
         ) : (
           <>
             <KpiCard
-              title="Ingresos del mes"
+              title={t('dashboard.income')}
               value={formatMoney(data?.resumen_financiero.ingresos_mes ?? 0)}
               variationPct={data?.resumen_financiero.variacion_ingresos_pct ?? 0}
               icon={<TrendingUp size={18} style={{ color: '#00B050' }} />}
               iconBg="#00B05020"
               valueColorClass="text-prosperity-green"
-              subtitle="vs. mes anterior"
+              subtitle={t('dashboard.vsLastMonth')}
             />
             <KpiCard
-              title="Egresos del mes"
+              title={t('dashboard.expenses')}
               value={formatMoney(data?.resumen_financiero.egresos_mes ?? 0)}
               variationPct={data?.resumen_financiero.variacion_egresos_pct ?? 0}
               icon={<TrendingDown size={18} style={{ color: '#FF0000' }} />}
               iconBg="#FF000020"
               valueColorClass="text-alert-red"
-              subtitle="vs. mes anterior"
+              subtitle={t('dashboard.vsLastMonth')}
             />
             <KpiCard
-              title="Balance del mes"
+              title={t('dashboard.balance')}
               value={formatMoney(Math.abs(data?.resumen_financiero.balance_mes ?? 0))}
               icon={<Wallet size={18} style={{ color: '#366092' }} />}
               iconBg="#36609220"
@@ -144,7 +148,7 @@ export function DashboardPage(): JSX.Element {
               subtitle="Ingresos - Egresos"
             />
             <KpiCard
-              title="Tasa de ahorro"
+              title={t('dashboard.savingsRate')}
               value={`${(data?.resumen_financiero.tasa_ahorro ?? 0).toFixed(1)}%`}
               icon={<Target size={18} style={{ color: '#FFC000' }} />}
               iconBg="#FFC00020"
@@ -160,22 +164,20 @@ export function DashboardPage(): JSX.Element {
         {/* Recent transactions */}
         <Card>
           <CardHeader>
-            <CardTitle>Ultimas transacciones</CardTitle>
+            <CardTitle>{t('dashboard.recentTransactions')}</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div aria-label="Cargando transacciones">
+              <div aria-label="Cargando transacciones" className="space-y-3">
                 {[...Array(5)].map((_, i) => (
-                  <div key={i} className="py-3 border-b border-border last:border-0">
-                    <div className="h-4 w-48 bg-flow-light rounded animate-pulse mb-1" />
-                    <div className="h-3 w-32 bg-flow-light rounded animate-pulse" />
-                  </div>
+                  <Skeleton key={i} className="h-10 w-full" />
                 ))}
               </div>
             ) : (data?.ultimas_transacciones ?? []).length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">
-                No hay datos para este periodo
-              </p>
+              <div className="text-center py-12 text-[var(--text-muted)]">
+                <BarChart3 size={48} className="mx-auto mb-3 opacity-30" />
+                <p className="text-sm">{t('dashboard.noTransactions')}</p>
+              </div>
             ) : (
               <div>
                 {(data?.ultimas_transacciones ?? []).slice(0, 5).map((tx, idx) => (
@@ -189,22 +191,23 @@ export function DashboardPage(): JSX.Element {
         {/* Egresos por categoria */}
         <Card>
           <CardHeader>
-            <CardTitle>Egresos por categoria</CardTitle>
+            <CardTitle>{t('dashboard.expensesByCategory')}</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <div className="space-y-4">
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="space-y-1">
-                    <div className="h-4 w-32 bg-flow-light rounded animate-pulse" />
-                    <div className="h-2 w-full bg-flow-light rounded animate-pulse" />
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-2 w-full" />
                   </div>
                 ))}
               </div>
             ) : (data?.egresos_por_categoria ?? []).length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">
-                No hay datos para este periodo
-              </p>
+              <div className="text-center py-12 text-[var(--text-muted)]">
+                <BarChart3 size={48} className="mx-auto mb-3 opacity-30" />
+                <p className="text-sm">{t('dashboard.noTransactions')}</p>
+              </div>
             ) : (
               <div className="space-y-4">
                 {(data?.egresos_por_categoria ?? []).map((item) => (
@@ -221,21 +224,21 @@ export function DashboardPage(): JSX.Element {
         {/* Presupuestos */}
         <Card>
           <CardHeader>
-            <CardTitle>Presupuestos</CardTitle>
+            <CardTitle>{t('dashboard.activeBudgets')}</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="space-y-1">
-                    <div className="h-4 w-28 bg-flow-light rounded animate-pulse" />
-                    <div className="h-2.5 w-full bg-flow-light rounded animate-pulse" />
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-2 w-full" />
                   </div>
                 ))}
               </div>
             ) : (data?.presupuestos_estado ?? []).length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-6">
-                No hay datos para este periodo
+              <p className="text-sm text-[var(--text-muted)] text-center py-6">
+                {t('common.noData')}
               </p>
             ) : (
               <div className="space-y-4">
@@ -246,12 +249,12 @@ export function DashboardPage(): JSX.Element {
                         className={
                           pres.alerta
                             ? 'font-semibold text-alert-red'
-                            : 'font-medium text-gray-700'
+                            : 'font-medium text-[var(--text-primary)]'
                         }
                       >
                         {pres.categoria}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-[var(--text-muted)]">
                         {pres.porcentaje_usado.toFixed(0)}%
                       </span>
                     </div>
@@ -259,7 +262,7 @@ export function DashboardPage(): JSX.Element {
                       porcentaje={pres.porcentaje_usado}
                       aria-label={`Presupuesto ${pres.categoria}: ${pres.porcentaje_usado.toFixed(0)}% usado`}
                     />
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-[var(--text-muted)]">
                       {formatMoney(pres.gasto_actual)} / {formatMoney(pres.monto_presupuestado)}
                     </p>
                   </div>
@@ -272,21 +275,21 @@ export function DashboardPage(): JSX.Element {
         {/* Metas activas */}
         <Card>
           <CardHeader>
-            <CardTitle>Metas activas</CardTitle>
+            <CardTitle>{t('dashboard.activeGoals')}</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="space-y-1">
-                    <div className="h-4 w-28 bg-flow-light rounded animate-pulse" />
-                    <div className="h-1.5 w-full bg-flow-light rounded animate-pulse" />
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-1.5 w-full" />
                   </div>
                 ))}
               </div>
             ) : (data?.metas_activas ?? []).length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-6">
-                No hay datos para este periodo
+              <p className="text-sm text-[var(--text-muted)] text-center py-6">
+                {t('common.noData')}
               </p>
             ) : (
               <div className="space-y-4">
@@ -301,29 +304,29 @@ export function DashboardPage(): JSX.Element {
         {/* Prestamos activos */}
         <Card>
           <CardHeader>
-            <CardTitle>Prestamos activos</CardTitle>
+            <CardTitle>{t('dashboard.activeLoans')}</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <div className="space-y-3">
-                <div className="h-8 w-40 bg-flow-light rounded animate-pulse" />
-                <div className="h-4 w-24 bg-flow-light rounded animate-pulse" />
-                <div className="h-4 w-32 bg-flow-light rounded animate-pulse" />
+                <Skeleton className="h-8 w-40" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-32" />
               </div>
             ) : (data?.prestamos_activos.count ?? 0) === 0 ? (
               <div className="flex flex-col items-center justify-center py-6 text-center">
-                <CreditCard size={32} className="text-gray-300 mb-2" aria-hidden="true" />
-                <p className="text-sm text-gray-400">Sin prestamos activos</p>
+                <CreditCard size={32} className="text-[var(--text-muted)] opacity-40 mb-2" aria-hidden="true" />
+                <p className="text-sm text-[var(--text-muted)]">Sin prestamos activos</p>
               </div>
             ) : (
               <div className="space-y-3">
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Deuda total</p>
+                  <p className="text-xs text-[var(--text-muted)] mb-0.5">Deuda total</p>
                   <p className="text-2xl font-bold font-mono text-alert-red">
                     {formatMoney(data?.prestamos_activos.total_deuda ?? 0)}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
                   <CreditCard size={14} className="text-finza-blue" aria-hidden="true" />
                   <span>
                     {data?.prestamos_activos.count ?? 0}{' '}
@@ -332,7 +335,7 @@ export function DashboardPage(): JSX.Element {
                   </span>
                 </div>
                 {data?.prestamos_activos.proximo_vencimiento && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
                     <CalendarClock size={14} className="text-golden-flow" aria-hidden="true" />
                     <span>
                       Proximo vencimiento:{' '}

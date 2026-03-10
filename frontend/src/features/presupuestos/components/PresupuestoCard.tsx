@@ -23,7 +23,7 @@ export function PresupuestoCard({
     >
       {/* Header: nombre + badges de alerta */}
       <div className="flex items-start justify-between gap-2 mb-3">
-        <p className="text-sm font-semibold text-gray-900 truncate">
+        <p className="text-sm font-semibold text-[var(--text-primary)] truncate">
           {estado.categoria_nombre}
         </p>
         <div className="flex items-center gap-1 flex-shrink-0">
@@ -43,22 +43,22 @@ export function PresupuestoCard({
       {/* Montos */}
       <div className="flex items-end justify-between mb-2">
         <div>
-          <p className="text-xs text-gray-400">Gastado</p>
+          <p className="text-xs text-[var(--text-muted)]">Gastado</p>
           <p
-            className={`text-lg font-bold money ${
+            className={`text-lg font-bold font-mono ${
               excedido
                 ? 'text-alert-red'
                 : estado.alerta
                   ? 'text-golden-flow'
-                  : 'text-gray-900'
+                  : 'text-[var(--text-primary)]'
             }`}
           >
             {formatMoney(estado.gasto_actual)}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-gray-400">Limite</p>
-          <p className="text-sm font-semibold text-gray-600">
+          <p className="text-xs text-[var(--text-muted)]">Limite</p>
+          <p className="text-sm font-semibold text-[var(--text-muted)]">
             {formatMoney(estado.monto_limite)}
           </p>
         </div>
@@ -69,7 +69,7 @@ export function PresupuestoCard({
         porcentaje={estado.porcentaje_usado}
         aria-label={`${Math.round(estado.porcentaje_usado)}% del presupuesto de ${estado.categoria_nombre} usado`}
       />
-      <p className="text-xs text-gray-400 mt-1">
+      <p className="text-xs text-[var(--text-muted)] mt-1">
         {Math.round(estado.porcentaje_usado)}% usado
       </p>
     </button>

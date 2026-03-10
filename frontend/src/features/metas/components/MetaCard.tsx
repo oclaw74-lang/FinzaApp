@@ -54,12 +54,12 @@ export function MetaCard({ meta, onClick }: MetaCardProps): JSX.Element {
             aria-hidden="true"
           />
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">
+            <p className="text-sm font-semibold text-[var(--text-primary)] truncate">
               {meta.icono ? `${meta.icono} ` : ''}
               {meta.nombre}
             </p>
             {meta.descripcion && (
-              <p className="text-xs text-gray-400 truncate mt-0.5">
+              <p className="text-xs text-[var(--text-muted)] truncate mt-0.5">
                 {meta.descripcion}
               </p>
             )}
@@ -86,17 +86,17 @@ export function MetaCard({ meta, onClick }: MetaCardProps): JSX.Element {
       {/* Montos */}
       <div className="flex items-end justify-between mb-2">
         <div>
-          <p className="text-xs text-gray-400">Ahorrado</p>
+          <p className="text-xs text-[var(--text-muted)]">Ahorrado</p>
           <p
-            className="text-lg font-bold money"
+            className="text-lg font-bold font-mono"
             style={{ color: colorMeta }}
           >
             {formatMoney(meta.monto_actual)}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-gray-400">Objetivo</p>
-          <p className="text-sm font-semibold text-gray-700">
+          <p className="text-xs text-[var(--text-muted)]">Objetivo</p>
+          <p className="text-sm font-semibold text-[var(--text-primary)]">
             {formatMoney(meta.monto_objetivo)}
           </p>
         </div>
@@ -108,15 +108,15 @@ export function MetaCard({ meta, onClick }: MetaCardProps): JSX.Element {
         color={colorMeta}
         aria-label={`${Math.round(porcentaje)}% de la meta ${meta.nombre}`}
       />
-      <p className="text-xs text-gray-400 mt-1">
+      <p className="text-xs text-[var(--text-muted)] mt-1">
         {Math.round(porcentaje)}% completado
       </p>
 
       {/* Fecha objetivo */}
       {meta.fecha_objetivo && (
-        <p className="text-xs text-gray-400 mt-2">
+        <p className="text-xs text-[var(--text-muted)] mt-2">
           Objetivo:{' '}
-          <span className="text-gray-600">{formatDate(meta.fecha_objetivo)}</span>
+          <span className="text-[var(--text-primary)]">{formatDate(meta.fecha_objetivo)}</span>
         </p>
       )}
     </button>
