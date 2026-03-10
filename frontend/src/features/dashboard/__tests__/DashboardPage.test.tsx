@@ -190,7 +190,8 @@ describe('DashboardPage', () => {
 
   it('renders metas activas section', () => {
     render(<DashboardPage />)
-    expect(screen.getByText('Metas activas')).toBeInTheDocument()
+    // 'Metas activas' appears in both the KPI card and the section header
+    expect(screen.getAllByText('Metas activas').length).toBeGreaterThan(0)
     expect(screen.getByText('Fondo de emergencia')).toBeInTheDocument()
   })
 
