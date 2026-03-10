@@ -18,7 +18,7 @@ async def list_ingresos(
     categoria_id: UUID | None = Query(None),
     moneda: str | None = Query(None),
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    page_size: int = Query(20, ge=1, le=500),
     token: str = Depends(get_raw_token),
     current_user: dict = Depends(get_current_user),
 ) -> dict:
