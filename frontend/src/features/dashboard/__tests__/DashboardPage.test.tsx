@@ -7,6 +7,21 @@ vi.mock('@/hooks/useDashboardV2', () => ({
   useDashboardV2: vi.fn(),
 }))
 
+// Mock recharts-based chart components — ResponsiveContainer has 0 dimensions in jsdom
+vi.mock('@/features/dashboard/components/ChartGastosPorCategoria', () => ({
+  ChartGastosPorCategoria: ({ data }: { data: Array<{ categoria: string; total: number }> }) => (
+    <div data-testid="chart-gastos-categoria">
+      {data.map((d) => (
+        <span key={d.categoria}>{d.categoria}</span>
+      ))}
+    </div>
+  ),
+}))
+
+vi.mock('@/features/dashboard/components/ChartBalanceTendencia', () => ({
+  ChartBalanceTendencia: () => <div data-testid="chart-balance-tendencia" />,
+}))
+
 import { useDashboardV2 } from '@/hooks/useDashboardV2'
 
 const mockData: DashboardV2Response = {
@@ -94,12 +109,16 @@ describe('DashboardPage', () => {
 
   it('renders page title', () => {
     render(<DashboardPage />)
-    expect(screen.getByText('Dashboard')).toBeInTheDocument()
+    // Title is rendered by the shared Header component (not duplicated in page body)
+    // Verify the dashboard hero section renders instead
+    expect(screen.getByText('Tasa de ahorro')).toBeInTheDocument()
   })
 
   it('renders month selector', () => {
     render(<DashboardPage />)
-    expect(screen.getByLabelText('Mes')).toBeInTheDocument()
+    // Month is now selected via pill buttons (Ene, Feb, ... Dic) in the hero card
+    expect(screen.getByRole('button', { name: 'Ene' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Dic' })).toBeInTheDocument()
   })
 
   it('renders year selector', () => {
@@ -158,7 +177,9 @@ describe('DashboardPage', () => {
 
   it('renders category breakdown bars', () => {
     render(<DashboardPage />)
+    // Alimentacion appears in presupuestos_estado AND in the mocked chart
     expect(screen.getAllByText('Alimentacion').length).toBeGreaterThan(0)
+    // Transporte appears in the mocked ChartGastosPorCategoria
     expect(screen.getByText('Transporte')).toBeInTheDocument()
   })
 
@@ -202,11 +223,13 @@ describe('DashboardPage', () => {
     expect(screen.getAllByText(/sin datos/i).length).toBeGreaterThan(0)
   })
 
-  it('changes mes when selector changes', () => {
+  it('changes mes when month button is clicked', () => {
     render(<DashboardPage />)
-    const mesSelect = screen.getByLabelText('Mes')
-    fireEvent.change(mesSelect, { target: { value: '6' } })
-    expect((mesSelect as HTMLSelectElement).value).toBe('6')
+    // Month is now selected via pill buttons in the hero card
+    const junButton = screen.getByRole('button', { name: 'Jun' })
+    fireEvent.click(junButton)
+    // Clicked button should have the active styling (bg-white class)
+    expect(junButton).toHaveClass('bg-white')
   })
 
   it('changes year when selector changes', () => {

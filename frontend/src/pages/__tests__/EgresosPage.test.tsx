@@ -113,7 +113,8 @@ describe('EgresosPage', () => {
 
   it('renders correctly with default props', () => {
     render(<EgresosPage />)
-    expect(screen.getByText('Egresos')).toBeInTheDocument()
+    // Title is rendered by the shared Header component (not duplicated in page body)
+    expect(screen.getByLabelText('Mes')).toBeInTheDocument()
   })
 
   it('shows loading state while fetching', () => {
