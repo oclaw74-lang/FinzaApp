@@ -29,12 +29,15 @@ function EstadoBadge({ estado }: { estado: EstadoPrestamo }): JSX.Element {
 }
 
 export function PrestamoRow({ prestamo, onClick }: PrestamoRowProps): JSX.Element {
+  const monto_original = Number(prestamo.monto_original ?? 0)
+  const monto_pendiente = Number(prestamo.monto_pendiente ?? 0)
+
   const porcentajePagado =
-    prestamo.monto_original > 0
+    monto_original > 0
       ? Math.min(
           100,
           Math.round(
-            ((prestamo.monto_original - prestamo.monto_pendiente) / prestamo.monto_original) * 100
+            ((monto_original - monto_pendiente) / monto_original) * 100
           )
         )
       : 0
@@ -70,16 +73,16 @@ export function PrestamoRow({ prestamo, onClick }: PrestamoRowProps): JSX.Elemen
           />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm font-semibold text-gray-900">{prestamo.persona}</p>
+              <p className="text-sm font-semibold text-[var(--text-primary)]">{prestamo.persona}</p>
               <EstadoBadge estado={prestamo.estado} />
             </div>
             {prestamo.descripcion && (
-              <p className="text-xs text-gray-400 truncate mt-0.5">{prestamo.descripcion}</p>
+              <p className="text-xs text-[var(--text-muted)] truncate mt-0.5">{prestamo.descripcion}</p>
             )}
             <div className="mt-2 space-y-1">
               {/* Progress bar */}
               <div
-                className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden"
+                className="w-full h-1.5 bg-[var(--border)] rounded-full overflow-hidden"
                 role="progressbar"
                 aria-valuenow={porcentajePagado}
                 aria-valuemin={0}
@@ -94,20 +97,20 @@ export function PrestamoRow({ prestamo, onClick }: PrestamoRowProps): JSX.Elemen
                   }}
                 />
               </div>
-              <p className="text-xs text-gray-400">{porcentajePagado}% pagado</p>
+              <p className="text-xs text-[var(--text-muted)]">{porcentajePagado}% pagado</p>
             </div>
           </div>
         </div>
 
         {/* Montos + fechas */}
         <div className="text-right flex-shrink-0">
-          <p className="text-sm font-bold text-gray-900">
-            {formatMoney(prestamo.monto_pendiente, prestamo.moneda)}
+          <p className="text-sm font-bold text-[var(--text-primary)]">
+            {formatMoney(monto_pendiente, prestamo.moneda)}
           </p>
-          <p className="text-xs text-gray-400">
-            de {formatMoney(prestamo.monto_original, prestamo.moneda)}
+          <p className="text-xs text-[var(--text-muted)]">
+            de {formatMoney(monto_original, prestamo.moneda)}
           </p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-[var(--text-muted)] mt-1">
             {formatDate(prestamo.fecha_prestamo)}
           </p>
           {prestamo.fecha_vencimiento && (

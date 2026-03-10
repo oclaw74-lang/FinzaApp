@@ -115,7 +115,8 @@ describe('MetasPage', () => {
 
   it('renders page title', () => {
     render(<MetasPage />)
-    expect(screen.getByText('Metas de ahorro')).toBeInTheDocument()
+    // Title is rendered by the shared Header component (not duplicated in page body)
+    expect(screen.getByText(/gestiona tus objetivos financieros/i)).toBeInTheDocument()
   })
 
   it('renders Nueva Meta button', () => {

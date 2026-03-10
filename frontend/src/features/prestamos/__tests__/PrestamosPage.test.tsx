@@ -101,7 +101,8 @@ describe('PrestamosPage', () => {
 
   it('renders page title', () => {
     render(<PrestamosPage />)
-    expect(screen.getByText('Prestamos')).toBeInTheDocument()
+    // Title is rendered by the shared Header component (not duplicated in page body)
+    expect(screen.getByText(/gestiona tus prestamos y cobros/i)).toBeInTheDocument()
   })
 
   it('renders Nuevo button', () => {

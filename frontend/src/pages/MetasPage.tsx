@@ -134,12 +134,9 @@ export function MetasPage(): JSX.Element {
     <div className="animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t('metas.title')}</h1>
-          <p className="text-[var(--text-muted)] text-sm mt-1">
-            Gestiona tus objetivos financieros
-          </p>
-        </div>
+        <p className="text-[var(--text-muted)] text-sm">
+          Gestiona tus objetivos financieros
+        </p>
         <Button onClick={() => setIsModalOpen(true)} variant="default" size="md">
           <Plus size={16} />
           {t('metas.newMeta')}

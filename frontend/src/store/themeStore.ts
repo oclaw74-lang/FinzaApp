@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import i18n from '../i18n'
 
 type Theme = 'light' | 'dark'
 type Language = 'es' | 'en'
@@ -36,6 +37,7 @@ export const useThemeStore = create<ThemeStore>((set) => ({
   },
   setLanguage: (language) => {
     localStorage.setItem('finza-lang', language)
+    i18n.changeLanguage(language)
     set({ language })
   },
 }))

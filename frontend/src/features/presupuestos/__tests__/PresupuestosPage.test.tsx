@@ -135,9 +135,10 @@ describe('PresupuestosPage', () => {
     setupMocks()
   })
 
-  it('renders page title', () => {
+  it('renders page content', () => {
     render(<PresupuestosPage />)
-    expect(screen.getByText('Presupuestos')).toBeInTheDocument()
+    // Title is now rendered by the shared Header component (not duplicated in page body)
+    expect(screen.getByRole('button', { name: /nuevo/i })).toBeInTheDocument()
   })
 
   it('renders Nuevo button', () => {

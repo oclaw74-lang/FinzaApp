@@ -71,15 +71,17 @@ export function Sidebar(): JSX.Element {
         >
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-golden-flow rounded-lg flex items-center justify-center shrink-0">
-                <span className="font-bold text-[#0f2544] text-sm">F</span>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                style={{ background: 'linear-gradient(135deg, #818cf8, #6366f1)' }}>
+                <span className="font-bold text-white text-sm">F</span>
               </div>
-              <span className="font-bold text-lg tracking-tight">Finza</span>
+              <span className="font-bold text-lg tracking-tight text-white">Finza</span>
             </div>
           )}
           {sidebarCollapsed && (
-            <div className="w-8 h-8 bg-golden-flow rounded-lg flex items-center justify-center">
-              <span className="font-bold text-[#0f2544] text-sm">F</span>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, #818cf8, #6366f1)' }}>
+              <span className="font-bold text-white text-sm">F</span>
             </div>
           )}
 
@@ -128,8 +130,8 @@ export function Sidebar(): JSX.Element {
                   'flex items-center gap-3 rounded-xl mb-0.5 text-sm font-medium transition-all duration-150',
                   sidebarCollapsed ? 'justify-center w-11 h-11 mx-auto' : 'px-3 py-2.5',
                   isActive
-                    ? 'bg-white/15 text-white shadow-sm'
-                    : 'text-white/65 hover:bg-white/10 hover:text-white'
+                    ? 'bg-[var(--accent)] text-white shadow-lg'
+                    : 'text-[var(--sidebar-muted)] hover:bg-white/10 hover:text-white'
                 )
               }
             >
