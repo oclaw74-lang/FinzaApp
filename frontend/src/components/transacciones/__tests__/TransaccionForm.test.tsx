@@ -77,6 +77,9 @@ describe('TransaccionForm', () => {
       <TransaccionForm tipo="ingreso" onSubmit={vi.fn()} onCancel={vi.fn()} isLoading={true} />,
       { wrapper: createWrapper() }
     )
-    expect(screen.getByRole('button', { name: /cargando/i })).toBeInTheDocument()
+    // Button is disabled and shows spinner SVG when loading
+    const submitBtn = screen.getByRole('button', { name: /registrar ingreso/i })
+    expect(submitBtn).toBeDisabled()
+    expect(submitBtn.querySelector('svg')).toBeInTheDocument()
   })
 })
