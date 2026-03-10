@@ -46,9 +46,10 @@ def get_meta_by_id(user_jwt: str, meta_id: str) -> dict:
     return {}
 
 
-def create_meta(user_jwt: str, data: MetaAhorroCreate) -> dict:
+def create_meta(user_jwt: str, user_id: str, data: MetaAhorroCreate) -> dict:
     client = get_user_client(user_jwt)
     payload = data.model_dump()
+    payload["user_id"] = user_id
     payload["monto_objetivo"] = str(payload["monto_objetivo"])
     payload["fecha_inicio"] = str(payload["fecha_inicio"])
     if payload.get("fecha_objetivo"):

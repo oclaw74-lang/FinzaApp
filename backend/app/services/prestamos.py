@@ -302,26 +302,15 @@ def get_resumen(user_jwt: str, user_id: str) -> dict:
         yo_debo_activos = [
             p for p in prestamos if p["tipo"] == "yo_debo" and p["estado"] == "activo"
         ]
-        me_deben_todos = [p for p in prestamos if p["tipo"] == "me_deben"]
-        yo_debo_todos = [p for p in prestamos if p["tipo"] == "yo_debo"]
 
         def sumar(lista: list[dict], campo: str) -> Decimal:
             return sum(Decimal(str(p[campo])) for p in lista)
 
         return {
-            "me_deben": {
-                "cantidad": len(me_deben_todos),
-                "monto_original_total": str(sumar(me_deben_todos, "monto_original")),
-                "monto_pendiente_total": str(sumar(me_deben_activos, "monto_pendiente")),
-            },
-            "yo_debo": {
-                "cantidad": len(yo_debo_todos),
-                "monto_original_total": str(sumar(yo_debo_todos, "monto_original")),
-                "monto_pendiente_total": str(sumar(yo_debo_activos, "monto_pendiente")),
-            },
-            "total_activos": sum(1 for p in prestamos if p["estado"] == "activo"),
-            "total_pagados": sum(1 for p in prestamos if p["estado"] == "pagado"),
-            "total_vencidos": sum(1 for p in prestamos if p["estado"] == "vencido"),
+            "total_me_deben": float(sumar(me_deben_activos, "monto_pendiente")),
+            "total_yo_debo": float(sumar(yo_debo_activos, "monto_pendiente")),
+            "cantidad_activos": sum(1 for p in prestamos if p["estado"] == "activo"),
+            "cantidad_vencidos": sum(1 for p in prestamos if p["estado"] == "vencido"),
         }
     except APIError as e:
         _handle_api_error(e)
