@@ -30,7 +30,7 @@ async def create_presupuesto(
     token: str = Depends(get_raw_token),
     current_user: dict = Depends(get_current_user),
 ) -> dict:
-    return svc.create_presupuesto(user_jwt=token, data=data)
+    return svc.create_presupuesto(user_jwt=token, user_id=current_user["user_id"], data=data)
 
 
 # IMPORTANTE: /estado debe ir ANTES de /{presupuesto_id} para evitar que el

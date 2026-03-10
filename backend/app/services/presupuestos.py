@@ -53,9 +53,10 @@ def get_presupuesto_by_id(user_jwt: str, presupuesto_id: str) -> dict:
     return {}
 
 
-def create_presupuesto(user_jwt: str, data: PresupuestoCreate) -> dict:
+def create_presupuesto(user_jwt: str, user_id: str, data: PresupuestoCreate) -> dict:
     client = get_user_client(user_jwt)
     payload = {
+        "user_id": user_id,
         "categoria_id": str(data.categoria_id),
         "mes": data.mes,
         "year": data.year,

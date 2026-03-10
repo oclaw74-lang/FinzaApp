@@ -33,7 +33,7 @@ async def create_meta(
     token: str = Depends(get_raw_token),
     current_user: dict = Depends(get_current_user),
 ) -> dict:
-    return svc.create_meta(user_jwt=token, data=data)
+    return svc.create_meta(user_jwt=token, user_id=current_user["user_id"], data=data)
 
 
 # IMPORTANTE: /resumen debe ir ANTES de /{meta_id} para evitar que el

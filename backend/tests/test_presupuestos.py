@@ -115,10 +115,11 @@ def test_create_presupuesto_success():
     with patch(
         "app.services.presupuestos.get_user_client", return_value=mock_client
     ):
-        result = create_presupuesto("fake-jwt", data)
+        result = create_presupuesto("fake-jwt", "u1", data)
 
     assert result["id"] == "aaaa-0001"
     insert_payload = mock_client.table.return_value.insert.call_args[0][0]
+    assert insert_payload["user_id"] == "u1"
     assert insert_payload["mes"] == 3
     assert insert_payload["year"] == 2026
     assert insert_payload["monto_limite"] == 5000.0
@@ -145,7 +146,7 @@ def test_create_presupuesto_duplicate_raises_409():
         "app.services.presupuestos.get_user_client", return_value=mock_client
     ):
         with pytest.raises(HTTPException) as exc_info:
-            create_presupuesto("fake-jwt", data)
+            create_presupuesto("fake-jwt", "u1", data)
 
     assert exc_info.value.status_code == 409
     assert "categoria" in exc_info.value.detail.lower()
@@ -543,6 +544,6 @@ def test_create_presupuesto_api_error_raises_http():
         "app.services.presupuestos.get_user_client", return_value=mock_client
     ):
         with pytest.raises(HTTPException) as exc_info:
-            create_presupuesto("fake-jwt", data)
+            create_presupuesto("fake-jwt", "u1", data)
 
     assert exc_info.value.status_code == 400

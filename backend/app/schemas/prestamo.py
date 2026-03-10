@@ -104,15 +104,8 @@ class PrestamoResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class PrestamoResumenTipo(BaseModel):
-    cantidad: int
-    monto_original_total: Decimal
-    monto_pendiente_total: Decimal
-
-
 class PrestamoResumen(BaseModel):
-    me_deben: PrestamoResumenTipo
-    yo_debo: PrestamoResumenTipo
-    total_activos: int
-    total_pagados: int
-    total_vencidos: int
+    total_me_deben: float
+    total_yo_debo: float
+    cantidad_activos: int
+    cantidad_vencidos: int

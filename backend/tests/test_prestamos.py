@@ -253,7 +253,7 @@ def test_registrar_pago_excede_pendiente_raises_400():
 
 
 def test_get_resumen_estructura():
-    """get_resumen returns the expected PrestamoResumen structure."""
+    """get_resumen returns the expected flat PrestamoResumen structure."""
     from app.services.prestamos import get_resumen
 
     prestamos_data = [
@@ -294,29 +294,20 @@ def test_get_resumen_estructura():
     with patch("app.services.prestamos.get_user_client", return_value=mock_client):
         result = get_resumen("fake-jwt", "u1")
 
-    # Estructura base
-    assert "me_deben" in result
-    assert "yo_debo" in result
-    assert "total_activos" in result
-    assert "total_pagados" in result
-    assert "total_vencidos" in result
+    # Flat structure
+    assert "total_me_deben" in result
+    assert "total_yo_debo" in result
+    assert "cantidad_activos" in result
+    assert "cantidad_vencidos" in result
 
-    # Conteos por estado
-    assert result["total_activos"] == 2   # 1 me_deben activo + 1 yo_debo activo
-    assert result["total_pagados"] == 1   # 1 me_deben pagado
-    assert result["total_vencidos"] == 1  # 1 yo_debo vencido
-
-    # me_deben: 2 en total (activo + pagado)
-    assert result["me_deben"]["cantidad"] == 2
-    assert Decimal(result["me_deben"]["monto_original_total"]) == Decimal("1500.00")
-    # monto_pendiente_total solo cuenta activos
-    assert Decimal(result["me_deben"]["monto_pendiente_total"]) == Decimal("700.00")
-
-    # yo_debo: 2 en total (activo + vencido)
-    assert result["yo_debo"]["cantidad"] == 2
-    assert Decimal(result["yo_debo"]["monto_original_total"]) == Decimal("2300.00")
-    # monto_pendiente_total solo cuenta activos
-    assert Decimal(result["yo_debo"]["monto_pendiente_total"]) == Decimal("2000.00")
+    # total_me_deben: solo activos con monto_pendiente
+    assert result["total_me_deben"] == 700.0
+    # total_yo_debo: solo activos con monto_pendiente
+    assert result["total_yo_debo"] == 2000.0
+    # cantidad_activos: 1 me_deben activo + 1 yo_debo activo
+    assert result["cantidad_activos"] == 2
+    # cantidad_vencidos: 1 yo_debo vencido
+    assert result["cantidad_vencidos"] == 1
 
 
 def test_delete_prestamo_soft_delete():

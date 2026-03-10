@@ -85,10 +85,11 @@ def test_create_meta_success():
     )
 
     with patch("app.services.metas_ahorro.get_user_client", return_value=mock_client):
-        result = create_meta("fake-jwt", data)
+        result = create_meta("fake-jwt", "u1", data)
 
     assert result["id"] == "aaaa-1111"
     insert_payload = mock_client.table.return_value.insert.call_args[0][0]
+    assert insert_payload["user_id"] == "u1"
     assert insert_payload["nombre"] == "Vacaciones"
     assert insert_payload["monto_objetivo"] == "30000.00"
 
@@ -496,6 +497,6 @@ def test_create_meta_api_error_raises_http():
 
     with patch("app.services.metas_ahorro.get_user_client", return_value=mock_client):
         with pytest.raises(HTTPException) as exc_info:
-            create_meta("fake-jwt", data)
+            create_meta("fake-jwt", "u1", data)
 
     assert exc_info.value.status_code == 400
