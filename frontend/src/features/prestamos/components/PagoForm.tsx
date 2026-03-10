@@ -54,7 +54,7 @@ export function PagoForm({ montoPendiente, onSubmit, onCancel, isLoading }: Pago
         error={errors.monto?.message}
         {...register('monto', { valueAsNumber: true })}
       />
-      <p className="text-xs text-gray-400 -mt-2">
+      <p className="text-xs text-[var(--text-muted)] -mt-2">
         Maximo: {montoPendiente.toFixed(2)}
       </p>
 
@@ -66,7 +66,7 @@ export function PagoForm({ montoPendiente, onSubmit, onCancel, isLoading }: Pago
       />
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="notas-pago" className="text-sm font-medium text-gray-700">
+        <label htmlFor="notas-pago" className="text-sm font-medium text-[var(--text-primary)]">
           Notas (opcional)
         </label>
         <textarea

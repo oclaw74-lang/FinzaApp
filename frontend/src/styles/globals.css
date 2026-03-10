@@ -4,24 +4,58 @@
 
 @layer base {
   :root {
-    --bg: #f0f4f8;
+    --bg: #f8fafc;
     --surface: #ffffff;
-    --surface-raised: #ffffff;
+    --surface-raised: #f1f5f9;
+    --surface-overlay: rgba(255,255,255,0.85);
     --border: #e2e8f0;
+    --border-strong: #cbd5e1;
     --text-primary: #0f172a;
+    --text-secondary: #1e293b;
     --text-muted: #64748b;
-    --sidebar: #0f2544;
-    --sidebar-fg: rgba(255,255,255,0.85);
+    --text-subtle: #94a3b8;
+    --sidebar: #1e1b4b;
+    --sidebar-fg: rgba(255,255,255,0.9);
+    --sidebar-muted: rgba(255,255,255,0.5);
+    --accent: #6366f1;
+    --accent-hover: #4f46e5;
+    --accent-muted: rgba(99,102,241,0.12);
+    --success: #10b981;
+    --success-muted: rgba(16,185,129,0.12);
+    --danger: #ef4444;
+    --danger-muted: rgba(239,68,68,0.12);
+    --warning: #f59e0b;
+    --warning-muted: rgba(245,158,11,0.12);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
   }
   .dark {
-    --bg: #0f172a;
-    --surface: #1e293b;
-    --surface-raised: #293548;
-    --border: #334155;
-    --text-primary: #f1f5f9;
-    --text-muted: #94a3b8;
-    --sidebar: #060d1a;
-    --sidebar-fg: rgba(255,255,255,0.75);
+    --bg: #0a0f1e;
+    --surface: #111827;
+    --surface-raised: #1f2937;
+    --surface-overlay: rgba(17,24,39,0.85);
+    --border: #1f2937;
+    --border-strong: #374151;
+    --text-primary: #f9fafb;
+    --text-secondary: #f3f4f6;
+    --text-muted: #9ca3af;
+    --text-subtle: #6b7280;
+    --sidebar: #07090f;
+    --sidebar-fg: rgba(255,255,255,0.90);
+    --sidebar-muted: rgba(255,255,255,0.45);
+    --accent: #818cf8;
+    --accent-hover: #6366f1;
+    --accent-muted: rgba(129,140,248,0.15);
+    --success: #34d399;
+    --success-muted: rgba(52,211,153,0.15);
+    --danger: #f87171;
+    --danger-muted: rgba(248,113,113,0.15);
+    --warning: #fbbf24;
+    --warning-muted: rgba(251,191,36,0.15);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5);
   }
   * { @apply border-border; }
   body {
@@ -36,19 +70,30 @@
 
 @layer components {
   .finza-card {
-    @apply bg-surface border border-border rounded-card shadow-card p-6 transition-shadow duration-200 hover:shadow-card-hover;
+    @apply bg-[var(--surface)] rounded-xl border border-[var(--border)] p-5;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .finza-card-hover {
+    @apply bg-[var(--surface)] rounded-xl border border-[var(--border)] p-5;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .finza-card-hover:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
   }
   .glass {
-    background: rgba(255,255,255,0.7);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.2);
+    @apply bg-[var(--surface-overlay)] backdrop-blur-xl border border-[var(--border)] rounded-xl;
   }
   .dark .glass {
-    background: rgba(30,41,59,0.7);
-    border-color: rgba(255,255,255,0.05);
+    background: var(--surface-overlay);
   }
   .finza-input {
-    @apply bg-surface border border-border rounded-lg px-4 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-finza-blue/30 focus:border-finza-blue transition-colors placeholder:text-[var(--text-muted)];
+    @apply w-full bg-[var(--surface-raised)] border border-[var(--border)] rounded-lg px-3 py-2
+           text-[var(--text-primary)] placeholder:text-[var(--text-subtle)]
+           focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent
+           transition-all text-sm;
   }
   .money {
     @apply font-mono font-medium;

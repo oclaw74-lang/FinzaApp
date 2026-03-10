@@ -3,22 +3,20 @@ import { useTranslation } from 'react-i18next'
 import {
   TrendingUp,
   TrendingDown,
-  Wallet,
   Target,
+  PiggyBank,
   AlertCircle,
   CreditCard,
   CalendarClock,
-  BarChart3,
 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDashboardV2 } from '@/hooks/useDashboardV2'
 import { KpiCard } from '@/features/dashboard/components/v2/KpiCard'
-import { TransaccionItem } from '@/features/dashboard/components/v2/TransaccionItem'
-import { EgresoCategoriaBar } from '@/features/dashboard/components/v2/EgresoCategoriaBar'
 import { MetaProgressItem } from '@/features/dashboard/components/v2/MetaProgressItem'
 import { BudgetProgressBar } from '@/features/presupuestos/components/BudgetProgressBar'
-import { formatDate, formatMoney, MESES } from '@/lib/utils'
+import { ChartGastosPorCategoria } from '@/features/dashboard/components/ChartGastosPorCategoria'
+import { ChartBalanceTendencia } from '@/features/dashboard/components/ChartBalanceTendencia'
+import { formatDate, formatMoney, MESES, cn } from '@/lib/utils'
 
 function getInitialPeriod(): { mes: number; year: number } {
   const now = new Date()
@@ -28,6 +26,8 @@ function getInitialPeriod(): { mes: number; year: number } {
 function buildYearOptions(currentYear: number): number[] {
   return [currentYear - 2, currentYear - 1, currentYear, currentYear + 1, currentYear + 2]
 }
+
+const MESES_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
 export function DashboardPage(): JSX.Element {
   const { t } = useTranslation()
@@ -40,63 +40,18 @@ export function DashboardPage(): JSX.Element {
   const { data, isLoading, isError, error } = useDashboardV2({ mes, year })
 
   const yearOptions = buildYearOptions(currentYear)
-  const monthName = MESES[mes - 1]
+
+  const ingresos = data?.resumen_financiero.ingresos_mes ?? 0
+  const egresos = data?.resumen_financiero.egresos_mes ?? 0
+  const balanceMes = data?.resumen_financiero.balance_mes ?? 0
+  const tasaAhorro = data?.resumen_financiero.tasa_ahorro ?? 0
 
   return (
     <div className="animate-fade-in">
-      {/* Page header */}
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-            {t('dashboard.title')}
-          </h1>
-          <p className="text-[var(--text-muted)] text-sm mt-1">
-            {t('dashboard.thisMonth')}: {monthName} {year}
-          </p>
-        </div>
-
-        {/* Month / Year selector */}
-        <div className="flex items-center gap-2">
-          <div>
-            <label htmlFor="mes-selector" className="sr-only">Mes</label>
-            <select
-              id="mes-selector"
-              aria-label="Mes"
-              value={mes}
-              onChange={(e) => setMes(Number(e.target.value))}
-              className="finza-input text-sm"
-            >
-              {MESES.map((name, idx) => (
-                <option key={name} value={idx + 1}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="year-selector" className="sr-only">Ano</label>
-            <select
-              id="year-selector"
-              aria-label="Ano"
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
-              className="finza-input text-sm"
-            >
-              {yearOptions.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
       {/* Error state */}
       {isError && (
         <div
-          className="flex items-center gap-3 p-4 mb-6 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg text-red-700 dark:text-red-400"
+          className="flex items-center gap-3 p-4 mb-6 bg-[var(--danger-muted)] border border-[var(--danger)] rounded-lg text-[var(--danger)]"
           role="alert"
         >
           <AlertCircle size={18} className="flex-shrink-0" />
@@ -106,127 +61,300 @@ export function DashboardPage(): JSX.Element {
         </div>
       )}
 
+      {/* Hero balance card */}
+      <div className="relative overflow-hidden rounded-2xl p-6 sm:p-8 mb-6
+        text-white shadow-xl"
+        style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #6d28d9 100%)' }}
+      >
+        {/* Decorative orbs */}
+        <div className="absolute -top-8 -right-8 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-purple-400/20 rounded-full blur-2xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          <div>
+            <p className="text-white/60 text-xs font-medium uppercase tracking-widest mb-1">
+              {t('dashboard.balance')}
+            </p>
+            {isLoading ? (
+              <Skeleton className="h-12 w-48 bg-white/20 mb-2" />
+            ) : (
+              <p className="text-4xl sm:text-5xl font-bold tracking-tight">
+                {formatMoney(Math.abs(balanceMes))}
+              </p>
+            )}
+            <p className="text-white/50 text-sm mt-2">
+              {MESES[mes - 1]} {year}
+            </p>
+          </div>
+
+          {/* Period selectors */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Month buttons */}
+            <div className="flex items-center gap-1 bg-white/10 rounded-xl p-1 flex-wrap">
+              {MESES_SHORT.map((m, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setMes(i + 1)}
+                  className={cn(
+                    'px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all',
+                    mes === i + 1
+                      ? 'bg-white text-indigo-600 shadow'
+                      : 'text-white/60 hover:text-white'
+                  )}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+            {/* Year selector */}
+            <div>
+              <label htmlFor="year-selector" className="sr-only">Ano</label>
+              <select
+                id="year-selector"
+                aria-label="Ano"
+                value={year}
+                onChange={(e) => setYear(Number(e.target.value))}
+                className="bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30"
+              >
+                {yearOptions.map((y) => (
+                  <option key={y} value={y} className="text-gray-900">
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* KPI cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {isLoading ? (
           <>
-            <Skeleton className="h-32 rounded-card" />
-            <Skeleton className="h-32 rounded-card" />
-            <Skeleton className="h-32 rounded-card" />
-            <Skeleton className="h-32 rounded-card" />
+            <Skeleton className="h-32 rounded-xl" />
+            <Skeleton className="h-32 rounded-xl" />
+            <Skeleton className="h-32 rounded-xl" />
+            <Skeleton className="h-32 rounded-xl" />
           </>
         ) : (
           <>
             <KpiCard
               title={t('dashboard.income')}
-              value={formatMoney(data?.resumen_financiero.ingresos_mes ?? 0)}
+              value={formatMoney(ingresos)}
               variationPct={data?.resumen_financiero.variacion_ingresos_pct ?? 0}
-              icon={<TrendingUp size={18} style={{ color: '#00B050' }} />}
-              iconBg="#00B05020"
-              valueColorClass="text-prosperity-green"
+              icon={<TrendingUp size={18} style={{ color: 'var(--success)' }} />}
+              iconBg="var(--success-muted)"
+              valueColorClass="text-[var(--success)]"
               subtitle={t('dashboard.vsLastMonth')}
             />
             <KpiCard
               title={t('dashboard.expenses')}
-              value={formatMoney(data?.resumen_financiero.egresos_mes ?? 0)}
+              value={formatMoney(egresos)}
               variationPct={data?.resumen_financiero.variacion_egresos_pct ?? 0}
-              icon={<TrendingDown size={18} style={{ color: '#FF0000' }} />}
-              iconBg="#FF000020"
-              valueColorClass="text-alert-red"
+              icon={<TrendingDown size={18} style={{ color: 'var(--danger)' }} />}
+              iconBg="var(--danger-muted)"
+              valueColorClass="text-[var(--danger)]"
               subtitle={t('dashboard.vsLastMonth')}
             />
             <KpiCard
-              title={t('dashboard.balance')}
-              value={formatMoney(Math.abs(data?.resumen_financiero.balance_mes ?? 0))}
-              icon={<Wallet size={18} style={{ color: '#366092' }} />}
-              iconBg="#36609220"
-              valueColorClass={
-                (data?.resumen_financiero.balance_mes ?? 0) >= 0
-                  ? 'text-prosperity-green'
-                  : 'text-alert-red'
-              }
-              subtitle="Ingresos - Egresos"
+              title="Metas activas"
+              value={String(data?.metas_activas.length ?? 0)}
+              icon={<Target size={18} style={{ color: 'var(--accent)' }} />}
+              iconBg="var(--accent-muted)"
+              valueColorClass="text-[var(--accent)]"
+              subtitle="En progreso"
             />
             <KpiCard
               title={t('dashboard.savingsRate')}
-              value={`${(data?.resumen_financiero.tasa_ahorro ?? 0).toFixed(1)}%`}
-              icon={<Target size={18} style={{ color: '#FFC000' }} />}
-              iconBg="#FFC00020"
-              valueColorClass="text-golden-flow"
+              value={`${tasaAhorro.toFixed(1)}%`}
+              icon={<PiggyBank size={18} style={{ color: 'var(--warning)' }} />}
+              iconBg="var(--warning-muted)"
+              valueColorClass="text-[var(--warning)]"
               subtitle="Del total de ingresos"
             />
           </>
         )}
       </div>
 
-      {/* Central section: transactions + category breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Recent transactions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('dashboard.recentTransactions')}</CardTitle>
-          </CardHeader>
-          <CardContent>
+      {/* Charts row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        {isLoading ? (
+          <>
+            <Skeleton className="h-72 rounded-xl" />
+            <Skeleton className="h-72 rounded-xl" />
+          </>
+        ) : (
+          <>
+            <ChartGastosPorCategoria
+              data={(data?.egresos_por_categoria ?? []).map((e) => ({
+                categoria: e.categoria,
+                total: e.total,
+              }))}
+            />
+            <ChartBalanceTendencia
+              ingresos={ingresos}
+              egresos={egresos}
+              mes={mes}
+            />
+          </>
+        )}
+      </div>
+
+      {/* Bottom section: recent transactions + loans + goals */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Recent transactions (2 cols) */}
+        <div className="lg:col-span-2 finza-card">
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+              {t('dashboard.recentTransactions')}
+            </p>
+            <a
+              href="/ingresos"
+              className="text-xs text-[var(--accent)] hover:underline"
+            >
+              Ver todos
+            </a>
+          </div>
+          {isLoading ? (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </div>
+          ) : (data?.ultimas_transacciones ?? []).length === 0 ? (
+            <div className="text-center py-12 text-[var(--text-muted)]">
+              <p className="text-sm">{t('dashboard.noTransactions')}</p>
+            </div>
+          ) : (
+            <div>
+              {(data?.ultimas_transacciones ?? []).slice(0, 6).map((tx, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 py-2.5 border-b border-[var(--border)] last:border-0"
+                >
+                  <div
+                    className={cn(
+                      'w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0',
+                      tx.tipo === 'ingreso'
+                        ? 'bg-[var(--success-muted)] text-[var(--success)]'
+                        : 'bg-[var(--danger-muted)] text-[var(--danger)]'
+                    )}
+                    aria-hidden="true"
+                  >
+                    {tx.tipo === 'ingreso' ? '+' : '\u2212'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[var(--text-primary)] truncate">
+                      {tx.descripcion || tx.categoria || (tx.tipo === 'ingreso' ? 'Ingreso' : 'Gasto')}
+                    </p>
+                    <p className="text-xs text-[var(--text-muted)]">
+                      {new Date(tx.fecha).toLocaleDateString('es-DO', {
+                        day: '2-digit',
+                        month: 'short',
+                      })}
+                    </p>
+                  </div>
+                  <span
+                    className={cn(
+                      'text-sm font-bold flex-shrink-0',
+                      tx.tipo === 'ingreso'
+                        ? 'text-[var(--success)]'
+                        : 'text-[var(--danger)]'
+                    )}
+                  >
+                    {tx.tipo === 'ingreso' ? '+' : '\u2212'}{formatMoney(Number(tx.monto ?? 0))}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right column: loans + goals */}
+        <div className="space-y-4">
+          {/* Prestamos activos */}
+          <div className="finza-card">
+            <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">
+              {t('dashboard.activeLoans')}
+            </p>
             {isLoading ? (
-              <div aria-label="Cargando transacciones" className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-10 w-full" />
-                ))}
+              <div className="space-y-3">
+                <Skeleton className="h-8 w-40" />
+                <Skeleton className="h-4 w-24" />
               </div>
-            ) : (data?.ultimas_transacciones ?? []).length === 0 ? (
-              <div className="text-center py-12 text-[var(--text-muted)]">
-                <BarChart3 size={48} className="mx-auto mb-3 opacity-30" />
-                <p className="text-sm">{t('dashboard.noTransactions')}</p>
+            ) : (data?.prestamos_activos.count ?? 0) === 0 ? (
+              <div className="flex flex-col items-center justify-center py-4 text-center">
+                <CreditCard
+                  size={28}
+                  className="text-[var(--text-muted)] opacity-40 mb-2"
+                  aria-hidden="true"
+                />
+                <p className="text-sm text-[var(--text-muted)]">Sin prestamos activos</p>
               </div>
             ) : (
-              <div>
-                {(data?.ultimas_transacciones ?? []).slice(0, 5).map((tx, idx) => (
-                  <TransaccionItem key={idx} transaccion={tx} />
-                ))}
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs text-[var(--text-muted)] mb-0.5">Deuda total</p>
+                  <p className="text-2xl font-bold font-mono text-[var(--danger)]">
+                    {formatMoney(data?.prestamos_activos.total_deuda ?? 0)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+                  <CreditCard size={14} className="text-[var(--accent)]" aria-hidden="true" />
+                  <span>
+                    {data?.prestamos_activos.count ?? 0}{' '}
+                    prestamo{(data?.prestamos_activos.count ?? 0) !== 1 ? 's' : ''} activo
+                    {(data?.prestamos_activos.count ?? 0) !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                {data?.prestamos_activos.proximo_vencimiento && (
+                  <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+                    <CalendarClock size={14} className="text-[var(--warning)]" aria-hidden="true" />
+                    <span>
+                      Proximo:{' '}
+                      <span className="font-medium text-[var(--warning)]">
+                        {formatDate(data.prestamos_activos.proximo_vencimiento)}
+                      </span>
+                    </span>
+                  </div>
+                )}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Egresos por categoria */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('dashboard.expensesByCategory')}</CardTitle>
-          </CardHeader>
-          <CardContent>
+          {/* Metas activas */}
+          <div className="finza-card">
+            <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">
+              {t('dashboard.activeGoals')}
+            </p>
             {isLoading ? (
               <div className="space-y-4">
-                {[...Array(4)].map((_, i) => (
+                {[...Array(2)].map((_, i) => (
                   <div key={i} className="space-y-1">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-2 w-full" />
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-1.5 w-full" />
                   </div>
                 ))}
               </div>
-            ) : (data?.egresos_por_categoria ?? []).length === 0 ? (
-              <div className="text-center py-12 text-[var(--text-muted)]">
-                <BarChart3 size={48} className="mx-auto mb-3 opacity-30" />
-                <p className="text-sm">{t('dashboard.noTransactions')}</p>
-              </div>
+            ) : (data?.metas_activas ?? []).length === 0 ? (
+              <p className="text-sm text-[var(--text-muted)] text-center py-4">
+                {t('common.noData')}
+              </p>
             ) : (
               <div className="space-y-4">
-                {(data?.egresos_por_categoria ?? []).map((item) => (
-                  <EgresoCategoriaBar key={item.categoria} item={item} />
+                {(data?.metas_activas ?? []).slice(0, 3).map((meta) => (
+                  <MetaProgressItem key={meta.nombre} meta={meta} />
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
 
-      {/* Bottom section: budgets + goals + loans */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Presupuestos */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('dashboard.activeBudgets')}</CardTitle>
-          </CardHeader>
-          <CardContent>
+          {/* Presupuestos */}
+          <div className="finza-card">
+            <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">
+              {t('dashboard.activeBudgets')}
+            </p>
             {isLoading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
@@ -237,7 +365,7 @@ export function DashboardPage(): JSX.Element {
                 ))}
               </div>
             ) : (data?.presupuestos_estado ?? []).length === 0 ? (
-              <p className="text-sm text-[var(--text-muted)] text-center py-6">
+              <p className="text-sm text-[var(--text-muted)] text-center py-4">
                 {t('common.noData')}
               </p>
             ) : (
@@ -248,7 +376,7 @@ export function DashboardPage(): JSX.Element {
                       <span
                         className={
                           pres.alerta
-                            ? 'font-semibold text-alert-red'
+                            ? 'font-semibold text-[var(--danger)]'
                             : 'font-medium text-[var(--text-primary)]'
                         }
                       >
@@ -269,86 +397,8 @@ export function DashboardPage(): JSX.Element {
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Metas activas */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('dashboard.activeGoals')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="space-y-4">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="space-y-1">
-                    <Skeleton className="h-4 w-28" />
-                    <Skeleton className="h-1.5 w-full" />
-                  </div>
-                ))}
-              </div>
-            ) : (data?.metas_activas ?? []).length === 0 ? (
-              <p className="text-sm text-[var(--text-muted)] text-center py-6">
-                {t('common.noData')}
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {(data?.metas_activas ?? []).map((meta) => (
-                  <MetaProgressItem key={meta.nombre} meta={meta} />
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Prestamos activos */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('dashboard.activeLoans')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="space-y-3">
-                <Skeleton className="h-8 w-40" />
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-32" />
-              </div>
-            ) : (data?.prestamos_activos.count ?? 0) === 0 ? (
-              <div className="flex flex-col items-center justify-center py-6 text-center">
-                <CreditCard size={32} className="text-[var(--text-muted)] opacity-40 mb-2" aria-hidden="true" />
-                <p className="text-sm text-[var(--text-muted)]">Sin prestamos activos</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-0.5">Deuda total</p>
-                  <p className="text-2xl font-bold font-mono text-alert-red">
-                    {formatMoney(data?.prestamos_activos.total_deuda ?? 0)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-                  <CreditCard size={14} className="text-finza-blue" aria-hidden="true" />
-                  <span>
-                    {data?.prestamos_activos.count ?? 0}{' '}
-                    {(data?.prestamos_activos.count ?? 0) === 1 ? 'prestamo' : 'prestamos'} activo
-                    {(data?.prestamos_activos.count ?? 0) !== 1 ? 's' : ''}
-                  </span>
-                </div>
-                {data?.prestamos_activos.proximo_vencimiento && (
-                  <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-                    <CalendarClock size={14} className="text-golden-flow" aria-hidden="true" />
-                    <span>
-                      Proximo vencimiento:{' '}
-                      <span className="font-medium text-golden-flow">
-                        {formatDate(data.prestamos_activos.proximo_vencimiento)}
-                      </span>
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   )

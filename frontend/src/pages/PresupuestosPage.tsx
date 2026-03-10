@@ -184,12 +184,9 @@ export function PresupuestosPage(): JSX.Element {
     <div className="animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t('presupuestos.title')}</h1>
-          <p className="text-[var(--text-muted)] text-sm mt-1">
-            Controla tus limites de gasto por categoria
-          </p>
-        </div>
+        <p className="text-[var(--text-muted)] text-sm">
+          Controla tus limites de gasto por categoria
+        </p>
         <Button onClick={handleOpenCreate} variant="default" size="md">
           <Plus size={16} />
           {t('common.new')}

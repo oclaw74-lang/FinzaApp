@@ -149,10 +149,7 @@ export function PrestamosPage(): JSX.Element {
     <div className="animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t('prestamos.title')}</h1>
-          <p className="text-[var(--text-muted)] text-sm mt-1">Gestiona tus prestamos y cobros</p>
-        </div>
+        <p className="text-[var(--text-muted)] text-sm">Gestiona tus prestamos y cobros</p>
         <Button onClick={() => setIsModalOpen(true)} variant="default" size="md">
           <Plus size={16} />
           {t('common.new')}
