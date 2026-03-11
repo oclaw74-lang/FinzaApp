@@ -6,6 +6,7 @@ import type { EgresoResponse, PaginatedResponse, CategoriaResponse } from '@/typ
 vi.mock('@/hooks/useEgresos', () => ({
   useEgresos: vi.fn(),
   useCreateEgreso: vi.fn(),
+  useUpdateEgreso: vi.fn(),
   useDeleteEgreso: vi.fn(),
 }))
 
@@ -20,7 +21,7 @@ vi.mock('sonner', () => ({
   },
 }))
 
-import { useEgresos, useCreateEgreso, useDeleteEgreso } from '@/hooks/useEgresos'
+import { useEgresos, useCreateEgreso, useUpdateEgreso, useDeleteEgreso } from '@/hooks/useEgresos'
 import { useCategorias } from '@/hooks/useCategorias'
 import { toast } from 'sonner'
 
@@ -98,6 +99,11 @@ function setupMocks({
     mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,
   } as unknown as ReturnType<typeof useCreateEgreso>)
+
+  vi.mocked(useUpdateEgreso).mockReturnValue({
+    mutateAsync: vi.fn().mockResolvedValue({}),
+    isPending: false,
+  } as unknown as ReturnType<typeof useUpdateEgreso>)
 
   vi.mocked(useDeleteEgreso).mockReturnValue({
     mutateAsync: vi.fn().mockResolvedValue(undefined),
