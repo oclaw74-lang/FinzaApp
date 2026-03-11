@@ -1,4 +1,5 @@
-import { Menu, Sun, Moon, Bell } from 'lucide-react'
+import { Menu, Sun, Moon } from 'lucide-react'
+import { NotificacionBadge } from '@/components/shared/NotificacionBadge'
 import { useUiStore } from '@/store/uiStore'
 import { useThemeStore } from '@/store/themeStore'
 import { useTranslation } from 'react-i18next'
@@ -61,13 +62,7 @@ export function Header(): JSX.Element {
       {/* Right controls */}
       <div className="flex items-center gap-1">
         {/* Notification bell */}
-        <button
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:bg-surface-raised hover:text-[var(--text-primary)] transition-colors relative"
-          aria-label="Notificaciones"
-        >
-          <Bell size={18} />
-          <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-finza-blue" />
-        </button>
+        <NotificacionBadge />
 
         {/* Language toggle */}
         <button

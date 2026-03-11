@@ -110,6 +110,34 @@ const en = {
     egreso: 'Expense',
     ambos: 'Both',
   },
+  notificaciones: {
+    title: 'Notifications',
+    markAllRead: 'Mark all as read',
+    noNotificaciones: 'No notifications',
+    noNotificacionesDesc: 'Your financial alerts will appear here',
+    verTodas: 'View all',
+    urgente: 'Urgent',
+    informativa: 'Info',
+    logro: 'Achievement',
+    sinLeer: 'unread',
+    markRead: 'Mark as read',
+    deleted: 'Notification deleted',
+    allRead: 'All notifications marked as read',
+  },
+  score: {
+    title: 'Financial score',
+    critico: 'Critical',
+    en_riesgo: 'At risk',
+    bueno: 'Good',
+    excelente: 'Excellent',
+  },
+  prediccion: {
+    title: 'Month-end prediction',
+    saldoProyectado: 'Projected balance',
+    gastoDiario: 'Daily spending',
+    siPresupuesto: 'If budget respected',
+    mayorImpacto: 'Biggest impact',
+  },
 }
 
 export default en
