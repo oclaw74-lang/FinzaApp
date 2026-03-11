@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TransaccionModal } from '@/components/transacciones/TransaccionModal'
-import { useEgresos, useCreateEgreso, useDeleteEgreso } from '@/hooks/useEgresos'
+import { useEgresos, useCreateEgreso, useUpdateEgreso, useDeleteEgreso } from '@/hooks/useEgresos'
+import { getApiErrorMessage } from '@/lib/apiError'
 import { useCategorias } from '@/hooks/useCategorias'
 import { formatCurrency, formatDate, MESES, cn } from '@/lib/utils'
 import type { IngresoFormData, EgresoFormData } from '@/components/transacciones/TransaccionForm'
@@ -27,6 +28,8 @@ export function EgresosPage(): JSX.Element {
   const currentYear = defaults.year
 
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [egresoEditando, setEgresoEditando] = useState<EgresoResponse | null>(null)
   const [mes, setMes] = useState<number>(0)
   const [year, setYear] = useState<number>(defaults.year)
   const [search, setSearch] = useState('')
@@ -34,6 +37,7 @@ export function EgresosPage(): JSX.Element {
   const { data, isLoading } = useEgresos({ page: 1, page_size: 200 })
   const { data: categorias = [] } = useCategorias('egreso')
   const createEgreso = useCreateEgreso()
+  const updateEgreso = useUpdateEgreso()
   const deleteEgreso = useDeleteEgreso()
 
   const yearOptions = buildYearOptions(currentYear)
@@ -66,8 +70,25 @@ export function EgresosPage(): JSX.Element {
       await createEgreso.mutateAsync(formData)
       setIsModalOpen(false)
       toast.success(t('egresos.created'))
-    } catch {
-      toast.error(t('common.error'))
+    } catch (error) {
+      toast.error(getApiErrorMessage(error))
+    }
+  }
+
+  const handleEdit = (egreso: EgresoResponse): void => {
+    setEgresoEditando(egreso)
+    setIsEditModalOpen(true)
+  }
+
+  const handleUpdate = async (formData: IngresoFormData | EgresoFormData): Promise<void> => {
+    if (!egresoEditando) return
+    try {
+      await updateEgreso.mutateAsync({ id: egresoEditando.id, ...formData })
+      setIsEditModalOpen(false)
+      setEgresoEditando(null)
+      toast.success(t('egresos.updated'))
+    } catch (error) {
+      toast.error(getApiErrorMessage(error))
     }
   }
 
@@ -76,14 +97,10 @@ export function EgresosPage(): JSX.Element {
       try {
         await deleteEgreso.mutateAsync(id)
         toast.success(t('egresos.deleted'))
-      } catch {
-        toast.error(t('common.error'))
+      } catch (error) {
+        toast.error(getApiErrorMessage(error))
       }
     }
-  }
-
-  const handleEdit = (_t: EgresoResponse): void => {
-    // Edit will be implemented in a future iteration
   }
 
   return (
@@ -323,6 +340,25 @@ export function EgresosPage(): JSX.Element {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreate}
         isLoading={createEgreso.isPending}
+      />
+
+      <TransaccionModal
+        tipo="egreso"
+        isOpen={isEditModalOpen}
+        onClose={() => { setIsEditModalOpen(false); setEgresoEditando(null) }}
+        onSubmit={handleUpdate}
+        isLoading={updateEgreso.isPending}
+        title={t('egresos.editEgreso')}
+        submitLabel={t('common.save')}
+        defaultValues={egresoEditando ? {
+          categoria_id: egresoEditando.categoria_id,
+          monto: parseFloat(egresoEditando.monto),
+          moneda: egresoEditando.moneda as 'DOP' | 'USD',
+          descripcion: egresoEditando.descripcion ?? undefined,
+          metodo_pago: egresoEditando.metodo_pago,
+          fecha: egresoEditando.fecha,
+          notas: egresoEditando.notas ?? undefined,
+        } : undefined}
       />
     </div>
   )

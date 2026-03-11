@@ -263,7 +263,7 @@ export function PrestamoDetail({
             <div className="border border-border rounded-lg p-4">
               <p className="text-sm font-semibold text-gray-700 mb-3">Registrar pago</p>
               <PagoForm
-                montoPendiente={displayPrestamo.monto_pendiente}
+                montoPendiente={Number(displayPrestamo.monto_pendiente)}
                 onSubmit={handleRegistrarPago}
                 onCancel={() => setShowPagoForm(false)}
                 isLoading={registrarPago.isPending}

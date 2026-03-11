@@ -8,6 +8,8 @@ interface TransaccionModalProps {
   onSubmit: (data: IngresoFormData | EgresoFormData) => Promise<void>
   isLoading?: boolean
   title?: string
+  defaultValues?: Partial<IngresoFormData | EgresoFormData>
+  submitLabel?: string
 }
 
 export function TransaccionModal({
@@ -17,6 +19,8 @@ export function TransaccionModal({
   onSubmit,
   isLoading,
   title,
+  defaultValues,
+  submitLabel,
 }: TransaccionModalProps): JSX.Element | null {
   if (!isOpen) return null
 
@@ -41,6 +45,8 @@ export function TransaccionModal({
           onSubmit={onSubmit}
           onCancel={onClose}
           isLoading={isLoading}
+          defaultValues={defaultValues}
+          submitLabel={submitLabel}
         />
       </div>
     </div>

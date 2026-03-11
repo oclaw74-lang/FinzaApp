@@ -5,7 +5,7 @@ const en = {
     reportes: 'Reports', configuracion: 'Settings', categorias: 'Categories',
   },
   common: {
-    save: 'Save', cancel: 'Cancel', create: 'Create', edit: 'Edit',
+    save: 'Save', saveChanges: 'Save changes', cancel: 'Cancel', create: 'Create', edit: 'Edit',
     delete: 'Delete', loading: 'Loading...', error: 'Error',
     success: 'Success', confirm: 'Confirm', close: 'Close',
     search: 'Search', filter: 'Filter', noData: 'No data',
@@ -52,14 +52,14 @@ const en = {
     noTransactions: 'No transactions this month',
   },
   ingresos: {
-    title: 'Income', newIngreso: 'New income',
+    title: 'Income', newIngreso: 'New income', editIngreso: 'Edit income',
     totalMonth: 'Month total', count: 'Transactions',
     noIngresos: 'No income recorded this month',
     noIngresosDesc: 'Record your first income to get started',
     created: 'Income recorded', updated: 'Income updated', deleted: 'Income deleted',
   },
   egresos: {
-    title: 'Expenses', newEgreso: 'New expense',
+    title: 'Expenses', newEgreso: 'New expense', editEgreso: 'Edit expense',
     totalMonth: 'Month total', count: 'Transactions',
     noEgresos: 'No expenses recorded this month',
     noEgresosDesc: 'Record your first expense to get started',

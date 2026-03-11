@@ -5,7 +5,7 @@ const es = {
     reportes: 'Reportes', configuracion: 'Configuracion', categorias: 'Categorias',
   },
   common: {
-    save: 'Guardar', cancel: 'Cancelar', create: 'Crear', edit: 'Editar',
+    save: 'Guardar', saveChanges: 'Guardar cambios', cancel: 'Cancelar', create: 'Crear', edit: 'Editar',
     delete: 'Eliminar', loading: 'Cargando...', error: 'Error',
     success: 'Exito', confirm: 'Confirmar', close: 'Cerrar',
     search: 'Buscar', filter: 'Filtrar', noData: 'Sin datos',
@@ -53,14 +53,14 @@ const es = {
     noTransactions: 'Sin transacciones este mes',
   },
   ingresos: {
-    title: 'Ingresos', newIngreso: 'Nuevo ingreso',
+    title: 'Ingresos', newIngreso: 'Nuevo ingreso', editIngreso: 'Editar ingreso',
     totalMonth: 'Total del mes', count: 'Transacciones',
     noIngresos: 'No hay ingresos registrados este mes',
     noIngresosDesc: 'Registra tu primer ingreso para comenzar',
     created: 'Ingreso registrado', updated: 'Ingreso actualizado', deleted: 'Ingreso eliminado',
   },
   egresos: {
-    title: 'Egresos', newEgreso: 'Nuevo egreso',
+    title: 'Egresos', newEgreso: 'Nuevo egreso', editEgreso: 'Editar egreso',
     totalMonth: 'Total del mes', count: 'Transacciones',
     noEgresos: 'No hay egresos registrados este mes',
     noEgresosDesc: 'Registra tu primer gasto para comenzar',
