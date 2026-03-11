@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TransaccionModal } from '@/components/transacciones/TransaccionModal'
-import { useIngresos, useCreateIngreso, useDeleteIngreso } from '@/hooks/useIngresos'
+import { useIngresos, useCreateIngreso, useUpdateIngreso, useDeleteIngreso } from '@/hooks/useIngresos'
+import { getApiErrorMessage } from '@/lib/apiError'
 import { useCategorias } from '@/hooks/useCategorias'
 import { formatCurrency, formatDate, MESES, cn } from '@/lib/utils'
 import type { IngresoFormData, EgresoFormData } from '@/components/transacciones/TransaccionForm'
@@ -27,6 +28,8 @@ export function IngresosPage(): JSX.Element {
   const currentYear = defaults.year
 
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [ingresoEditando, setIngresoEditando] = useState<IngresoResponse | null>(null)
   const [mes, setMes] = useState<number>(0)
   const [year, setYear] = useState<number>(defaults.year)
   const [search, setSearch] = useState('')
@@ -34,6 +37,7 @@ export function IngresosPage(): JSX.Element {
   const { data, isLoading } = useIngresos({ page: 1, page_size: 200 })
   const { data: categorias = [] } = useCategorias('ingreso')
   const createIngreso = useCreateIngreso()
+  const updateIngreso = useUpdateIngreso()
   const deleteIngreso = useDeleteIngreso()
 
   const yearOptions = buildYearOptions(currentYear)
@@ -66,8 +70,25 @@ export function IngresosPage(): JSX.Element {
       await createIngreso.mutateAsync(formData)
       setIsModalOpen(false)
       toast.success(t('ingresos.created'))
-    } catch {
-      toast.error(t('common.error'))
+    } catch (error) {
+      toast.error(getApiErrorMessage(error))
+    }
+  }
+
+  const handleEdit = (ingreso: IngresoResponse): void => {
+    setIngresoEditando(ingreso)
+    setIsEditModalOpen(true)
+  }
+
+  const handleUpdate = async (formData: IngresoFormData | EgresoFormData): Promise<void> => {
+    if (!ingresoEditando) return
+    try {
+      await updateIngreso.mutateAsync({ id: ingresoEditando.id, ...formData })
+      setIsEditModalOpen(false)
+      setIngresoEditando(null)
+      toast.success(t('ingresos.updated'))
+    } catch (error) {
+      toast.error(getApiErrorMessage(error))
     }
   }
 
@@ -76,14 +97,10 @@ export function IngresosPage(): JSX.Element {
       try {
         await deleteIngreso.mutateAsync(id)
         toast.success(t('ingresos.deleted'))
-      } catch {
-        toast.error(t('common.error'))
+      } catch (error) {
+        toast.error(getApiErrorMessage(error))
       }
     }
-  }
-
-  const handleEdit = (_t: IngresoResponse): void => {
-    // Edit will be implemented in a future iteration
   }
 
   return (
@@ -324,6 +341,25 @@ export function IngresosPage(): JSX.Element {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreate}
         isLoading={createIngreso.isPending}
+      />
+
+      <TransaccionModal
+        tipo="ingreso"
+        isOpen={isEditModalOpen}
+        onClose={() => { setIsEditModalOpen(false); setIngresoEditando(null) }}
+        onSubmit={handleUpdate}
+        isLoading={updateIngreso.isPending}
+        title={t('ingresos.editIngreso')}
+        submitLabel={t('common.save')}
+        defaultValues={ingresoEditando ? {
+          categoria_id: ingresoEditando.categoria_id,
+          monto: parseFloat(ingresoEditando.monto),
+          moneda: ingresoEditando.moneda as 'DOP' | 'USD',
+          descripcion: ingresoEditando.descripcion ?? undefined,
+          fuente: ingresoEditando.fuente ?? undefined,
+          fecha: ingresoEditando.fecha,
+          notas: ingresoEditando.notas ?? undefined,
+        } : undefined}
       />
     </div>
   )

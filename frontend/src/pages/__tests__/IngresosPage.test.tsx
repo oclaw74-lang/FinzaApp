@@ -7,6 +7,7 @@ import type { CategoriaResponse } from '@/types/transacciones'
 vi.mock('@/hooks/useIngresos', () => ({
   useIngresos: vi.fn(),
   useCreateIngreso: vi.fn(),
+  useUpdateIngreso: vi.fn(),
   useDeleteIngreso: vi.fn(),
 }))
 
@@ -21,7 +22,7 @@ vi.mock('sonner', () => ({
   },
 }))
 
-import { useIngresos, useCreateIngreso, useDeleteIngreso } from '@/hooks/useIngresos'
+import { useIngresos, useCreateIngreso, useUpdateIngreso, useDeleteIngreso } from '@/hooks/useIngresos'
 import { useCategorias } from '@/hooks/useCategorias'
 import { toast } from 'sonner'
 
@@ -100,6 +101,11 @@ function setupMocks({
     mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,
   } as unknown as ReturnType<typeof useCreateIngreso>)
+
+  vi.mocked(useUpdateIngreso).mockReturnValue({
+    mutateAsync: vi.fn().mockResolvedValue({}),
+    isPending: false,
+  } as unknown as ReturnType<typeof useUpdateIngreso>)
 
   vi.mocked(useDeleteIngreso).mockReturnValue({
     mutateAsync: vi.fn().mockResolvedValue(undefined),

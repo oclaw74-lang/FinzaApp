@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, Pencil, Trash2, Tag } from 'lucide-react'
+import { getCategoriaIcon } from '@/lib/iconMap'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -248,23 +249,26 @@ export function CategoriasPage(): JSX.Element {
                 <SkeletonRow />
               </>
             )}
-            {!isLoading && categoriasSistema.map((cat) => (
-              <div
-                key={cat.id}
-                className="flex items-center justify-between px-4 py-3 border-b border-border last:border-0"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-surface-raised flex items-center justify-center text-sm">
-                    {cat.icono ? cat.icono : <Tag size={14} className="text-[var(--text-muted)]" />}
+            {!isLoading && categoriasSistema.map((cat) => {
+              const CatIcon = getCategoriaIcon(cat.icono)
+              return (
+                <div
+                  key={cat.id}
+                  className="flex items-center justify-between px-4 py-3 border-b border-border last:border-0"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-full bg-surface-raised flex items-center justify-center text-sm">
+                      <CatIcon size={14} className="text-[var(--text-muted)]" />
+                    </div>
+                    <span className="text-sm text-[var(--text-primary)]">{cat.nombre}</span>
                   </div>
-                  <span className="text-sm text-[var(--text-primary)]">{cat.nombre}</span>
+                  <div className="flex items-center gap-2">
+                    <TipoBadge tipo={cat.tipo} />
+                    <Badge variant="neutral">{t('categorias.sistema')}</Badge>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <TipoBadge tipo={cat.tipo} />
-                  <Badge variant="neutral">{t('categorias.sistema')}</Badge>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </section>
       )}
@@ -297,38 +301,41 @@ export function CategoriasPage(): JSX.Element {
                 </Button>
               </div>
             )}
-            {!isLoading && categoriasPersonalizadas.map((cat) => (
-              <div
-                key={cat.id}
-                className="flex items-center justify-between px-4 py-3 border-b border-border last:border-0"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-surface-raised flex items-center justify-center text-sm">
-                    {cat.icono ? cat.icono : <Tag size={14} className="text-[var(--text-muted)]" />}
+            {!isLoading && categoriasPersonalizadas.map((cat) => {
+              const CatIcon = getCategoriaIcon(cat.icono)
+              return (
+                <div
+                  key={cat.id}
+                  className="flex items-center justify-between px-4 py-3 border-b border-border last:border-0"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-full bg-surface-raised flex items-center justify-center text-sm">
+                      <CatIcon size={14} className="text-[var(--text-muted)]" />
+                    </div>
+                    <span className="text-sm text-[var(--text-primary)]">{cat.nombre}</span>
                   </div>
-                  <span className="text-sm text-[var(--text-primary)]">{cat.nombre}</span>
+                  <div className="flex items-center gap-2">
+                    <TipoBadge tipo={cat.tipo} />
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(cat)}
+                      aria-label={`Editar ${cat.nombre}`}
+                      className="p-1.5 rounded text-[var(--text-muted)] hover:text-finza-blue hover:bg-blue-50 transition-colors"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(cat)}
+                      aria-label={`Eliminar ${cat.nombre}`}
+                      className="p-1.5 rounded text-[var(--text-muted)] hover:text-alert-red hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <TipoBadge tipo={cat.tipo} />
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEdit(cat)}
-                    aria-label={`Editar ${cat.nombre}`}
-                    className="p-1.5 rounded text-[var(--text-muted)] hover:text-finza-blue hover:bg-blue-50 transition-colors"
-                  >
-                    <Pencil size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(cat)}
-                    aria-label={`Eliminar ${cat.nombre}`}
-                    className="p-1.5 rounded text-[var(--text-muted)] hover:text-alert-red hover:bg-red-50 transition-colors"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </section>
       )}

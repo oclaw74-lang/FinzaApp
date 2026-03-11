@@ -40,6 +40,7 @@ interface TransaccionFormProps {
   onSubmit: (data: IngresoFormData | EgresoFormData) => Promise<void>
   onCancel: () => void
   isLoading?: boolean
+  submitLabel?: string
 }
 
 const METODOS_PAGO = [
@@ -55,6 +56,7 @@ export function TransaccionForm({
   onSubmit,
   onCancel,
   isLoading,
+  submitLabel,
 }: TransaccionFormProps): JSX.Element {
   const schema = tipo === 'ingreso' ? ingresoSchema : egresoSchema
   const { data: categorias = [], isLoading: loadingCategorias } = useCategorias(tipo)
@@ -198,7 +200,7 @@ export function TransaccionForm({
           variant={tipo === 'ingreso' ? 'success' : 'default'}
           isLoading={isLoading}
         >
-          {tipo === 'ingreso' ? 'Registrar ingreso' : 'Registrar egreso'}
+          {submitLabel ?? (tipo === 'ingreso' ? 'Registrar ingreso' : 'Registrar egreso')}
         </Button>
       </div>
     </form>
