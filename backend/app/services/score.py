@@ -1,6 +1,6 @@
 from datetime import date
 from postgrest import APIError
-from app.core.supabase import get_user_client
+from app.core.supabase_client import get_user_client
 from app.services.base import _handle_api_error
 
 
