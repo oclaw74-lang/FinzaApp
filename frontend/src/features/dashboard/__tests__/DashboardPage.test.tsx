@@ -7,6 +7,10 @@ vi.mock('@/hooks/useDashboardV2', () => ({
   useDashboardV2: vi.fn(),
 }))
 
+vi.mock('@/hooks/usePrediccionMes', () => ({
+  usePrediccionMes: vi.fn(() => ({ data: undefined, isLoading: false })),
+}))
+
 // Mock recharts-based chart components — ResponsiveContainer has 0 dimensions in jsdom
 vi.mock('@/features/dashboard/components/ChartGastosPorCategoria', () => ({
   ChartGastosPorCategoria: ({ data }: { data: Array<{ categoria: string; total: number }> }) => (

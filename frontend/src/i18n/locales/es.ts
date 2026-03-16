@@ -111,6 +111,34 @@ const es = {
     egreso: 'Egreso',
     ambos: 'Ambos',
   },
+  notificaciones: {
+    title: 'Notificaciones',
+    markAllRead: 'Marcar todas como leidas',
+    noNotificaciones: 'Sin notificaciones',
+    noNotificacionesDesc: 'Aqui apareceran tus alertas financieras',
+    verTodas: 'Ver todas',
+    urgente: 'Urgente',
+    informativa: 'Informativa',
+    logro: 'Logro',
+    sinLeer: 'sin leer',
+    markRead: 'Marcar como leida',
+    deleted: 'Notificacion eliminada',
+    allRead: 'Todas las notificaciones marcadas como leidas',
+  },
+  score: {
+    title: 'Score financiero',
+    critico: 'Critico',
+    en_riesgo: 'En riesgo',
+    bueno: 'Bueno',
+    excelente: 'Excelente',
+  },
+  prediccion: {
+    title: 'Prediccion fin de mes',
+    saldoProyectado: 'Saldo proyectado',
+    gastoDiario: 'Gasto diario',
+    siPresupuesto: 'Si respeta presupuesto',
+    mayorImpacto: 'Mayor impacto',
+  },
 }
 
 export default es

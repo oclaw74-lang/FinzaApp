@@ -19,6 +19,7 @@ import { useUiStore } from '@/store/uiStore'
 import { useAuthStore } from '@/store/authStore'
 import { useTranslation } from 'react-i18next'
 import { Avatar } from '@/components/ui/avatar'
+import { ScoreWidget } from '@/components/shared/ScoreWidget'
 
 const navItems = [
   { to: '/', icon: BarChart3, labelKey: 'nav.dashboard' },
@@ -142,6 +143,9 @@ export function Sidebar(): JSX.Element {
             </NavLink>
           ))}
         </nav>
+
+        {/* Score widget */}
+        <ScoreWidget collapsed={sidebarCollapsed} />
 
         {/* User section */}
         <div

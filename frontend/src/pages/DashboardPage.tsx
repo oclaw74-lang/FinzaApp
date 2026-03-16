@@ -16,6 +16,7 @@ import { MetaProgressItem } from '@/features/dashboard/components/v2/MetaProgres
 import { BudgetProgressBar } from '@/features/presupuestos/components/BudgetProgressBar'
 import { ChartGastosPorCategoria } from '@/features/dashboard/components/ChartGastosPorCategoria'
 import { ChartBalanceTendencia } from '@/features/dashboard/components/ChartBalanceTendencia'
+import { PrediccionMesCard } from '@/components/dashboard/PrediccionMesCard'
 import { formatDate, formatMoney, MESES, cn } from '@/lib/utils'
 
 function getInitialPeriod(): { mes: number; year: number } {
@@ -179,8 +180,12 @@ export function DashboardPage(): JSX.Element {
         )}
       </div>
 
-      {/* Charts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+      {/* Prediccion + Charts row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        <PrediccionMesCard />
+        <div className="lg:col-span-2">
+          {/* Charts row */}
+          <div className="grid grid-cols-1 gap-4">
         {isLoading ? (
           <>
             <Skeleton className="h-72 rounded-xl" />
@@ -201,6 +206,8 @@ export function DashboardPage(): JSX.Element {
             />
           </>
         )}
+          </div>
+        </div>
       </div>
 
       {/* Bottom section: recent transactions + loans + goals */}
