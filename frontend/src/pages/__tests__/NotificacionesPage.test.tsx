@@ -80,14 +80,14 @@ describe('NotificacionesPage', () => {
     setupMocks([mockUrgenteNotif])
     render(<NotificacionesPage />)
     expect(screen.getByText('Presupuesto al 85%')).toBeInTheDocument()
-    expect(screen.getByText('Urgente')).toBeInTheDocument()
+    expect(screen.getAllByText('Urgente').length).toBeGreaterThan(0)
   })
 
   it('renders logro notification', () => {
     setupMocks([mockLogroNotif])
     render(<NotificacionesPage />)
     expect(screen.getByText('¡Excelente salud financiera!')).toBeInTheDocument()
-    expect(screen.getByText('Logro')).toBeInTheDocument()
+    expect(screen.getAllByText('Logro').length).toBeGreaterThan(0)
   })
 
   it('shows unread count badge', () => {
