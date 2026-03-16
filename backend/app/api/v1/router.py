@@ -1,6 +1,10 @@
 from fastapi import APIRouter
 
 from app.api.v1.routes.categorias import router as categorias_router
+from app.api.v1.routes.fondo_emergencia import router as fondo_emergencia_router
+from app.api.v1.routes.impulso import router as impulso_router
+from app.api.v1.routes.profiles import router as profiles_router
+from app.api.v1.routes.suscripciones import router as suscripciones_router
 from app.api.v1.routes.dashboard import router as dashboard_router
 from app.api.v1.routes.egresos import router as egresos_router
 from app.api.v1.routes.health import router as health_router
@@ -24,3 +28,7 @@ api_router.include_router(presupuestos_router)
 api_router.include_router(score_router)
 api_router.include_router(prediccion_router)
 api_router.include_router(notificaciones_router)
+api_router.include_router(fondo_emergencia_router)
+api_router.include_router(impulso_router)
+api_router.include_router(suscripciones_router)
+api_router.include_router(profiles_router)
