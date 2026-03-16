@@ -1,26 +1,34 @@
-from datetime import date
+from calendar import monthrange
+from datetime import date, datetime
 from postgrest import APIError
 from app.core.supabase_client import get_user_client
 from app.services.base import _handle_api_error
 
 
+def _fecha_rango(year: int, mes: int) -> tuple[str, str]:
+    """Return (fecha_inicio, fecha_fin) strings for the given year/month."""
+    dias_en_mes = monthrange(year, mes)[1]
+    return f"{year}-{mes:02d}-01", f"{year}-{mes:02d}-{dias_en_mes:02d}"
+
+
 def _calc_ahorro(client, user_id: str, mes: int, year: int) -> int:
     """Savings rate: (income - expenses) / income. >=20% = 25pts, linear scale."""
+    fecha_inicio, fecha_fin = _fecha_rango(year, mes)
     try:
         ingresos_r = (
             client.table("ingresos")
             .select("monto")
             .eq("user_id", user_id)
-            .eq("mes", mes)
-            .eq("year", year)
+            .gte("fecha", fecha_inicio)
+            .lte("fecha", fecha_fin)
             .execute()
         )
         egresos_r = (
             client.table("egresos")
             .select("monto")
             .eq("user_id", user_id)
-            .eq("mes", mes)
-            .eq("year", year)
+            .gte("fecha", fecha_inicio)
+            .lte("fecha", fecha_fin)
             .execute()
         )
     except APIError as e:
@@ -42,6 +50,7 @@ def _calc_ahorro(client, user_id: str, mes: int, year: int) -> int:
 
 def _calc_presupuesto(client, user_id: str, mes: int, year: int) -> int:
     """Budget compliance: avg of min(spent,limit)/limit per category. 100% = 25pts."""
+    fecha_inicio, fecha_fin = _fecha_rango(year, mes)
     try:
         presupuestos_r = (
             client.table("presupuestos")
@@ -55,8 +64,8 @@ def _calc_presupuesto(client, user_id: str, mes: int, year: int) -> int:
             client.table("egresos")
             .select("monto,categoria_id")
             .eq("user_id", user_id)
-            .eq("mes", mes)
-            .eq("year", year)
+            .gte("fecha", fecha_inicio)
+            .lte("fecha", fecha_fin)
             .execute()
         )
     except APIError as e:
@@ -99,12 +108,13 @@ def _calc_deuda(client, user_id: str) -> int:
             .eq("estado", "activo")
             .execute()
         )
+        fecha_inicio_hoy, fecha_fin_hoy = _fecha_rango(today.year, today.month)
         ingresos_r = (
             client.table("ingresos")
             .select("monto")
             .eq("user_id", user_id)
-            .eq("mes", today.month)
-            .eq("year", today.year)
+            .gte("fecha", fecha_inicio_hoy)
+            .lte("fecha", fecha_fin_hoy)
             .execute()
         )
     except APIError as e:
@@ -138,7 +148,7 @@ def _calc_emergencia(client, user_id: str) -> int:
         )
         egresos_r = (
             client.table("egresos")
-            .select("monto,year,mes")
+            .select("monto,fecha")
             .eq("user_id", user_id)
             .execute()
         )
@@ -155,11 +165,13 @@ def _calc_emergencia(client, user_id: str) -> int:
             y -= 1
         meses_recientes.add((y, m))
 
-    egresos_recientes = [
-        float(e["monto"])
-        for e in (egresos_r.data or [])
-        if (int(e.get("year", 0)), int(e.get("mes", 0))) in meses_recientes
-    ]
+    egresos_recientes = []
+    for e in (egresos_r.data or []):
+        fecha_str = e.get("fecha", "")
+        if fecha_str:
+            d = datetime.strptime(fecha_str[:10], "%Y-%m-%d")
+            if (d.year, d.month) in meses_recientes:
+                egresos_recientes.append(float(e["monto"]))
 
     total_egresos_3m = sum(egresos_recientes)
     objetivo_emergencia = total_egresos_3m  # 3 months of expenses

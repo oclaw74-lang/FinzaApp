@@ -28,7 +28,8 @@ def get_or_create_profile(user_jwt: str, user_id: str) -> dict:
     except APIError as e:
         _handle_api_error(e)
 
-    if r.data:
+    # maybe_single() returns None directly when no row found
+    if r is not None and r.data:
         return _enrich(r.data)
 
     # Create default profile

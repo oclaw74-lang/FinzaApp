@@ -16,21 +16,24 @@ def get_prediccion_mes(user_jwt: str, user_id: str) -> dict:
     dias_transcurridos = today.day
     dias_restantes = dias_mes - dias_transcurridos
 
+    fecha_inicio = f"{year}-{mes:02d}-01"
+    fecha_fin = f"{year}-{mes:02d}-{dias_mes:02d}"
+
     try:
         ingresos_r = (
             client.table("ingresos")
             .select("monto")
             .eq("user_id", user_id)
-            .eq("mes", mes)
-            .eq("year", year)
+            .gte("fecha", fecha_inicio)
+            .lte("fecha", fecha_fin)
             .execute()
         )
         egresos_r = (
             client.table("egresos")
             .select("monto,categoria_id")
             .eq("user_id", user_id)
-            .eq("mes", mes)
-            .eq("year", year)
+            .gte("fecha", fecha_inicio)
+            .lte("fecha", fecha_fin)
             .execute()
         )
         presupuestos_r = (

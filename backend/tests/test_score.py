@@ -14,6 +14,8 @@ def make_client(data_map: dict) -> MagicMock:
         mock_query = MagicMock()
         mock_query.execute.return_value = MagicMock(data=data_map.get(table_name, []))
         mock_query.eq.return_value = mock_query
+        mock_query.gte.return_value = mock_query
+        mock_query.lte.return_value = mock_query
         mock_query.select.return_value = mock_query
         mock_table.select.return_value = mock_query
         return mock_table

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 from fastapi import HTTPException
 from postgrest import APIError
@@ -23,7 +23,7 @@ def _calc_meta(client, user_id: str, meta_meses: int) -> float:
     try:
         r = (
             client.table("egresos")
-            .select("monto,mes,year")
+            .select("monto,fecha")
             .eq("user_id", user_id)
             .execute()
         )
@@ -31,12 +31,16 @@ def _calc_meta(client, user_id: str, meta_meses: int) -> float:
         _handle_api_error(e)
         return 0.0
 
+    meses_set = set(meses)
     egresos = r.data or []
     totales: dict[tuple[int, int], float] = {}
     for e in egresos:
-        key = (int(e.get("year", 0)), int(e.get("mes", 0)))
-        if key in dict.fromkeys(meses):
-            totales[key] = totales.get(key, 0.0) + float(e["monto"])
+        fecha_str = e.get("fecha", "")
+        if fecha_str:
+            d = datetime.strptime(fecha_str[:10], "%Y-%m-%d")
+            key = (d.year, d.month)
+            if key in meses_set:
+                totales[key] = totales.get(key, 0.0) + float(e["monto"])
 
     if not totales:
         return 0.0
@@ -69,7 +73,8 @@ def get_or_none(user_jwt: str, user_id: str) -> dict | None:
         )
     except APIError as e:
         _handle_api_error(e)
-    if not r.data:
+    # maybe_single() returns None directly when no row found
+    if r is None or not r.data:
         return None
     return _enrich(r.data, client, user_id)
 
