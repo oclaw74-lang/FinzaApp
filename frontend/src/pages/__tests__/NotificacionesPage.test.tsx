@@ -67,40 +67,40 @@ describe('NotificacionesPage', () => {
   it('renders page title', () => {
     setupMocks()
     render(<NotificacionesPage />)
-    expect(screen.getByText('notificaciones.title')).toBeInTheDocument()
+    expect(screen.getByText('Notificaciones')).toBeInTheDocument()
   })
 
   it('shows empty state when no notifications', () => {
     setupMocks([])
     render(<NotificacionesPage />)
-    expect(screen.getByText('notificaciones.noNotificaciones')).toBeInTheDocument()
+    expect(screen.getByText('Sin notificaciones')).toBeInTheDocument()
   })
 
   it('renders urgente notification with title', () => {
     setupMocks([mockUrgenteNotif])
     render(<NotificacionesPage />)
     expect(screen.getByText('Presupuesto al 85%')).toBeInTheDocument()
-    expect(screen.getByText('notificaciones.urgente')).toBeInTheDocument()
+    expect(screen.getByText('Urgente')).toBeInTheDocument()
   })
 
   it('renders logro notification', () => {
     setupMocks([mockLogroNotif])
     render(<NotificacionesPage />)
     expect(screen.getByText('¡Excelente salud financiera!')).toBeInTheDocument()
-    expect(screen.getByText('notificaciones.logro')).toBeInTheDocument()
+    expect(screen.getByText('Logro')).toBeInTheDocument()
   })
 
   it('shows unread count badge', () => {
     setupMocks([mockUrgenteNotif, mockLogroNotif])
     render(<NotificacionesPage />)
     // 1 unread (urgente is not leida, logro is leida)
-    expect(screen.getByText(/1.*sin leer|1 notificaciones.sinLeer/i)).toBeInTheDocument()
+    expect(screen.getByText(/1.*sin leer/i)).toBeInTheDocument()
   })
 
   it('shows mark all read button when there are unread', () => {
     setupMocks([mockUrgenteNotif])
     render(<NotificacionesPage />)
-    expect(screen.getByText('notificaciones.markAllRead')).toBeInTheDocument()
+    expect(screen.getByText('Marcar todas como leidas')).toBeInTheDocument()
   })
 
   it('shows loading skeletons when isLoading', () => {
@@ -116,7 +116,7 @@ describe('NotificacionesPage', () => {
 
     render(<NotificacionesPage />)
     // Should not show page content while loading
-    expect(screen.queryByText('notificaciones.noNotificaciones')).not.toBeInTheDocument()
+    expect(screen.queryByText('Sin notificaciones')).not.toBeInTheDocument()
   })
 
   it('calls generar on mount', () => {

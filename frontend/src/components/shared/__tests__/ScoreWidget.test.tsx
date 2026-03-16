@@ -28,7 +28,7 @@ describe('ScoreWidget', () => {
   it('renders estado label for bueno', () => {
     vi.mocked(useScore).mockReturnValue({ data: mockScoreBueno, isLoading: false } as ReturnType<typeof useScore>)
     render(<ScoreWidget />)
-    expect(screen.getByText('score.bueno')).toBeInTheDocument()
+    expect(screen.getByText('Bueno')).toBeInTheDocument()
   })
 
   it('renders skeleton when loading', () => {
@@ -43,7 +43,7 @@ describe('ScoreWidget', () => {
     vi.mocked(useScore).mockReturnValue({ data: mockScoreCritico, isLoading: false } as ReturnType<typeof useScore>)
     render(<ScoreWidget />)
     expect(screen.getByText(/25/)).toBeInTheDocument()
-    expect(screen.getByText('score.critico')).toBeInTheDocument()
+    expect(screen.getByText('Critico')).toBeInTheDocument()
   })
 
   it('renders collapsed mode with just number', () => {
@@ -51,12 +51,12 @@ describe('ScoreWidget', () => {
     render(<ScoreWidget collapsed={true} />)
     expect(screen.getByText('75')).toBeInTheDocument()
     // In collapsed mode, no label
-    expect(screen.queryByText('score.bueno')).not.toBeInTheDocument()
+    expect(screen.queryByText('Bueno')).not.toBeInTheDocument()
   })
 
   it('renders score title in expanded mode', () => {
     vi.mocked(useScore).mockReturnValue({ data: mockScoreBueno, isLoading: false } as ReturnType<typeof useScore>)
     render(<ScoreWidget />)
-    expect(screen.getByText('score.title')).toBeInTheDocument()
+    expect(screen.getByText('Score financiero')).toBeInTheDocument()
   })
 })
