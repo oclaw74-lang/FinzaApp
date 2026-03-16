@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import apiClient from '@/lib/api'
+import { apiClient } from '@/lib/api'
 import type { ComparativaData } from '@/types/comparativa'
 
 export function useComparativa() {

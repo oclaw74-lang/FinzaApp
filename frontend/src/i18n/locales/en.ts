@@ -4,7 +4,7 @@ const en = {
     prestamos: 'Loans', metas: 'Goals', presupuestos: 'Budgets',
     reportes: 'Reports', configuracion: 'Settings', categorias: 'Categories',
     fondoEmergencia: 'Emergency fund', suscripciones: 'Subscriptions',
-    retos: 'Challenges', educacion: 'Education',
+    retos: 'Challenges', educacion: 'Education', notificaciones: 'Notifications',
   },
   common: {
     save: 'Save', saveChanges: 'Save changes', cancel: 'Cancel', create: 'Create', edit: 'Edit',

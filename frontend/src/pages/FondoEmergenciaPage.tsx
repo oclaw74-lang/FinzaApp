@@ -82,7 +82,7 @@ export function FondoEmergenciaPage(): JSX.Element {
     if (!m || m <= 0) return
     try {
       await depositar.mutateAsync(m)
-      toast.success(t('fondoEmergencia.depositado'))
+      toast.success(t('fondoEmergencia.depositoRegistrado'))
       setModal(null)
       setMonto('')
     } catch (err) {
@@ -95,7 +95,7 @@ export function FondoEmergenciaPage(): JSX.Element {
     if (!m || m <= 0) return
     try {
       await retirar.mutateAsync(m)
-      toast.success(t('fondoEmergencia.retirado'))
+      toast.success(t('fondoEmergencia.retiroRegistrado'))
       setModal(null)
       setMonto('')
     } catch (err) {
@@ -192,7 +192,7 @@ export function FondoEmergenciaPage(): JSX.Element {
                       : 'bg-surface-raised text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                   )}
                 >
-                  {m} {m === 1 ? t('fondoEmergencia.hito1mes') : `meses`}
+                  {m === 1 ? t('fondoEmergencia.meta1mes') : `${m} meses`}
                 </button>
               ))}
             </div>

@@ -19,6 +19,12 @@ const routeTitles: Record<string, string> = {
   '/presupuestos': 'nav.presupuestos',
   '/reportes': 'nav.reportes',
   '/configuracion': 'nav.configuracion',
+  '/categorias': 'nav.categorias',
+  '/suscripciones': 'nav.suscripciones',
+  '/fondo-emergencia': 'nav.fondoEmergencia',
+  '/notificaciones': 'nav.notificaciones',
+  '/retos': 'nav.retos',
+  '/educacion': 'nav.educacion',
 }
 
 export function Header(): JSX.Element {

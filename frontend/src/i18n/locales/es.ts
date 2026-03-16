@@ -4,7 +4,7 @@ const es = {
     prestamos: 'Prestamos', metas: 'Metas', presupuestos: 'Presupuestos',
     reportes: 'Reportes', configuracion: 'Configuracion', categorias: 'Categorias',
     fondoEmergencia: 'Fondo emergencia', suscripciones: 'Suscripciones',
-    retos: 'Retos', educacion: 'Educacion',
+    retos: 'Retos', educacion: 'Educacion', notificaciones: 'Notificaciones',
   },
   common: {
     save: 'Guardar', saveChanges: 'Guardar cambios', cancel: 'Cancelar', create: 'Crear', edit: 'Editar',

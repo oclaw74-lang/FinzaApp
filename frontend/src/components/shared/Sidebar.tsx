@@ -17,6 +17,7 @@ import {
   CreditCard,
   Trophy,
   BookOpen,
+  Bell,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUiStore } from '@/store/uiStore'
@@ -35,6 +36,7 @@ const navItems = [
   { to: '/categorias', icon: Tag, labelKey: 'nav.categorias' },
   { to: '/fondo-emergencia', icon: ShieldCheck, labelKey: 'nav.fondoEmergencia' },
   { to: '/suscripciones', icon: CreditCard, labelKey: 'nav.suscripciones' },
+  { to: '/notificaciones', icon: Bell, labelKey: 'nav.notificaciones' },
   { to: '/retos', icon: Trophy, labelKey: 'nav.retos' },
   { to: '/educacion', icon: BookOpen, labelKey: 'nav.educacion' },
   { to: '/reportes', icon: FileText, labelKey: 'nav.reportes' },
