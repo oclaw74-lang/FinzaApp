@@ -13,6 +13,8 @@ import {
   ChevronRight,
   LogOut,
   Tag,
+  ShieldCheck,
+  CreditCard,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUiStore } from '@/store/uiStore'
@@ -29,6 +31,8 @@ const navItems = [
   { to: '/metas', icon: PiggyBank, labelKey: 'nav.metas' },
   { to: '/presupuestos', icon: Target, labelKey: 'nav.presupuestos' },
   { to: '/categorias', icon: Tag, labelKey: 'nav.categorias' },
+  { to: '/fondo-emergencia', icon: ShieldCheck, labelKey: 'nav.fondoEmergencia' },
+  { to: '/suscripciones', icon: CreditCard, labelKey: 'nav.suscripciones' },
   { to: '/reportes', icon: FileText, labelKey: 'nav.reportes' },
   { to: '/configuracion', icon: Settings, labelKey: 'nav.configuracion' },
 ]

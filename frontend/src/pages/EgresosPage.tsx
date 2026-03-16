@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, TrendingDown, Pencil, Trash2, Hash, BarChart2 } from 'lucide-react'
+import { Plus, TrendingDown, Pencil, Trash2, Hash, BarChart2, Zap } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -285,6 +285,13 @@ export function EgresosPage(): JSX.Element {
                         <span className="text-sm font-medium text-[var(--text-primary)]">
                           {item.descripcion ?? catName ?? '\u2014'}
                         </span>
+                        {(item as EgresoResponse & { is_impulso?: boolean }).is_impulso === true && (
+                          <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                            style={{ color: 'var(--warning)', backgroundColor: 'var(--warning-muted)' }}>
+                            <Zap size={9} />
+                            Impulso
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell">
