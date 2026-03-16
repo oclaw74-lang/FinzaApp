@@ -158,7 +158,7 @@ def _calc_emergencia(client, user_id: str) -> int:
     egresos_recientes = [
         float(e["monto"])
         for e in (egresos_r.data or [])
-        if (int(e["year"]), int(e["mes"])) in meses_recientes
+        if (int(e.get("year", 0)), int(e.get("mes", 0))) in meses_recientes
     ]
 
     total_egresos_3m = sum(egresos_recientes)
