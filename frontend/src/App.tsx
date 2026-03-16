@@ -23,6 +23,8 @@ import { NotificacionesPage } from '@/pages/NotificacionesPage'
 import { FondoEmergenciaPage } from '@/pages/FondoEmergenciaPage'
 import { SuscripcionesPage } from '@/pages/SuscripcionesPage'
 import { ConfiguracionPage } from '@/pages/ConfiguracionPage'
+import { RetosPage } from '@/pages/RetosPage'
+import { EducacionPage } from '@/pages/EducacionPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,6 +79,8 @@ export function App(): JSX.Element {
                 <Route path="/suscripciones" element={<SuscripcionesPage />} />
                 <Route path="/reportes" element={<div className="p-4 text-[var(--text-primary)]">Reportes - Issue futuro</div>} />
                 <Route path="/configuracion" element={<ConfiguracionPage />} />
+                <Route path="/retos" element={<RetosPage />} />
+                <Route path="/educacion" element={<EducacionPage />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFoundPage />} />

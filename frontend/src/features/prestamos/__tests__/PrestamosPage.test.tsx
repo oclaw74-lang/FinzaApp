@@ -15,6 +15,10 @@ vi.mock('@/hooks/usePrestamos', () => ({
   useDeletePago: vi.fn(),
 }))
 
+vi.mock('@/hooks/useComparativa', () => ({
+  useComparativa: vi.fn(() => ({ data: undefined, isLoading: false, isError: false })),
+}))
+
 import {
   usePrestamos,
   usePrestamoResumen,
