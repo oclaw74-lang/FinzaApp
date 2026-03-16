@@ -3,6 +3,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { BrowserRouter } from 'react-router-dom'
 import { ConfiguracionPage } from '../ConfiguracionPage'
 
+// Mock useProfile to prevent QueryClient error
+vi.mock('@/hooks/useProfile', () => ({
+  useProfile: vi.fn(() => ({ data: undefined, isLoading: false })),
+  useUpdateProfile: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+}))
+
 // Mock supabase
 vi.mock('@/lib/supabase', () => ({
   supabase: {

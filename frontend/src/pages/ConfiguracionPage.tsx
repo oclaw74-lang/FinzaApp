@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Sun, Moon, Camera } from 'lucide-react'
+import { Sun, Moon, Camera, DollarSign, Clock } from 'lucide-react'
+import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
 import { useThemeStore } from '@/store/themeStore'
@@ -14,7 +15,7 @@ import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/i18n'
 
-type Tab = 'profile' | 'appearance' | 'language' | 'security'
+type Tab = 'profile' | 'appearance' | 'language' | 'security' | 'finances'
 
 const profileSchema = z.object({
   fullName: z.string().min(2, 'Nombre requerido'),
@@ -41,6 +42,18 @@ export function ConfiguracionPage(): JSX.Element {
   const { user } = useAuthStore()
   const { theme, setTheme, language, setLanguage } = useThemeStore()
   const [activeTab, setActiveTab] = useState<Tab>('profile')
+  const { data: profile } = useProfile()
+  const updateProfile = useUpdateProfile()
+  const [salarioValue, setSalarioValue] = useState('')
+  const [mostrarHoras, setMostrarHoras] = useState(false)
+
+  // Sync profile data when loaded
+  const [profileLoaded, setProfileLoaded] = useState(false)
+  if (profile && !profileLoaded) {
+    setSalarioValue(profile.salario_mensual_neto != null ? String(profile.salario_mensual_neto) : '')
+    setMostrarHoras(profile.mostrar_horas_trabajo ?? false)
+    setProfileLoaded(true)
+  }
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
   const [passwordError, setPasswordError] = useState<string | null>(null)
@@ -102,8 +115,21 @@ export function ConfiguracionPage(): JSX.Element {
     toast.success(t('settings.languageSaved'))
   }
 
+  const handleSaveFinances = async () => {
+    try {
+      await updateProfile.mutateAsync({
+        salario_mensual_neto: salarioValue ? parseFloat(salarioValue) : undefined,
+        mostrar_horas_trabajo: mostrarHoras,
+      })
+      toast.success(t('profile.saved'))
+    } catch {
+      toast.error('Error al guardar perfil financiero')
+    }
+  }
+
   const tabs: { id: Tab; label: string }[] = [
     { id: 'profile', label: t('settings.profile') },
+    { id: 'finances', label: t('profile.title') },
     { id: 'appearance', label: t('settings.appearance') },
     { id: 'language', label: t('settings.language') },
     { id: 'security', label: t('settings.security') },
@@ -305,6 +331,64 @@ export function ConfiguracionPage(): JSX.Element {
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Tab: Finances */}
+      {activeTab === 'finances' && (
+        <div className="finza-card space-y-5">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
+              <DollarSign size={15} className="text-[var(--accent)]" />
+              {t('profile.salario')}
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              value={salarioValue}
+              onChange={(e) => setSalarioValue(e.target.value)}
+              className="finza-input w-full"
+            />
+            <p className="text-xs text-[var(--text-muted)]">{t('profile.salarioHint')}</p>
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-xl border border-[var(--border)]">
+            <div className="flex items-center gap-2">
+              <Clock size={15} className="text-[var(--accent)]" />
+              <div>
+                <p className="text-sm font-medium text-[var(--text-primary)]">{t('profile.mostrarHoras')}</p>
+                {profile?.horas_por_peso != null && (
+                  <p className="text-xs text-[var(--text-muted)]">
+                    {t('profile.horasPorPeso')}: {profile.horas_por_peso.toFixed(4)} h/$
+                  </p>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={() => setMostrarHoras((v) => !v)}
+              className={cn(
+                'w-11 h-6 rounded-full transition-colors relative',
+                mostrarHoras ? 'bg-[var(--accent)]' : 'bg-[var(--border)]'
+              )}
+            >
+              <span
+                className={cn(
+                  'absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform',
+                  mostrarHoras ? 'translate-x-6' : 'translate-x-1'
+                )}
+              />
+            </button>
+          </div>
+
+          <Button
+            onClick={handleSaveFinances}
+            isLoading={updateProfile.isPending}
+            className="w-full"
+          >
+            {t('common.save')}
+          </Button>
         </div>
       )}
 
