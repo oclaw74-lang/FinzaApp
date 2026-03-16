@@ -9,6 +9,7 @@ import { PrestamoResumenCards } from '@/features/prestamos/components/PrestamoRe
 import { PrestamoRow } from '@/features/prestamos/components/PrestamoRow'
 import { PrestamoModal } from '@/features/prestamos/components/PrestamoModal'
 import { PrestamoDetail } from '@/features/prestamos/components/PrestamoDetail'
+import { ComparativaCard } from '@/components/dashboard/ComparativaCard'
 import {
   usePrestamos,
   useCreatePrestamo,
@@ -251,6 +252,11 @@ export function PrestamosPage(): JSX.Element {
           onDelete={handleDelete}
         />
       )}
+
+      {/* Comparativa deuda vs ahorro */}
+      <div className="mt-6">
+        <ComparativaCard />
+      </div>
     </div>
   )
 }
