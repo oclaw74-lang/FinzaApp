@@ -33,6 +33,7 @@ const navItems = [
   { to: '/egresos', icon: TrendingDown, labelKey: 'nav.egresos' },
   { to: '/recurrentes', icon: RefreshCw, labelKey: 'nav.recurrentes' },
   { to: '/prestamos', icon: HandCoins, labelKey: 'nav.prestamos' },
+  { to: '/tarjetas', icon: CreditCard, labelKey: 'nav.tarjetas' },
   { to: '/metas', icon: PiggyBank, labelKey: 'nav.metas' },
   { to: '/presupuestos', icon: Target, labelKey: 'nav.presupuestos' },
   { to: '/categorias', icon: Tag, labelKey: 'nav.categorias' },

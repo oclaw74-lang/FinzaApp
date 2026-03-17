@@ -1,0 +1,46 @@
+export type TipoTarjeta = 'credito' | 'debito'
+export type RedTarjeta = 'visa' | 'mastercard' | 'amex' | 'discover' | 'otro'
+
+export interface Tarjeta {
+  id: string
+  user_id: string
+  nombre: string
+  tipo: TipoTarjeta
+  red: RedTarjeta
+  ultimos_digitos: string
+  saldo_actual: number
+  limite_credito: number | null
+  disponible: number | null
+  fecha_corte: number | null
+  fecha_pago: number | null
+  color: string | null
+  activa: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface TarjetaCreate {
+  nombre: string
+  tipo: TipoTarjeta
+  red: RedTarjeta
+  ultimos_digitos: string
+  saldo_actual: number
+  limite_credito?: number | null
+  fecha_corte?: number | null
+  fecha_pago?: number | null
+  color?: string | null
+  activa?: boolean
+}
+
+export interface TarjetaUpdate {
+  nombre?: string
+  tipo?: TipoTarjeta
+  red?: RedTarjeta
+  ultimos_digitos?: string
+  saldo_actual?: number
+  limite_credito?: number | null
+  fecha_corte?: number | null
+  fecha_pago?: number | null
+  color?: string | null
+  activa?: boolean
+}

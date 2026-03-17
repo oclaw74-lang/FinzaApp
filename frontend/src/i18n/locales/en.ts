@@ -5,7 +5,7 @@ const en = {
     reportes: 'Reports', configuracion: 'Settings', categorias: 'Categories',
     fondoEmergencia: 'Emergency fund', suscripciones: 'Subscriptions',
     retos: 'Challenges', educacion: 'Education', notificaciones: 'Notifications',
-    recurrentes: 'Recurring',
+    recurrentes: 'Recurring', tarjetas: 'Cards',
   },
   common: {
     save: 'Save', saveChanges: 'Save changes', cancel: 'Cancel', create: 'Create', edit: 'Edit',
