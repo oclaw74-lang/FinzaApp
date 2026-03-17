@@ -133,16 +133,16 @@ export function RecurrentesPage(): JSX.Element {
   }
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in p-6 md:p-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-[var(--text-primary)]">{t('recurrentes.title')}</h1>
-          <p className="text-sm text-[var(--text-muted)]">{t('recurrentes.subtitle')}</p>
+          <h1 className="page-title-premium dark:text-[#e8f0ff]">{t('recurrentes.title')}</h1>
+          <p className="text-sm dark:text-finza-t2 mt-1">{t('recurrentes.subtitle')}</p>
         </div>
         <button
           onClick={openCrear}
-          className="finza-btn flex items-center gap-1.5 px-3 py-2 text-sm"
+          className="flex items-center gap-2 bg-finza-blue hover:bg-finza-blue/80 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all"
           aria-label={t('recurrentes.nueva')}
         >
           <Plus size={14} />
@@ -161,14 +161,14 @@ export function RecurrentesPage(): JSX.Element {
             {[1, 2, 3].map((i) => <Skeleton key={i} className="h-14 rounded-xl" />)}
           </div>
         ) : !proximos || proximos.length === 0 ? (
-          <div className="finza-card p-8 text-center">
+          <div className="card-glass p-8 text-center">
             <Calendar size={28} className="mx-auto mb-2 text-[var(--text-muted)]" />
             <p className="font-medium text-[var(--text-primary)]">{t('recurrentes.noProximos')}</p>
           </div>
         ) : (
           <div className="space-y-2">
             {proximos.map(({ recurrente, fecha_estimada }) => (
-              <div key={recurrente.id} className="finza-card p-4 flex items-center gap-4">
+              <div key={recurrente.id} className="card-glass p-4 flex items-center gap-4 dark:hover:bg-white/[0.03] transition-colors">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium text-sm text-[var(--text-primary)] truncate">
@@ -188,9 +188,9 @@ export function RecurrentesPage(): JSX.Element {
                       {t(`recurrentes.frecuencia.${recurrente.frecuencia}`)}
                     </Badge>
                   </div>
-                  <p className="text-xs text-[var(--text-muted)] mt-0.5">{fecha_estimada}</p>
+                  <p className="text-xs dark:text-finza-yellow mt-0.5">{fecha_estimada}</p>
                 </div>
-                <p className="font-bold text-sm money text-[var(--text-primary)]">
+                <p className={`font-bold text-sm money ${recurrente.tipo === 'ingreso' ? 'dark:text-finza-green' : 'dark:text-finza-red'} text-[var(--text-primary)]`}>
                   {formatCurrency(recurrente.monto)}
                 </p>
               </div>
@@ -210,14 +210,14 @@ export function RecurrentesPage(): JSX.Element {
             {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-14 rounded-xl" />)}
           </div>
         ) : !recurrentes || recurrentes.length === 0 ? (
-          <div className="finza-card p-12 text-center">
+          <div className="card-glass p-12 text-center">
             <RefreshCw size={32} className="mx-auto mb-2 text-[var(--text-muted)]" />
             <p className="font-medium text-[var(--text-primary)]">{t('recurrentes.noRecurrentes')}</p>
           </div>
         ) : (
           <div className="space-y-2">
             {recurrentes.map((r) => (
-              <div key={r.id} className="finza-card p-4 flex items-center gap-4">
+              <div key={r.id} className="card-glass p-4 flex items-center gap-4 dark:hover:bg-white/[0.03] transition-colors">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium text-sm text-[var(--text-primary)] truncate">{r.descripcion}</p>
@@ -237,14 +237,14 @@ export function RecurrentesPage(): JSX.Element {
                     {r.dia_del_mes ? ` · ${t('recurrentes.form.diaDelMes')} ${r.dia_del_mes}` : ''}
                   </p>
                 </div>
-                <p className="font-bold text-sm money text-[var(--text-primary)]">
+                <p className={`font-bold text-sm money ${r.tipo === 'ingreso' ? 'dark:text-finza-green' : 'dark:text-finza-red'} text-[var(--text-primary)]`}>
                   {formatCurrency(r.monto)}
                 </p>
                 {/* Toggle activo */}
                 <button
                   onClick={() => handleToggleActivo(r)}
                   className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
-                    r.activo ? 'bg-[var(--success)]' : 'bg-[var(--border)]'
+                    r.activo ? 'bg-[var(--success)] dark:bg-finza-blue' : 'bg-[var(--border)]'
                   }`}
                   role="switch"
                   aria-checked={r.activo}

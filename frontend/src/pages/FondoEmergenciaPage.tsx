@@ -123,14 +123,14 @@ export function FondoEmergenciaPage(): JSX.Element {
   }
 
   return (
-    <div className="animate-fade-in max-w-2xl mx-auto">
+    <div className="animate-fade-in max-w-2xl mx-auto p-6 md:p-8 space-y-6">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-[var(--text-primary)]">{t('fondoEmergencia.title')}</h1>
-        <p className="text-sm text-[var(--text-muted)] mt-0.5">{t('fondoEmergencia.subtitle')}</p>
+        <h1 className="page-title-premium dark:text-[#e8f0ff]">{t('fondoEmergencia.title')}</h1>
+        <p className="text-sm dark:text-finza-t2 mt-0.5">{t('fondoEmergencia.subtitle')}</p>
       </div>
 
       {!fondo ? (
-        <div className="finza-card p-12 text-center">
+        <div className="card-glass p-12 text-center dark:border-finza-cyan/20">
           <PiggyBank size={40} className="mx-auto mb-3 text-[var(--text-muted)]" />
           <p className="font-medium text-[var(--text-primary)]">{t('fondoEmergencia.noFondo')}</p>
           <p className="text-sm text-[var(--text-muted)] mt-1 mb-4">{t('fondoEmergencia.noFondoDesc')}</p>
@@ -146,25 +146,25 @@ export function FondoEmergenciaPage(): JSX.Element {
         <>
           {/* KPI Cards */}
           <div className="grid grid-cols-2 gap-3 mb-6">
-            <div className="finza-card p-4">
-              <p className="text-xs text-[var(--text-muted)]">{t('fondoEmergencia.montoActual')}</p>
-              <p className="text-2xl font-bold text-[var(--text-primary)] money">{formatCurrency(fondo.monto_actual)}</p>
+            <div className="card-glass p-5 dark:border-finza-cyan/20">
+              <p className="kpi-label dark:text-finza-t2">{t('fondoEmergencia.montoActual')}</p>
+              <p className="kpi-value dark:text-finza-cyan mt-2 money">{formatCurrency(fondo.monto_actual)}</p>
             </div>
-            <div className="finza-card p-4">
-              <p className="text-xs text-[var(--text-muted)]">{t('fondoEmergencia.metaCalculada')}</p>
-              <p className="text-2xl font-bold text-[var(--text-primary)] money">
+            <div className="card-glass p-5 dark:border-finza-cyan/20">
+              <p className="kpi-label dark:text-finza-t2">{t('fondoEmergencia.metaCalculada')}</p>
+              <p className="kpi-value dark:text-[#e8f0ff] mt-2 money">
                 {fondo.meta_calculada ? formatCurrency(fondo.meta_calculada) : '—'}
               </p>
             </div>
-            <div className="finza-card p-4">
-              <p className="text-xs text-[var(--text-muted)]">{t('fondoEmergencia.porcentaje')}</p>
-              <p className={cn('text-2xl font-bold', fondo.porcentaje >= 100 ? 'text-[var(--success)]' : 'text-[var(--text-primary)]')}>
+            <div className="card-glass p-5">
+              <p className="kpi-label dark:text-finza-t2">{t('fondoEmergencia.porcentaje')}</p>
+              <p className={cn('kpi-value mt-2', fondo.porcentaje >= 100 ? 'text-[var(--success)] dark:text-finza-green' : 'dark:text-finza-cyan')}>
                 {fondo.porcentaje.toFixed(1)}%
               </p>
             </div>
-            <div className="finza-card p-4">
-              <p className="text-xs text-[var(--text-muted)]">{t('fondoEmergencia.sugerenciaMensual')}</p>
-              <p className="text-2xl font-bold text-[var(--text-primary)] money">
+            <div className="card-glass p-5">
+              <p className="kpi-label dark:text-finza-t2">{t('fondoEmergencia.sugerenciaMensual')}</p>
+              <p className="kpi-value dark:text-finza-yellow mt-2 money">
                 {fondo.meta_calculada
                   ? formatCurrency(Math.max(0, (fondo.meta_calculada - fondo.monto_actual) / 12))
                   : '—'}
@@ -173,12 +173,12 @@ export function FondoEmergenciaPage(): JSX.Element {
           </div>
 
           {/* Progress bar */}
-          <div className="finza-card p-5 mb-4">
+          <div className="card-glass p-5 mb-4 dark:border-finza-cyan/20">
             <ProgressBar porcentaje={fondo.porcentaje} />
           </div>
 
           {/* Meta selector */}
-          <div className="finza-card p-4 mb-4">
+          <div className="card-glass p-4 mb-4">
             <p className="text-xs text-[var(--text-muted)] mb-2">{t('fondoEmergencia.metaMeses')}</p>
             <div className="flex gap-2">
               {([1, 3, 6] as const).map((m) => (
@@ -188,7 +188,7 @@ export function FondoEmergenciaPage(): JSX.Element {
                   className={cn(
                     'px-4 py-1.5 rounded-full text-sm font-medium transition-colors',
                     fondo.meta_meses === m
-                      ? 'bg-[var(--accent)] text-white'
+                      ? 'bg-[var(--accent)] dark:bg-finza-cyan text-white dark:text-[#080f1e]'
                       : 'bg-surface-raised text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                   )}
                 >

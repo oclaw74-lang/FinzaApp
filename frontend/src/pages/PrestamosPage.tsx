@@ -151,11 +151,15 @@ export function PrestamosPage(): JSX.Element {
   ]
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in p-6 md:p-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <p className="text-[var(--text-muted)] text-sm">Gestiona tus prestamos y cobros</p>
-        <Button onClick={() => setIsModalOpen(true)} variant="default" size="md">
+        <div>
+          <h1 className="page-title-premium dark:text-[#e8f0ff]">{t('nav.prestamos')}</h1>
+          <p className="text-sm dark:text-finza-t2 mt-1">Gestiona tus prestamos y cobros</p>
+        </div>
+        <Button onClick={() => setIsModalOpen(true)} variant="default" size="md"
+          className="dark:bg-finza-blue dark:hover:bg-finza-blue/80">
           <Plus size={16} />
           {t('common.new')}
         </Button>
@@ -167,7 +171,7 @@ export function PrestamosPage(): JSX.Element {
       </div>
 
       {/* Tabs + lista */}
-      <div className="finza-card p-0 overflow-hidden">
+      <div className="card-glass p-0 overflow-hidden">
         {/* Tabs */}
         <div className="flex gap-1 border-b border-border px-4 pt-4">
           {tabs.map((tab) => (
@@ -258,7 +262,7 @@ export function PrestamosPage(): JSX.Element {
       )}
 
       {/* Comparativa deuda vs ahorro */}
-      <div className="mt-6">
+      <div className="mt-6 dark:bg-[rgba(8,15,30,0.6)] dark:backdrop-blur-xl dark:border-white/[0.06] rounded-2xl">
         <ComparativaCard />
       </div>
     </div>

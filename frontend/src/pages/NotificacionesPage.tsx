@@ -16,29 +16,33 @@ import { getApiErrorMessage } from '@/lib/apiError'
 
 const TIPO_CONFIG: Record<
   string,
-  { color: string; bgColor: string; icon: typeof AlertTriangle; label: string }
+  { color: string; bgColor: string; darkColorClass: string; icon: typeof AlertTriangle; label: string }
 > = {
   urgente: {
     color: 'var(--danger)',
     bgColor: 'var(--danger)',
+    darkColorClass: 'dark:text-finza-red',
     icon: AlertTriangle,
     label: 'notificaciones.urgente',
   },
   informativa: {
     color: 'var(--accent)',
     bgColor: 'var(--accent)',
+    darkColorClass: 'dark:text-finza-blue',
     icon: Info,
     label: 'notificaciones.informativa',
   },
   logro: {
     color: 'var(--success)',
     bgColor: 'var(--success)',
+    darkColorClass: 'dark:text-finza-green',
     icon: Trophy,
     label: 'notificaciones.logro',
   },
   advertencia: {
     color: '#E65100',
     bgColor: '#E65100',
+    darkColorClass: 'dark:text-finza-yellow',
     icon: Bell,
     label: 'notificaciones.advertencia',
   },
@@ -67,7 +71,7 @@ function NotificacionItem({
   return (
     <div
       className={cn(
-        'finza-card p-4 flex items-start gap-3 transition-opacity',
+        'card-glass p-4 flex items-start gap-3 transition-opacity dark:hover:bg-white/[0.03]',
         notificacion.leida && 'opacity-60'
       )}
     >
@@ -178,11 +182,11 @@ export function NotificacionesPage(): JSX.Element {
   const noLeidas = notificaciones.filter((n) => !n.leida).length
 
   return (
-    <div className="animate-fade-in max-w-2xl mx-auto">
+    <div className="animate-fade-in max-w-2xl mx-auto p-6 md:p-8 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-[var(--text-primary)]">
+          <h1 className="page-title-premium dark:text-[#e8f0ff]">
             {t('notificaciones.title')}
           </h1>
           {noLeidas > 0 && (
@@ -214,7 +218,7 @@ export function NotificacionesPage(): JSX.Element {
 
       {/* Empty state */}
       {!isLoading && notificaciones.length === 0 && (
-        <div className="finza-card p-12 text-center">
+        <div className="card-glass p-12 text-center">
           <div className="w-12 h-12 rounded-full bg-surface-raised flex items-center justify-center mx-auto mb-3">
             <CheckCheck size={24} className="text-[var(--text-muted)]" />
           </div>

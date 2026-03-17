@@ -104,25 +104,22 @@ export function EgresosPage(): JSX.Element {
   }
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in p-6 md:p-8 space-y-6">
       {/* Stats chips */}
-      <div className="flex flex-wrap gap-3 mb-5">
-        <div className="finza-card-hover flex items-center gap-3 py-3 px-4 flex-1 min-w-[140px]">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: 'var(--danger-muted)' }}
-          >
-            <TrendingDown className="w-4 h-4" style={{ color: 'var(--danger)' }} />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-5">
+        <div className="card-glass p-5 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 dark:bg-finza-red/10">
+            <TrendingDown className="w-4 h-4 dark:text-finza-red" style={{ color: 'var(--danger)' }} />
           </div>
           <div>
             {isLoading ? (
               <Skeleton className="h-6 w-24" />
             ) : (
               <>
-                <p className="text-lg font-bold text-[var(--text-primary)]">
+                <p className="kpi-value dark:text-finza-red">
                   {formatCurrency(totalMes)}
                 </p>
-                <p className="text-xs text-[var(--text-muted)]">
+                <p className="kpi-label dark:text-finza-t2">
                   {t('egresos.totalMonth')}
                 </p>
               </>
@@ -130,22 +127,19 @@ export function EgresosPage(): JSX.Element {
           </div>
         </div>
 
-        <div className="finza-card-hover flex items-center gap-3 py-3 px-4 flex-1 min-w-[120px]">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: 'var(--accent-muted)' }}
-          >
-            <Hash className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+        <div className="card-glass p-5 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 dark:bg-finza-blue/10">
+            <Hash className="w-4 h-4 dark:text-finza-blue" style={{ color: 'var(--accent)' }} />
           </div>
           <div>
             {isLoading ? (
               <Skeleton className="h-6 w-12" />
             ) : (
               <>
-                <p className="text-lg font-bold text-[var(--text-primary)]">
+                <p className="kpi-value dark:text-[#e8f0ff]">
                   {filteredItems.length}
                 </p>
-                <p className="text-xs text-[var(--text-muted)]">
+                <p className="kpi-label dark:text-finza-t2">
                   {t('egresos.count')}
                 </p>
               </>
@@ -153,22 +147,19 @@ export function EgresosPage(): JSX.Element {
           </div>
         </div>
 
-        <div className="finza-card-hover flex items-center gap-3 py-3 px-4 flex-1 min-w-[140px]">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: 'var(--warning-muted)' }}
-          >
-            <BarChart2 className="w-4 h-4" style={{ color: 'var(--warning)' }} />
+        <div className="card-glass p-5 flex items-center gap-3 col-span-2 md:col-span-1">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 dark:bg-finza-yellow/10">
+            <BarChart2 className="w-4 h-4 dark:text-finza-yellow" style={{ color: 'var(--warning)' }} />
           </div>
           <div>
             {isLoading ? (
               <Skeleton className="h-6 w-24" />
             ) : (
               <>
-                <p className="text-lg font-bold text-[var(--text-primary)]">
+                <p className="kpi-value dark:text-finza-t2">
                   {formatCurrency(filteredItems.length ? totalMes / filteredItems.length : 0)}
                 </p>
-                <p className="text-xs text-[var(--text-muted)]">Promedio</p>
+                <p className="kpi-label dark:text-finza-t2">Promedio</p>
               </>
             )}
           </div>
@@ -176,7 +167,7 @@ export function EgresosPage(): JSX.Element {
       </div>
 
       {/* Table card */}
-      <div className="finza-card p-0 overflow-hidden">
+      <div className="finza-card dark:bg-[rgba(8,15,30,0.6)] dark:backdrop-blur-xl dark:border-white/[0.06] p-0 overflow-hidden">
         {/* Filters bar */}
         <div className="flex flex-wrap items-center gap-3 p-4 border-b border-[var(--border)]">
           <div>
@@ -266,7 +257,7 @@ export function EgresosPage(): JSX.Element {
                   <tr
                     key={item.id}
                     className={cn(
-                      'border-b border-[var(--border)] last:border-0 hover:bg-[var(--surface-raised)] transition-colors group border-l-2 border-l-[#FF0000]',
+                      'border-b border-[var(--border)] last:border-0 hover:bg-[var(--surface-raised)] dark:hover:bg-white/[0.03] transition-colors group border-l-2 border-l-[#FF0000]',
                       i % 2 !== 0 ? 'bg-[var(--surface-raised)]/40' : ''
                     )}
                   >
@@ -300,7 +291,7 @@ export function EgresosPage(): JSX.Element {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <span className="text-sm font-bold" style={{ color: 'var(--danger)' }}>
+                      <span className="text-sm font-bold dark:text-finza-red" style={{ color: 'var(--danger)' }}>
                         -{formatCurrency(parseFloat(item.monto), item.moneda)}
                       </span>
                     </td>

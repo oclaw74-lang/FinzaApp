@@ -138,8 +138,8 @@ export function ConfiguracionPage(): JSX.Element {
   const userName = metadata.full_name ?? user?.email?.split('@')[0] ?? 'Usuario'
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t('settings.title')}</h1>
+    <div className="max-w-2xl mx-auto space-y-6 p-6 md:p-8">
+      <h1 className="page-title-premium dark:text-[#e8f0ff]">{t('settings.title')}</h1>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-surface border border-border rounded-xl p-1">
@@ -161,7 +161,7 @@ export function ConfiguracionPage(): JSX.Element {
 
       {/* Tab: Profile */}
       {activeTab === 'profile' && (
-        <div className="finza-card space-y-6">
+        <div className="card-glass p-6 space-y-6">
           {/* Avatar */}
           <div className="flex items-center gap-4">
             <div className="relative">
@@ -250,7 +250,7 @@ export function ConfiguracionPage(): JSX.Element {
 
       {/* Tab: Appearance */}
       {activeTab === 'appearance' && (
-        <div className="finza-card space-y-4">
+        <div className="card-glass p-6 space-y-4">
           <p className="text-sm text-[var(--text-muted)]">{t('settings.currentTheme')}</p>
           <div className="grid grid-cols-2 gap-4">
             {/* Light mode card */}
@@ -306,7 +306,7 @@ export function ConfiguracionPage(): JSX.Element {
 
       {/* Tab: Language */}
       {activeTab === 'language' && (
-        <div className="finza-card space-y-4">
+        <div className="card-glass p-6 space-y-4">
           <p className="text-sm text-[var(--text-muted)]">{t('settings.changeLanguage')}</p>
           <div className="space-y-3">
             {[
@@ -336,7 +336,7 @@ export function ConfiguracionPage(): JSX.Element {
 
       {/* Tab: Finances */}
       {activeTab === 'finances' && (
-        <div className="finza-card space-y-5">
+        <div className="card-glass p-6 space-y-5">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
               <DollarSign size={15} className="text-[var(--accent)]" />
@@ -354,7 +354,7 @@ export function ConfiguracionPage(): JSX.Element {
             <p className="text-xs text-[var(--text-muted)]">{t('profile.salarioHint')}</p>
           </div>
 
-          <div className="flex items-center justify-between p-3 rounded-xl border border-[var(--border)]">
+          <div className="flex items-center justify-between p-3 rounded-xl border border-[var(--border)] dark:border-white/[0.08] dark:bg-white/[0.05]">
             <div className="flex items-center gap-2">
               <Clock size={15} className="text-[var(--accent)]" />
               <div>
@@ -370,7 +370,7 @@ export function ConfiguracionPage(): JSX.Element {
               onClick={() => setMostrarHoras((v) => !v)}
               className={cn(
                 'w-11 h-6 rounded-full transition-colors relative',
-                mostrarHoras ? 'bg-[var(--accent)]' : 'bg-[var(--border)]'
+                mostrarHoras ? 'bg-[var(--accent)] dark:bg-finza-blue' : 'bg-[var(--border)]'
               )}
             >
               <span
@@ -394,7 +394,7 @@ export function ConfiguracionPage(): JSX.Element {
 
       {/* Tab: Security */}
       {activeTab === 'security' && (
-        <div className="finza-card space-y-4">
+        <div className="card-glass p-6 space-y-4">
           <p className="text-sm text-[var(--text-muted)]">{t('settings.changePassword')}</p>
           <Button variant="secondary" onClick={() => setPasswordModalOpen(true)} className="w-full">
             {t('settings.changePassword')}

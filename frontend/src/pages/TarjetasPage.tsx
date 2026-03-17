@@ -147,7 +147,7 @@ interface UtilizationBarProps {
 function UtilizationBar({ saldo, limite }: UtilizationBarProps): JSX.Element {
   const pct = Math.min((saldo / limite) * 100, 100)
   const colorClass =
-    pct > 70 ? 'bg-red-500' : pct > 40 ? 'bg-yellow-500' : 'bg-green-500'
+    pct > 70 ? 'bg-red-500 dark:bg-finza-red' : pct > 40 ? 'bg-yellow-500 dark:bg-finza-yellow' : 'bg-green-500 dark:bg-finza-green'
 
   return (
     <div>
@@ -170,12 +170,17 @@ interface StatItem {
 }
 
 function StatsGrid({ stats }: { stats: StatItem[] }): JSX.Element {
+  const colorMap: Record<string, string> = {
+    'Total saldo': 'dark:text-finza-red',
+    'Disponible credito': 'dark:text-finza-green',
+    'Tarjetas activas': 'dark:text-finza-blue',
+  }
   return (
     <div className="grid grid-cols-3 gap-3 mb-6">
       {stats.map((s) => (
-        <div key={s.label} className="finza-card p-4">
-          <p className="text-xs text-[var(--text-muted)] mb-1">{s.label}</p>
-          <p className="text-lg font-bold text-[var(--text-primary)]">{s.value}</p>
+        <div key={s.label} className="card-glass p-5">
+          <p className="kpi-label dark:text-finza-t2 mb-1">{s.label}</p>
+          <p className={`kpi-value mt-2 ${colorMap[s.label] ?? ''}`}>{s.value}</p>
         </div>
       ))}
     </div>
@@ -454,7 +459,7 @@ function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): 
               </div>
               <div className="flex justify-between">
                 <span className="text-[var(--text-muted)]">Disponible</span>
-                <span className="text-green-500 font-medium">{fmt.format(tarjeta.disponible ?? 0)}</span>
+                <span className="text-green-500 dark:text-finza-green font-medium">{fmt.format(tarjeta.disponible ?? 0)}</span>
               </div>
               <UtilizationBar saldo={tarjeta.saldo_actual} limite={tarjeta.limite_credito} />
             </>
@@ -619,14 +624,15 @@ export function TarjetasPage(): JSX.Element {
   )
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in p-6 md:p-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-[var(--text-primary)]">{t('nav.tarjetas')}</h1>
-          <p className="text-[var(--text-muted)] text-sm">Gestiona tus tarjetas de credito y debito</p>
+          <h1 className="page-title-premium dark:text-[#e8f0ff]">{t('nav.tarjetas')}</h1>
+          <p className="text-sm dark:text-finza-t2 mt-1">Gestiona tus tarjetas de credito y debito</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} variant="default">
+        <Button onClick={() => setIsModalOpen(true)} variant="default"
+          className="dark:bg-finza-blue dark:hover:bg-finza-blue/80">
           <Plus size={16} className="mr-1" />
           Nueva tarjeta
         </Button>
