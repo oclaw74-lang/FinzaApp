@@ -82,25 +82,34 @@ export function Sidebar(): JSX.Element {
       >
         {/* Logo area */}
         <div
-          className={cn(
-            'flex items-center h-16',
-            sidebarCollapsed ? 'justify-center px-4' : 'px-5 justify-between'
-          )}
+          className="flex items-center h-16 px-3 justify-between"
           style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
         >
-          {!sidebarCollapsed && (
-            <div className="flex items-center gap-2.5">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-lg"
-                style={{
-                  background: 'linear-gradient(135deg, #5B9BD5, #366092)',
-                  boxShadow: '0 0 16px rgba(91,155,213,0.4)',
-                }}
-              >
-                <span className="font-bold text-white text-sm">F</span>
-              </div>
+          {/* Logo — clickeable para expandir cuando colapsado */}
+          <button
+            type="button"
+            onClick={() => sidebarCollapsed && setSidebarCollapsed(false)}
+            className={cn(
+              'flex items-center gap-2.5 min-w-0',
+              sidebarCollapsed ? 'cursor-pointer' : 'cursor-default pointer-events-none'
+            )}
+            aria-label={sidebarCollapsed ? 'Expandir sidebar' : undefined}
+            tabIndex={sidebarCollapsed ? 0 : -1}
+          >
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-lg"
+              style={{
+                background: 'linear-gradient(135deg, #5B9BD5, #366092)',
+                boxShadow: sidebarCollapsed
+                  ? '0 0 16px rgba(91,155,213,0.35)'
+                  : '0 0 16px rgba(91,155,213,0.4)',
+              }}
+            >
+              <span className="font-bold text-white text-sm">F</span>
+            </div>
+            {!sidebarCollapsed && (
               <span
-                className="font-bold text-lg tracking-tight"
+                className="font-bold text-lg tracking-tight truncate"
                 style={{
                   background: 'linear-gradient(135deg, #ffffff, #a0b4cc)',
                   WebkitBackgroundClip: 'text',
@@ -110,51 +119,36 @@ export function Sidebar(): JSX.Element {
               >
                 Finza
               </span>
-            </div>
-          )}
-          {sidebarCollapsed && (
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg"
-              style={{
-                background: 'linear-gradient(135deg, #5B9BD5, #366092)',
-                boxShadow: '0 0 16px rgba(91,155,213,0.35)',
-              }}
-            >
-              <span className="font-bold text-white text-sm">F</span>
-            </div>
-          )}
-
-          {/* Mobile close */}
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden text-white/50 hover:text-white transition-colors"
-            aria-label="Cerrar menu"
-          >
-            <X size={18} />
+            )}
           </button>
 
-          {/* Desktop collapse toggle */}
-          {!sidebarCollapsed && (
+          {/* Right side: mobile close OR desktop toggle */}
+          <div className="flex items-center gap-1 shrink-0">
+            {/* Mobile close */}
             <button
-              onClick={() => setSidebarCollapsed(true)}
-              className="hidden lg:flex text-white/30 hover:text-white/80 transition-colors w-7 h-7 items-center justify-center rounded-lg hover:bg-white/10"
-              aria-label="Colapsar sidebar"
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden text-white/50 hover:text-white transition-colors p-1"
+              aria-label="Cerrar menu"
             >
-              <ChevronLeft size={16} />
+              <X size={18} />
             </button>
-          )}
-        </div>
 
-        {/* Expand button when collapsed */}
-        {sidebarCollapsed && (
-          <button
-            onClick={() => setSidebarCollapsed(false)}
-            className="hidden lg:flex items-center justify-center h-8 mx-3 mt-2 rounded-lg text-white/30 hover:text-white/80 hover:bg-white/10 transition-all duration-150"
-            aria-label="Expandir sidebar"
-          >
-            <ChevronRight size={15} />
-          </button>
-        )}
+            {/* Desktop collapse/expand toggle — always visible on desktop */}
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="hidden lg:flex items-center justify-center text-white/30 hover:text-white/80 transition-all duration-150 hover:bg-white/10 rounded-[7px]"
+              style={{ width: 26, height: 26 }}
+              aria-label={sidebarCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+              title={sidebarCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+            >
+              {sidebarCollapsed ? (
+                <ChevronRight size={15} />
+              ) : (
+                <ChevronLeft size={15} />
+              )}
+            </button>
+          </div>
+        </div>
 
         {/* Navigation */}
         <nav className="flex-1 px-2 py-3 overflow-y-auto overflow-x-hidden">
