@@ -12,7 +12,7 @@ interface ThemeStore {
   setLanguage: (lang: Language) => void
 }
 
-const savedTheme = (localStorage.getItem('finza-theme') as Theme) ?? 'light'
+const savedTheme = (localStorage.getItem('finza-theme') as Theme) ?? 'dark'
 const savedLang = (localStorage.getItem('finza-lang') as Language) ?? 'es'
 
 // Apply theme on load

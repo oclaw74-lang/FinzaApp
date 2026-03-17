@@ -63,9 +63,11 @@ export function DashboardPage(): JSX.Element {
       )}
 
       {/* Hero balance card */}
-      <div className="relative overflow-hidden rounded-2xl p-6 sm:p-8 mb-6
-        text-white shadow-xl dark:shadow-finza-blue/10"
-        style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #366092 100%)' }}
+      <div
+        className="rounded-2xl p-6 sm:p-8 mb-6 relative overflow-hidden text-white shadow-xl
+          bg-gradient-to-br from-blue-900/40 to-blue-950/60
+          border border-blue-800/20 dark:border-blue-700/20"
+        style={{ background: 'linear-gradient(135deg, #0d1b2e 0%, #1a2a4a 50%, #1e3a5f 100%)' }}
       >
         {/* Decorative orbs */}
         <div className="absolute -top-8 -right-8 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
