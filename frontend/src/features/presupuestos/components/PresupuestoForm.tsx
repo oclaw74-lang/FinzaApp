@@ -45,10 +45,8 @@ export function PresupuestoForm({
   const { data: categorias = [], isLoading: loadingCategorias } =
     useCategorias()
 
-  // Solo categorias de egreso o ambos
-  const categoriasEgreso = categorias.filter(
-    (c) => c.tipo === 'egreso' || c.tipo === 'ambos'
-  )
+  // Todas las categorias — los presupuestos aplican a cualquier categoria
+  const categoriasEgreso = categorias
 
   const {
     register,
@@ -106,7 +104,6 @@ export function PresupuestoForm({
           )}
           {categoriasEgreso.map((cat) => (
             <option key={cat.id} value={cat.id}>
-              {cat.icono ? `${cat.icono} ` : ''}
               {cat.nombre}
             </option>
           ))}
