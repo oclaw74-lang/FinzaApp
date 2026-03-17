@@ -25,6 +25,7 @@ import { SuscripcionesPage } from '@/pages/SuscripcionesPage'
 import { ConfiguracionPage } from '@/pages/ConfiguracionPage'
 import { RetosPage } from '@/pages/RetosPage'
 import { EducacionPage } from '@/pages/EducacionPage'
+import { RecurrentesPage } from '@/pages/RecurrentesPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -81,6 +82,7 @@ export function App(): JSX.Element {
                 <Route path="/configuracion" element={<ConfiguracionPage />} />
                 <Route path="/retos" element={<RetosPage />} />
                 <Route path="/educacion" element={<EducacionPage />} />
+                <Route path="/recurrentes" element={<RecurrentesPage />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFoundPage />} />
