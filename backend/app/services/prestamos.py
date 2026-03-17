@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from calendar import monthrange
+from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from fastapi import HTTPException
@@ -7,6 +8,90 @@ from postgrest import APIError
 from app.core.supabase_client import get_user_client
 from app.schemas.prestamo import PagoPrestamoCreate, PrestamoCreate, PrestamoUpdate
 from app.services.base import _handle_api_error
+
+
+def _calc_cuota_mensual(
+    monto_original: float,
+    tasa_interes: float | None,
+    plazo_meses: int | None,
+) -> float | None:
+    """French amortization formula. Returns None if insufficient data."""
+    if not plazo_meses or plazo_meses <= 0:
+        return None
+    if tasa_interes and tasa_interes > 0:
+        r = tasa_interes / 100 / 12
+        n = plazo_meses
+        cuota = monto_original * (r * (1 + r) ** n) / ((1 + r) ** n - 1)
+    else:
+        # No interest: simple division
+        cuota = monto_original / plazo_meses
+    return round(cuota, 2)
+
+
+def _calc_proximo_pago(
+    fecha_prestamo: date,
+    pagos: list[dict],
+    plazo_meses: int | None,
+) -> date | None:
+    """Estimate next payment date based on loan origination day."""
+    if not plazo_meses:
+        return None
+    today = date.today()
+    dia_pago = fecha_prestamo.day  # same day of month as loan start
+
+    if pagos:
+        ultimas_fechas = sorted(p["fecha"][:10] for p in pagos if p.get("fecha"))
+        if ultimas_fechas:
+            ultimo = datetime.strptime(ultimas_fechas[-1], "%Y-%m-%d").date()
+            m = ultimo.month + 1
+            y = ultimo.year
+            if m > 12:
+                m -= 12
+                y += 1
+            max_day = monthrange(y, m)[1]
+            return date(y, m, min(dia_pago, max_day))
+
+    # No payments yet: first payment is 1 month after start
+    m = fecha_prestamo.month + 1
+    y = fecha_prestamo.year
+    if m > 12:
+        m -= 12
+        y += 1
+    max_day = monthrange(y, m)[1]
+    next_date = date(y, m, min(dia_pago, max_day))
+
+    # Advance to future if already passed
+    while next_date < today:
+        m = next_date.month + 1
+        y = next_date.year
+        if m > 12:
+            m -= 12
+            y += 1
+        max_day = monthrange(y, m)[1]
+        next_date = date(y, m, min(dia_pago, max_day))
+
+    return next_date
+
+
+def _enrich_prestamo(row: dict) -> dict:
+    """Add calculated fields: cuota_mensual, total_intereses, proximo_pago."""
+    monto_orig = float(row.get("monto_original", 0))
+    tasa = float(row["tasa_interes"]) if row.get("tasa_interes") else None
+    plazo = int(row["plazo_meses"]) if row.get("plazo_meses") else None
+    pagos = row.get("pagos", [])
+
+    cuota = _calc_cuota_mensual(monto_orig, tasa, plazo)
+    proximo = _calc_proximo_pago(
+        datetime.strptime(row["fecha_prestamo"][:10], "%Y-%m-%d").date(),
+        pagos,
+        plazo,
+    )
+    total_int = round(cuota * plazo - monto_orig, 2) if cuota and plazo else None
+
+    row["cuota_mensual"] = cuota
+    row["total_intereses"] = total_int
+    row["proximo_pago"] = proximo.isoformat() if proximo else None
+    return row
 
 
 def get_prestamos(
@@ -38,13 +123,15 @@ def get_prestamos(
 
 def create_prestamo(user_jwt: str, user_id: str, data: PrestamoCreate) -> dict:
     client = get_user_client(user_jwt)
-    payload = data.model_dump()
+    payload = data.model_dump(exclude_none=True)
     payload["user_id"] = user_id
     payload["monto_pendiente"] = str(payload["monto_original"])
     payload["monto_original"] = str(payload["monto_original"])
     payload["fecha_prestamo"] = str(payload["fecha_prestamo"])
     if payload.get("fecha_vencimiento"):
         payload["fecha_vencimiento"] = str(payload["fecha_vencimiento"])
+    if "tasa_interes" in payload:
+        payload["tasa_interes"] = str(payload["tasa_interes"])
 
     try:
         response = client.table("prestamos").insert(payload).execute()
@@ -85,6 +172,7 @@ def get_prestamo(user_jwt: str, user_id: str, prestamo_id: str) -> dict | None:
             .execute()
         )
         prestamo["pagos"] = pagos_response.data or []
+        prestamo = _enrich_prestamo(prestamo)
         return prestamo
     except APIError as e:
         _handle_api_error(e)
@@ -102,6 +190,8 @@ def update_prestamo(
 
     if "fecha_vencimiento" in payload and payload["fecha_vencimiento"]:
         payload["fecha_vencimiento"] = str(payload["fecha_vencimiento"])
+    if "tasa_interes" in payload and payload["tasa_interes"] is not None:
+        payload["tasa_interes"] = str(payload["tasa_interes"])
 
     try:
         response = (

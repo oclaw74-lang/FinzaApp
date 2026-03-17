@@ -19,6 +19,8 @@ class PrestamoCreate(BaseModel):
     fecha_vencimiento: date | None = None
     descripcion: str | None = None
     notas: str | None = None
+    tasa_interes: Decimal | None = None  # % annual, e.g. 18.5
+    plazo_meses: int | None = None        # number of installments
 
     @field_validator("monto_original")
     @classmethod
@@ -41,6 +43,8 @@ class PrestamoUpdate(BaseModel):
     descripcion: str | None = None
     notas: str | None = None
     estado: EstadoPrestamo | None = None
+    tasa_interes: Decimal | None = None  # % annual, e.g. 18.5
+    plazo_meses: int | None = None        # number of installments
 
     @field_validator("persona")
     @classmethod
@@ -92,6 +96,11 @@ class PrestamoResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     pagos: list[PagoPrestamoResponse] = []
+    tasa_interes: Decimal | None = None
+    plazo_meses: int | None = None
+    cuota_mensual: float | None = None      # calculated by service
+    total_intereses: float | None = None    # calculated by service
+    proximo_pago: date | None = None        # calculated by service
 
     @computed_field
     @property
