@@ -65,14 +65,31 @@ def test_get_or_none_returns_none_when_empty(mock_client: MagicMock) -> None:
 def test_porcentaje_caps_at_100(mock_client: MagicMock) -> None:
     from app.services.fondo_emergencia import _enrich
 
+    # Build a chain mock that handles all query patterns:
+    # .eq().gte().lte().execute()  → egresos
+    # .eq().eq().is_().execute()   → prestamos, recurrentes, suscripciones
+    # .eq().maybe_single().execute() → profiles (salary)
+    chain = MagicMock()
+    chain.execute.return_value = MagicMock(data=[])
+    chain.eq.return_value = chain
+    chain.gte.return_value = chain
+    chain.lte.return_value = chain
+    chain.is_.return_value = chain
+    chain.limit.return_value = chain
+    chain.order.return_value = chain
+    # maybe_single returns None → no salary
+    chain.maybe_single.return_value = MagicMock(
+        execute=MagicMock(return_value=None)
+    )
+
     mock = MagicMock()
-    # egresos = [] so meta_calculada = 0, porcentaje = 0
-    mock.table.return_value.select.return_value.eq.return_value.execute.return_value = MagicMock(data=[])
+    mock.table.return_value.select.return_value = chain
     mock_client.return_value = mock
 
     row = {"id": "x", "user_id": "u", "monto_actual": "999999.00", "meta_meses": 3, "notas": None}
     result = _enrich(row, mock, "u")
-    assert result["porcentaje"] == 0.0  # no egresos → meta=0 → porcentaje=0
+    # No egresos, no salary, no prestamos, no suscripciones, no recurrentes → meta=0 → porcentaje=0
+    assert result["porcentaje"] == 0.0
 
 
 @patch("app.services.fondo_emergencia.get_user_client")

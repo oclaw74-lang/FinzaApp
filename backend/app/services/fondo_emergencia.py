@@ -1,3 +1,4 @@
+from calendar import monthrange
 from datetime import date, datetime
 
 from fastapi import HTTPException
@@ -7,9 +8,19 @@ from app.core.supabase_client import get_user_client
 from app.schemas.fondo_emergencia import FondoEmergenciaCreate, FondoEmergenciaUpdate
 from app.services.base import _handle_api_error
 
+# Factors to convert any subscription/recurrente frequency to monthly equivalent
+_FREQ_TO_MONTHLY: dict[str, float] = {
+    "mensual": 1.0,
+    "quincenal": 2.0,
+    "semanal": 4.33,
+    "diaria": 30.0,
+    "anual": 1 / 12,
+    "trimestral": 1 / 3,
+}
 
-def _calc_meta(client, user_id: str, meta_meses: int) -> float:
-    """Average monthly expenses over last 3 months * meta_meses."""
+
+def _get_promedio_egresos(client, user_id: str) -> float:
+    """Average monthly egresos over the last 3 calendar months."""
     today = date.today()
     meses: list[tuple[int, int]] = []
     for i in range(3):
@@ -20,21 +31,28 @@ def _calc_meta(client, user_id: str, meta_meses: int) -> float:
             y -= 1
         meses.append((y, m))
 
+    # Build date range: first day of oldest month to last day of current month
+    oldest_y, oldest_m = meses[-1]
+    newest_y, newest_m = meses[0]
+    fecha_inicio = f"{oldest_y}-{oldest_m:02d}-01"
+    last_day = monthrange(newest_y, newest_m)[1]
+    fecha_fin = f"{newest_y}-{newest_m:02d}-{last_day:02d}"
+
     try:
         r = (
             client.table("egresos")
             .select("monto,fecha")
             .eq("user_id", user_id)
+            .gte("fecha", fecha_inicio)
+            .lte("fecha", fecha_fin)
             .execute()
         )
-    except APIError as e:
-        _handle_api_error(e)
+    except APIError:
         return 0.0
 
     meses_set = set(meses)
-    egresos = r.data or []
     totales: dict[tuple[int, int], float] = {}
-    for e in egresos:
+    for e in r.data or []:
         fecha_str = e.get("fecha", "")
         if fecha_str:
             d = datetime.strptime(fecha_str[:10], "%Y-%m-%d")
@@ -44,9 +62,131 @@ def _calc_meta(client, user_id: str, meta_meses: int) -> float:
 
     if not totales:
         return 0.0
+    return sum(totales.values()) / len(meses)
 
-    promedio = sum(totales.values()) / len(meses)
-    return promedio * meta_meses
+
+def _get_cuota_prestamos(client, user_id: str) -> float:
+    """Estimated monthly payment for active loans (monto_pendiente / months_remaining)."""
+    today = date.today()
+    try:
+        r = (
+            client.table("prestamos")
+            .select("monto_pendiente,fecha_vencimiento")
+            .eq("user_id", user_id)
+            .eq("estado", "activo")
+            .is_("deleted_at", "null")
+            .execute()
+        )
+    except APIError:
+        return 0.0
+
+    total = 0.0
+    for p in r.data or []:
+        pendiente = float(p.get("monto_pendiente") or 0)
+        if pendiente <= 0:
+            continue
+        vencimiento = p.get("fecha_vencimiento")
+        if vencimiento:
+            try:
+                venc_date = datetime.strptime(vencimiento[:10], "%Y-%m-%d").date()
+                months_remaining = max(1, (venc_date.year - today.year) * 12 + (venc_date.month - today.month))
+                total += pendiente / months_remaining
+            except ValueError:
+                # No valid date: add 10% of pending as conservative monthly estimate
+                total += pendiente * 0.10
+        else:
+            # No vencimiento set: 10% of pending as estimate
+            total += pendiente * 0.10
+    return total
+
+
+def _get_suscripciones_mensual(client, user_id: str) -> float:
+    """Sum of active subscriptions normalized to monthly amount."""
+    try:
+        r = (
+            client.table("suscripciones")
+            .select("monto,frecuencia")
+            .eq("user_id", user_id)
+            .eq("activa", True)
+            .execute()
+        )
+    except APIError:
+        return 0.0
+
+    total = 0.0
+    for s in r.data or []:
+        monto = float(s.get("monto") or 0)
+        freq = s.get("frecuencia", "mensual")
+        total += monto * _FREQ_TO_MONTHLY.get(freq, 1.0)
+    return total
+
+
+def _get_recurrentes_mensual(client, user_id: str) -> float:
+    """Sum of active recurring egresos normalized to monthly amount."""
+    try:
+        r = (
+            client.table("recurrentes")
+            .select("monto,frecuencia")
+            .eq("user_id", user_id)
+            .eq("tipo", "egreso")
+            .eq("activo", True)
+            .execute()
+        )
+    except APIError:
+        return 0.0
+
+    total = 0.0
+    for rec in r.data or []:
+        monto = float(rec.get("monto") or 0)
+        freq = rec.get("frecuencia", "mensual")
+        total += monto * _FREQ_TO_MONTHLY.get(freq, 1.0)
+    return total
+
+
+def _get_salario(client, user_id: str) -> float:
+    """User's net monthly salary from profile, 0 if not set."""
+    try:
+        r = (
+            client.table("profiles")
+            .select("salario_mensual_neto")
+            .eq("user_id", user_id)
+            .maybe_single()
+            .execute()
+        )
+    except APIError:
+        return 0.0
+    if r is None or not r.data:
+        return 0.0
+    sal = r.data.get("salario_mensual_neto")
+    return float(sal) if sal else 0.0
+
+
+def _calc_meta(client, user_id: str, meta_meses: int) -> float:
+    """
+    Comprehensive emergency fund target.
+
+    base_mensual = max(
+        salario_mensual_neto,          # income replacement (primary if set)
+        promedio_egresos_3_meses,       # historical variable expenses
+        cuota_prestamos + suscripciones_mensual + recurrentes_mensual  # fixed obligations
+    )
+
+    meta_calculada = base_mensual * meta_meses
+    """
+    promedio_egresos = _get_promedio_egresos(client, user_id)
+    cuota_prestamos = _get_cuota_prestamos(client, user_id)
+    suscripciones = _get_suscripciones_mensual(client, user_id)
+    recurrentes = _get_recurrentes_mensual(client, user_id)
+    salario = _get_salario(client, user_id)
+
+    obligaciones_fijas = cuota_prestamos + suscripciones + recurrentes
+
+    candidates = [promedio_egresos, obligaciones_fijas]
+    if salario > 0:
+        candidates.append(salario)
+
+    base_mensual = max(candidates)
+    return round(base_mensual * meta_meses, 2)
 
 
 def _enrich(row: dict, client, user_id: str) -> dict:
