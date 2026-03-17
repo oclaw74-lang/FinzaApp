@@ -5,12 +5,22 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Brand (backward-compat)
-        'finza-blue': { DEFAULT: '#2563eb', light: '#60a5fa', dark: '#1d4ed8' },
+        // Brand legacy (backward-compat)
         'prosperity-green': '#10b981',
         'golden-flow': '#f59e0b',
         'alert-red': '#ef4444',
         'flow-light': '#eff6ff',
+        // Premium design system tokens
+        'finza-blue': '#3d8ef8',
+        'finza-green': '#00dfa2',
+        'finza-red': '#ff4060',
+        'finza-yellow': '#ffb340',
+        'finza-purple': '#9768ff',
+        'finza-cyan': '#00dfff',
+        'finza-t2': '#657a9e',
+        'finza-bg': '#04080f',
+        'finza-bg2': '#080f1e',
+        'finza-bg3': '#0d1829',
         // Semanticos via CSS vars
         background: 'var(--bg)',
         surface: 'var(--surface)',
