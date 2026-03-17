@@ -11,13 +11,40 @@ import {
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDashboardV2 } from '@/hooks/useDashboardV2'
+import { useAuthStore } from '@/store/authStore'
 import { KpiCard } from '@/features/dashboard/components/v2/KpiCard'
 import { MetaProgressItem } from '@/features/dashboard/components/v2/MetaProgressItem'
 import { BudgetProgressBar } from '@/features/presupuestos/components/BudgetProgressBar'
 import { ChartGastosPorCategoria } from '@/features/dashboard/components/ChartGastosPorCategoria'
 import { ChartBalanceTendencia } from '@/features/dashboard/components/ChartBalanceTendencia'
 import { PrediccionMesCard } from '@/components/dashboard/PrediccionMesCard'
-import { formatDate, formatMoney, MESES, cn } from '@/lib/utils'
+import { formatDate, formatMoney, cn } from '@/lib/utils'
+import type { DashboardV2Response } from '@/types/dashboard'
+
+function getGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Buenos dias'
+  if (hour < 18) return 'Buenas tardes'
+  return 'Buenas noches'
+}
+
+function getWeekContext(): string {
+  const now = new Date()
+  const startOfYear = new Date(now.getFullYear(), 0, 1)
+  const weekNum = Math.ceil(
+    ((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7
+  )
+  return `Semana ${weekNum}`
+}
+
+function getFinancialContext(data: DashboardV2Response | undefined): string {
+  if (!data) return 'Cargando datos...'
+  const tasa = data.resumen_financiero?.tasa_ahorro ?? 0
+  if (tasa > 20) return 'Excelente ritmo'
+  if (tasa > 10) return 'Todo bajo control'
+  if (tasa > 0) return 'Puedes mejorar'
+  return 'Revisa tus gastos'
+}
 
 function getInitialPeriod(): { mes: number; year: number } {
   const now = new Date()
@@ -34,6 +61,7 @@ export function DashboardPage(): JSX.Element {
   const { t } = useTranslation()
   const now = new Date()
   const currentYear = now.getFullYear()
+  const { user } = useAuthStore()
 
   const [mes, setMes] = useState<number>(getInitialPeriod().mes)
   const [year, setYear] = useState<number>(getInitialPeriod().year)
@@ -44,8 +72,12 @@ export function DashboardPage(): JSX.Element {
 
   const ingresos = data?.resumen_financiero.ingresos_mes ?? 0
   const egresos = data?.resumen_financiero.egresos_mes ?? 0
-  const balanceMes = data?.resumen_financiero.balance_mes ?? 0
   const tasaAhorro = data?.resumen_financiero.tasa_ahorro ?? 0
+
+  const firstName =
+    (user?.user_metadata?.full_name as string | undefined)?.split(' ')[0] ??
+    user?.email?.split('@')[0] ??
+    'Usuario'
 
   return (
     <div className="animate-fade-in p-6 md:p-8 space-y-6">
@@ -62,71 +94,55 @@ export function DashboardPage(): JSX.Element {
         </div>
       )}
 
-      {/* Hero balance card */}
-      <div
-        className="rounded-2xl p-6 sm:p-8 mb-6 relative overflow-hidden text-white shadow-xl
-          bg-gradient-to-br from-blue-900/40 to-blue-950/60
-          border border-blue-800/20 dark:border-blue-700/20"
-        style={{ background: 'linear-gradient(135deg, #0d1b2e 0%, #1a2a4a 50%, #1e3a5f 100%)' }}
-      >
-        {/* Decorative orbs */}
-        <div className="absolute -top-8 -right-8 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-purple-400/20 rounded-full blur-2xl pointer-events-none" />
+      {/* Greeting header */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-1" data-testid="dashboard-greeting">
+            {getGreeting()}, {firstName}
+          </h1>
+          <p className="text-white/50 text-sm">
+            {getWeekContext()} · {getFinancialContext(data)}
+          </p>
+        </div>
 
-        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div>
-            <p className="text-white/60 text-xs font-medium uppercase tracking-widest mb-1">
-              {t('dashboard.balance')}
-            </p>
-            {isLoading ? (
-              <Skeleton className="h-12 w-48 bg-white/20 mb-2" />
-            ) : (
-              <p className="text-4xl sm:text-5xl font-bold tracking-tight">
-                {formatMoney(Math.abs(balanceMes))}
-              </p>
-            )}
-            <p className="text-white/50 text-sm mt-2">
-              {MESES[mes - 1]} {year}
-            </p>
-          </div>
-
-          {/* Period selectors */}
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Month buttons */}
-            <div className="flex items-center gap-1 bg-white/10 rounded-xl p-1 flex-wrap">
-              {MESES_SHORT.map((m, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setMes(i + 1)}
-                  className={cn(
-                    'px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all',
-                    mes === i + 1
-                      ? 'bg-white text-indigo-600 shadow'
-                      : 'text-white/60 hover:text-white'
-                  )}
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
-            {/* Year selector */}
-            <div>
-              <label htmlFor="year-selector" className="sr-only">Ano</label>
-              <select
-                id="year-selector"
-                aria-label="Ano"
-                value={year}
-                onChange={(e) => setYear(Number(e.target.value))}
-                className="bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30"
+        {/* Period selectors */}
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {/* Month buttons */}
+          <div className="flex items-center gap-1 bg-white/10 rounded-xl p-1 flex-wrap">
+            {MESES_SHORT.map((m, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setMes(i + 1)}
+                className={cn(
+                  'px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all',
+                  mes === i + 1
+                    ? 'bg-white text-indigo-600 shadow'
+                    : 'text-white/60 hover:text-white'
+                )}
               >
-                {yearOptions.map((y) => (
-                  <option key={y} value={y} className="text-gray-900">
-                    {y}
-                  </option>
-                ))}
-              </select>
-            </div>
+                {m}
+              </button>
+            ))}
+          </div>
+          {/* Year selector */}
+          <div>
+            <label htmlFor="year-selector" className="sr-only">
+              Ano
+            </label>
+            <select
+              id="year-selector"
+              aria-label="Ano"
+              value={year}
+              onChange={(e) => setYear(Number(e.target.value))}
+              className="bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30"
+            >
+              {yearOptions.map((y) => (
+                <option key={y} value={y} className="text-gray-900">
+                  {y}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
@@ -190,26 +206,22 @@ export function DashboardPage(): JSX.Element {
         <div className="lg:col-span-2">
           {/* Charts row */}
           <div className="grid grid-cols-1 gap-4">
-        {isLoading ? (
-          <>
-            <Skeleton className="h-72 rounded-xl" />
-            <Skeleton className="h-72 rounded-xl" />
-          </>
-        ) : (
-          <>
-            <ChartGastosPorCategoria
-              data={(data?.egresos_por_categoria ?? []).map((e) => ({
-                categoria: e.categoria,
-                total: e.total,
-              }))}
-            />
-            <ChartBalanceTendencia
-              ingresos={ingresos}
-              egresos={egresos}
-              mes={mes}
-            />
-          </>
-        )}
+            {isLoading ? (
+              <>
+                <Skeleton className="h-72 rounded-xl" />
+                <Skeleton className="h-72 rounded-xl" />
+              </>
+            ) : (
+              <>
+                <ChartGastosPorCategoria
+                  data={(data?.egresos_por_categoria ?? []).map((e) => ({
+                    categoria: e.categoria,
+                    total: e.total,
+                  }))}
+                />
+                <ChartBalanceTendencia ingresos={ingresos} egresos={egresos} mes={mes} />
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -222,10 +234,7 @@ export function DashboardPage(): JSX.Element {
             <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
               {t('dashboard.recentTransactions')}
             </p>
-            <a
-              href="/ingresos"
-              className="text-xs text-[var(--accent)] hover:underline"
-            >
+            <a href="/ingresos" className="text-xs text-[var(--accent)] hover:underline">
               Ver todos
             </a>
           </div>
@@ -271,12 +280,11 @@ export function DashboardPage(): JSX.Element {
                   <span
                     className={cn(
                       'text-sm font-bold flex-shrink-0',
-                      tx.tipo === 'ingreso'
-                        ? 'text-[var(--success)]'
-                        : 'text-[var(--danger)]'
+                      tx.tipo === 'ingreso' ? 'text-[var(--success)]' : 'text-[var(--danger)]'
                     )}
                   >
-                    {tx.tipo === 'ingreso' ? '+' : '\u2212'}{formatMoney(Number(tx.monto ?? 0))}
+                    {tx.tipo === 'ingreso' ? '+' : '\u2212'}
+                    {formatMoney(Number(tx.monto ?? 0))}
                   </span>
                 </div>
               ))}

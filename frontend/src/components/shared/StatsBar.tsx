@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useDashboardV2 } from '@/hooks/useDashboardV2'
+import { useScore } from '@/hooks/useScore'
+import { useFondoEmergencia } from '@/hooks/useFondoEmergencia'
 import { cn } from '@/lib/utils'
 
 interface StatItemProps {
@@ -56,6 +58,24 @@ function getBadgeVariant(value: number, invert = false): 'positive' | 'negative'
   return (invert ? !isPositive : isPositive) ? 'positive' : 'negative'
 }
 
+function scoreEstadoToVariant(estado?: string): 'positive' | 'warning' | 'negative' {
+  if (!estado) return 'warning'
+  if (estado === 'excelente' || estado === 'bueno') return 'positive'
+  if (estado === 'en_riesgo') return 'warning'
+  return 'negative'
+}
+
+function scoreEstadoLabel(estado?: string): string {
+  if (!estado) return ''
+  const map: Record<string, string> = {
+    excelente: 'Excelente',
+    bueno: 'Bueno',
+    en_riesgo: 'En riesgo',
+    critico: 'Critico',
+  }
+  return map[estado] ?? estado
+}
+
 interface StatsBarProps {
   onCommandPaletteOpen: () => void
 }
@@ -63,6 +83,8 @@ interface StatsBarProps {
 export function StatsBar({ onCommandPaletteOpen }: StatsBarProps): JSX.Element {
   const now = new Date()
   const { data, isLoading } = useDashboardV2({ mes: now.getMonth() + 1, year: now.getFullYear() })
+  const { data: scoreData } = useScore()
+  const { data: fondoData } = useFondoEmergencia()
   const navigate = useNavigate()
 
   const barClass = cn(
@@ -121,6 +143,24 @@ export function StatsBar({ onCommandPaletteOpen }: StatsBarProps): JSX.Element {
           value={formatCurrency(rf.egresos_mes)}
           badge={formatPct(rf.variacion_egresos_pct)}
           badgeVariant={getBadgeVariant(rf.variacion_egresos_pct, true)}
+        />
+        <StatItem
+          label="Score"
+          value={scoreData?.score?.toString() ?? '—'}
+          badge={scoreData?.estado ? scoreEstadoLabel(scoreData.estado) : undefined}
+          badgeVariant={scoreEstadoToVariant(scoreData?.estado)}
+        />
+        <StatItem
+          label="Fondo"
+          value={formatCurrency(fondoData?.monto_actual ?? 0)}
+          badge={fondoData?.porcentaje != null ? `${Math.round(fondoData.porcentaje)}%` : undefined}
+          badgeVariant={
+            (fondoData?.porcentaje ?? 0) >= 100
+              ? 'positive'
+              : (fondoData?.porcentaje ?? 0) >= 50
+                ? 'warning'
+                : 'negative'
+          }
         />
         <button
           onClick={() => navigate('/prestamos')}
