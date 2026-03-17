@@ -11,6 +11,10 @@ vi.mock('@/hooks/usePrediccionMes', () => ({
   usePrediccionMes: vi.fn(() => ({ data: undefined, isLoading: false })),
 }))
 
+vi.mock('@/store/authStore', () => ({
+  useAuthStore: vi.fn(),
+}))
+
 // Mock recharts-based chart components — ResponsiveContainer has 0 dimensions in jsdom
 vi.mock('@/features/dashboard/components/ChartGastosPorCategoria', () => ({
   ChartGastosPorCategoria: ({ data }: { data: Array<{ categoria: string; total: number }> }) => (
@@ -27,6 +31,7 @@ vi.mock('@/features/dashboard/components/ChartBalanceTendencia', () => ({
 }))
 
 import { useDashboardV2 } from '@/hooks/useDashboardV2'
+import { useAuthStore } from '@/store/authStore'
 
 const mockData: DashboardV2Response = {
   resumen_financiero: {
@@ -105,22 +110,32 @@ function setupMock({
   } as ReturnType<typeof useDashboardV2>)
 }
 
+function setupAuthMock(fullName?: string, email = 'test@example.com') {
+  vi.mocked(useAuthStore).mockReturnValue({
+    user: {
+      user_metadata: fullName ? { full_name: fullName } : {},
+      email,
+    },
+  } as ReturnType<typeof useAuthStore>)
+}
+
 describe('DashboardPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     setupMock()
+    setupAuthMock('Jorge Martinez')
   })
 
   it('renders page title', () => {
     render(<DashboardPage />)
     // Title is rendered by the shared Header component (not duplicated in page body)
-    // Verify the dashboard hero section renders instead
+    // Verify the dashboard KPI section renders instead
     expect(screen.getByText('Tasa de ahorro')).toBeInTheDocument()
   })
 
   it('renders month selector', () => {
     render(<DashboardPage />)
-    // Month is now selected via pill buttons (Ene, Feb, ... Dic) in the hero card
+    // Month is now selected via pill buttons (Ene, Feb, ... Dic) in the greeting header
     expect(screen.getByRole('button', { name: 'Ene' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Dic' })).toBeInTheDocument()
   })
@@ -162,9 +177,10 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Egresos')).toBeInTheDocument()
   })
 
-  it('renders balance KPI with data', () => {
+  it('renders greeting header instead of balance hero card', () => {
     render(<DashboardPage />)
-    expect(screen.getByText('Balance')).toBeInTheDocument()
+    // The old hero balance card has been replaced by a greeting header
+    expect(screen.getByTestId('dashboard-greeting')).toBeInTheDocument()
   })
 
   it('renders tasa de ahorro KPI', () => {
@@ -230,7 +246,7 @@ describe('DashboardPage', () => {
 
   it('changes mes when month button is clicked', () => {
     render(<DashboardPage />)
-    // Month is now selected via pill buttons in the hero card
+    // Month is now selected via pill buttons in the greeting header
     const junButton = screen.getByRole('button', { name: 'Jun' })
     fireEvent.click(junButton)
     // Clicked button should have the active styling (bg-white class)
@@ -247,5 +263,37 @@ describe('DashboardPage', () => {
   it('does not show error alert when isError is false', () => {
     render(<DashboardPage />)
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('renders greeting with user first name', () => {
+    setupAuthMock('Jorge Martinez')
+    render(<DashboardPage />)
+    const greeting = screen.getByTestId('dashboard-greeting')
+    expect(greeting).toBeInTheDocument()
+    expect(greeting.textContent).toContain('Jorge')
+  })
+
+  it('greeting changes based on hour', () => {
+    // Mock Date to control the hour
+    const originalDate = globalThis.Date
+    const mockDate = class extends originalDate {
+      getHours() {
+        return 9 // morning
+      }
+    } as typeof Date
+    globalThis.Date = mockDate
+
+    render(<DashboardPage />)
+    const greeting = screen.getByTestId('dashboard-greeting')
+    expect(greeting.textContent).toContain('Buenos dias')
+
+    globalThis.Date = originalDate
+  })
+
+  it('shows fallback name when user has no full_name', () => {
+    setupAuthMock(undefined, 'jorge@example.com')
+    render(<DashboardPage />)
+    const greeting = screen.getByTestId('dashboard-greeting')
+    expect(greeting.textContent).toContain('jorge')
   })
 })
