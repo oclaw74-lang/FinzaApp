@@ -12,6 +12,15 @@ import type {
   Presupuesto,
 } from '@/types/presupuesto'
 
+// ─── Dashboard invalidation keys ────────────────────────────────────────────
+
+const DASHBOARD_KEYS = [
+  ['dashboard-v2'],
+  ['score'],
+  ['prediccion-mes'],
+  ['comparativa'],
+] as const
+
 // ─── Query key factory ──────────────────────────────────────────────────────
 
 export const presupuestosKeys = {
@@ -41,6 +50,7 @@ export function useCreatePresupuesto(mes: number, year: number) {
       queryClient.invalidateQueries({
         queryKey: presupuestosKeys.estado(mes, year),
       })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }
@@ -57,6 +67,7 @@ export function useUpdatePresupuesto(mes: number, year: number) {
       queryClient.invalidateQueries({
         queryKey: presupuestosKeys.estado(mes, year),
       })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }
@@ -69,6 +80,7 @@ export function useDeletePresupuesto(mes: number, year: number) {
       queryClient.invalidateQueries({
         queryKey: presupuestosKeys.estado(mes, year),
       })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }

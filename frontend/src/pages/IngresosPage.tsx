@@ -35,7 +35,7 @@ export function IngresosPage(): JSX.Element {
   const [search, setSearch] = useState('')
 
   const { data, isLoading } = useIngresos({ page: 1, page_size: 200 })
-  const { data: categorias = [] } = useCategorias('ingreso')
+  const { data: categorias = [] } = useCategorias()
   const createIngreso = useCreateIngreso()
   const updateIngreso = useUpdateIngreso()
   const deleteIngreso = useDeleteIngreso()

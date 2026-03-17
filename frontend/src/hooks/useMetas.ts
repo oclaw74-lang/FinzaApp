@@ -13,6 +13,13 @@ import type {
 
 const METAS_KEY = 'metas' as const
 
+const DASHBOARD_KEYS = [
+  ['dashboard-v2'],
+  ['score'],
+  ['prediccion-mes'],
+  ['comparativa'],
+] as const
+
 // ─── Queries ───────────────────────────────────────────────────────────────────
 
 export function useMetas() {
@@ -70,6 +77,7 @@ export function useCreateMeta() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [METAS_KEY] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }
@@ -86,6 +94,7 @@ export function useUpdateMeta() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [METAS_KEY] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }
@@ -98,6 +107,7 @@ export function useDeleteMeta() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [METAS_KEY] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }
@@ -116,6 +126,7 @@ export function useAgregarContribucion(metaId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [METAS_KEY] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }
@@ -130,6 +141,7 @@ export function useDeleteContribucion(metaId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [METAS_KEY] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }

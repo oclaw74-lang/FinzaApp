@@ -35,7 +35,7 @@ export function EgresosPage(): JSX.Element {
   const [search, setSearch] = useState('')
 
   const { data, isLoading } = useEgresos({ page: 1, page_size: 200 })
-  const { data: categorias = [] } = useCategorias('egreso')
+  const { data: categorias = [] } = useCategorias()
   const createEgreso = useCreateEgreso()
   const updateEgreso = useUpdateEgreso()
   const deleteEgreso = useDeleteEgreso()

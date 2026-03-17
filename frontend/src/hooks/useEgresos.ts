@@ -2,6 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api'
 import type { EgresoResponse, PaginatedResponse } from '@/types/transacciones'
 
+const DASHBOARD_KEYS = [
+  ['dashboard-v2'],
+  ['score'],
+  ['prediccion-mes'],
+  ['comparativa'],
+] as const
+
 interface EgresosFilters {
   fecha_desde?: string
   fecha_hasta?: string
@@ -36,6 +43,7 @@ export function useCreateEgreso() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['egresos'] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }
@@ -49,6 +57,7 @@ export function useUpdateEgreso() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['egresos'] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }
@@ -61,6 +70,7 @@ export function useDeleteEgreso() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['egresos'] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }

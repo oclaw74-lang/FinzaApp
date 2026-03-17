@@ -1,5 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api'
+
+const DASHBOARD_KEYS = [
+  ['dashboard-v2'],
+  ['score'],
+  ['prediccion-mes'],
+  ['comparativa'],
+] as const
+
 import type {
   Prestamo,
   PrestamoCreate,
@@ -61,6 +69,7 @@ export function useCreatePrestamo() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prestamos'] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }
@@ -74,6 +83,7 @@ export function useUpdatePrestamo() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prestamos'] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }
@@ -86,6 +96,7 @@ export function useDeletePrestamo() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prestamos'] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }
@@ -102,6 +113,8 @@ export function useRegistrarPago(prestamoId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prestamos'] })
+      queryClient.invalidateQueries({ queryKey: ['egresos'] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }
@@ -114,6 +127,7 @@ export function useDeletePago(prestamoId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prestamos'] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }

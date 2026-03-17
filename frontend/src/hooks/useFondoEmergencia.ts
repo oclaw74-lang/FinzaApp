@@ -2,6 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api'
 import type { FondoEmergenciaData } from '@/types/fondoEmergencia'
 
+const DASHBOARD_KEYS = [
+  ['dashboard-v2'],
+  ['score'],
+  ['prediccion-mes'],
+  ['comparativa'],
+] as const
+
 export function useFondoEmergencia() {
   return useQuery({
     queryKey: ['fondo-emergencia'],
@@ -26,7 +33,10 @@ export function useCreateFondoEmergencia() {
       const { data } = await apiClient.post('/fondo-emergencia', payload)
       return data as FondoEmergenciaData
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['fondo-emergencia'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fondo-emergencia'] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
+    },
   })
 }
 
@@ -37,7 +47,10 @@ export function useUpdateFondoEmergencia() {
       const { data } = await apiClient.patch('/fondo-emergencia', payload)
       return data as FondoEmergenciaData
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['fondo-emergencia'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fondo-emergencia'] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
+    },
   })
 }
 
@@ -48,7 +61,10 @@ export function useDepositarFondo() {
       const { data } = await apiClient.post('/fondo-emergencia/depositar', { monto })
       return data as FondoEmergenciaData
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['fondo-emergencia'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fondo-emergencia'] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
+    },
   })
 }
 
@@ -59,6 +75,9 @@ export function useRetirarFondo() {
       const { data } = await apiClient.post('/fondo-emergencia/retirar', { monto })
       return data as FondoEmergenciaData
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['fondo-emergencia'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fondo-emergencia'] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
+    },
   })
 }

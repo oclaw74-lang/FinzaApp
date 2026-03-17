@@ -197,7 +197,6 @@ def registrar_pago(
             raise HTTPException(
                 status_code=500, detail="Error al registrar el pago."
             )
-        return result.data
     except HTTPException:
         raise
     except APIError as e:
@@ -214,7 +213,50 @@ def registrar_pago(
                 detail="El monto del pago excede el monto pendiente.",
             )
         _handle_api_error(e)
-    return {}
+        return {}
+
+    # Auto-create egreso to reflect the payment in the user's balance
+    try:
+        prestamo_r = (
+            client.table("prestamos")
+            .select("nombre")
+            .eq("id", prestamo_id)
+            .maybe_single()
+            .execute()
+        )
+        prestamo_nombre = (
+            prestamo_r.data["nombre"]
+            if (prestamo_r and prestamo_r.data)
+            else "prestamo"
+        )
+
+        cat_r = (
+            client.table("categorias")
+            .select("id")
+            .eq("nombre", "Otros Egresos")
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        )
+        cat_id = cat_r.data[0]["id"] if cat_r.data else None
+
+        egreso_payload: dict = {
+            "user_id": user_id,
+            "monto": str(data.monto),
+            "moneda": "DOP",
+            "descripcion": f"Pago: {prestamo_nombre}",
+            "metodo_pago": "transferencia",
+            "fecha": str(data.fecha),
+            "categoria_id": cat_id,
+        }
+        if data.notas:
+            egreso_payload["notas"] = data.notas
+
+        client.table("egresos").insert(egreso_payload).execute()
+    except Exception:
+        pass  # Do not fail the payment if egreso creation fails (MVP)
+
+    return result.data
 
 
 def delete_pago(

@@ -59,7 +59,7 @@ export function TransaccionForm({
   submitLabel,
 }: TransaccionFormProps): JSX.Element {
   const schema = tipo === 'ingreso' ? ingresoSchema : egresoSchema
-  const { data: categorias = [], isLoading: loadingCategorias } = useCategorias(tipo)
+  const { data: categorias = [], isLoading: loadingCategorias } = useCategorias()
 
   const {
     register,

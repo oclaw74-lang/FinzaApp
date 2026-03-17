@@ -2,6 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api'
 import type { IngresoResponse, PaginatedResponse } from '@/types/transacciones'
 
+const DASHBOARD_KEYS = [
+  ['dashboard-v2'],
+  ['score'],
+  ['prediccion-mes'],
+  ['comparativa'],
+] as const
+
 interface IngresosFilters {
   fecha_desde?: string
   fecha_hasta?: string
@@ -36,6 +43,7 @@ export function useCreateIngreso() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ingresos'] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }
@@ -49,6 +57,7 @@ export function useUpdateIngreso() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ingresos'] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }
@@ -61,6 +70,7 @@ export function useDeleteIngreso() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ingresos'] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
   })
 }
