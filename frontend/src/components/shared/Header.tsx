@@ -14,6 +14,7 @@ const routeTitles: Record<string, string> = {
   '/': 'nav.dashboard',
   '/ingresos': 'nav.ingresos',
   '/egresos': 'nav.egresos',
+  '/recurrentes': 'nav.recurrentes',
   '/prestamos': 'nav.prestamos',
   '/metas': 'nav.metas',
   '/presupuestos': 'nav.presupuestos',
@@ -49,9 +50,11 @@ export function Header(): JSX.Element {
   return (
     <header
       className={cn(
-        'sticky top-0 z-10 h-16 bg-surface/80 backdrop-blur-md border-b border-border',
-        'flex items-center px-4 gap-4'
+        'sticky top-0 z-10 h-16 flex items-center px-4 gap-4',
+        'backdrop-blur-md border-b',
+        'bg-white/80 border-gray-200/60 dark:bg-[#0a0f1e]/85 dark:border-white/[0.06]'
       )}
+      style={{ boxShadow: '0 1px 0 rgba(0,0,0,0.04)' }}
     >
       {/* Mobile hamburger */}
       <button

@@ -64,7 +64,7 @@ export function Sidebar(): JSX.Element {
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-20 lg:hidden"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-20 lg:hidden modal-overlay"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -72,30 +72,54 @@ export function Sidebar(): JSX.Element {
       <aside
         className={cn(
           'fixed top-0 left-0 h-full z-30 flex flex-col transition-all duration-300 ease-in-out',
-          'bg-sidebar text-sidebar-foreground',
           sidebarCollapsed ? 'w-[72px]' : 'w-64',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
+        style={{
+          background: 'linear-gradient(180deg, #0F1923 0%, #121e2d 60%, #0f1923 100%)',
+          borderRight: '1px solid rgba(255,255,255,0.06)',
+        }}
       >
         {/* Logo area */}
         <div
           className={cn(
-            'flex items-center border-b border-white/10 h-16',
+            'flex items-center h-16',
             sidebarCollapsed ? 'justify-center px-4' : 'px-5 justify-between'
           )}
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
         >
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                style={{ background: 'linear-gradient(135deg, #818cf8, #6366f1)' }}>
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-lg"
+                style={{
+                  background: 'linear-gradient(135deg, #5B9BD5, #366092)',
+                  boxShadow: '0 0 16px rgba(91,155,213,0.4)',
+                }}
+              >
                 <span className="font-bold text-white text-sm">F</span>
               </div>
-              <span className="font-bold text-lg tracking-tight text-white">Finza</span>
+              <span
+                className="font-bold text-lg tracking-tight"
+                style={{
+                  background: 'linear-gradient(135deg, #ffffff, #a0b4cc)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                Finza
+              </span>
             </div>
           )}
           {sidebarCollapsed && (
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #818cf8, #6366f1)' }}>
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg"
+              style={{
+                background: 'linear-gradient(135deg, #5B9BD5, #366092)',
+                boxShadow: '0 0 16px rgba(91,155,213,0.35)',
+              }}
+            >
               <span className="font-bold text-white text-sm">F</span>
             </div>
           )}
@@ -103,7 +127,7 @@ export function Sidebar(): JSX.Element {
           {/* Mobile close */}
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden text-white/60 hover:text-white"
+            className="lg:hidden text-white/50 hover:text-white transition-colors"
             aria-label="Cerrar menu"
           >
             <X size={18} />
@@ -113,10 +137,10 @@ export function Sidebar(): JSX.Element {
           {!sidebarCollapsed && (
             <button
               onClick={() => setSidebarCollapsed(true)}
-              className="hidden lg:flex text-white/40 hover:text-white transition-colors"
+              className="hidden lg:flex text-white/30 hover:text-white/80 transition-colors w-7 h-7 items-center justify-center rounded-lg hover:bg-white/10"
               aria-label="Colapsar sidebar"
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={16} />
             </button>
           )}
         </div>
@@ -125,10 +149,10 @@ export function Sidebar(): JSX.Element {
         {sidebarCollapsed && (
           <button
             onClick={() => setSidebarCollapsed(false)}
-            className="hidden lg:flex items-center justify-center h-8 mx-3 mt-2 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+            className="hidden lg:flex items-center justify-center h-8 mx-3 mt-2 rounded-lg text-white/30 hover:text-white/80 hover:bg-white/10 transition-all duration-150"
             aria-label="Expandir sidebar"
           >
-            <ChevronRight size={16} />
+            <ChevronRight size={15} />
           </button>
         )}
 
@@ -142,16 +166,42 @@ export function Sidebar(): JSX.Element {
               title={sidebarCollapsed ? t(labelKey) : undefined}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-3 rounded-xl mb-0.5 text-sm font-medium transition-all duration-150',
+                  'group relative flex items-center gap-3 rounded-xl mb-0.5 text-sm font-medium transition-all duration-150',
                   sidebarCollapsed ? 'justify-center w-11 h-11 mx-auto' : 'px-3 py-2.5',
                   isActive
-                    ? 'bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/70 text-white shadow-lg shadow-[var(--accent)]/20'
-                    : 'text-[var(--sidebar-muted)] hover:bg-white/10 hover:text-white'
+                    ? 'text-white sidebar-item-active'
+                    : 'text-white/45 hover:text-white/90'
                 )
               }
+              style={({ isActive }) =>
+                isActive
+                  ? {
+                      background: 'linear-gradient(90deg, rgba(54,96,146,0.35) 0%, rgba(91,155,213,0.12) 100%)',
+                      boxShadow: 'inset 0 0 0 1px rgba(91,155,213,0.15)',
+                    }
+                  : {}
+              }
             >
-              <Icon size={18} strokeWidth={2} className="shrink-0" />
-              {!sidebarCollapsed && <span className="truncate">{t(labelKey)}</span>}
+              {({ isActive }) => (
+                <>
+                  <span
+                    className="transition-all duration-150"
+                    style={isActive ? { color: '#5B9BD5', filter: 'drop-shadow(0 0 6px rgba(91,155,213,0.5))' } : {}}
+                  >
+                    <Icon size={17} strokeWidth={isActive ? 2.2 : 1.8} className="shrink-0" />
+                  </span>
+                  {!sidebarCollapsed && (
+                    <span className="truncate">{t(labelKey)}</span>
+                  )}
+                  {/* Hover glow */}
+                  {!isActive && (
+                    <span
+                      className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                      style={{ background: 'rgba(255,255,255,0.04)' }}
+                    />
+                  )}
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -162,24 +212,25 @@ export function Sidebar(): JSX.Element {
         {/* User section */}
         <div
           className={cn(
-            'border-t border-white/10 p-3',
+            'p-3',
             sidebarCollapsed ? 'flex flex-col items-center gap-2' : ''
           )}
+          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
         >
           {!sidebarCollapsed ? (
             <div className="flex items-center gap-3">
               <Avatar name={userName} size="sm" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{userName}</p>
-                <p className="text-xs text-white/50 truncate">{user?.email}</p>
+                <p className="text-sm font-medium text-white/90 truncate">{userName}</p>
+                <p className="text-xs text-white/40 truncate">{user?.email}</p>
               </div>
               <button
                 onClick={handleSignOut}
-                className="text-white/40 hover:text-white transition-colors"
+                className="text-white/30 hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-500/10"
                 title={t('auth.logout')}
                 aria-label={t('auth.logout')}
               >
-                <LogOut size={16} />
+                <LogOut size={15} />
               </button>
             </div>
           ) : (
@@ -187,7 +238,7 @@ export function Sidebar(): JSX.Element {
               <Avatar name={userName} size="sm" />
               <button
                 onClick={handleSignOut}
-                className="text-white/40 hover:text-white transition-colors"
+                className="text-white/30 hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-500/10"
                 title={t('auth.logout')}
                 aria-label={t('auth.logout')}
               >

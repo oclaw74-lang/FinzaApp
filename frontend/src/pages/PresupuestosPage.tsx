@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, Target, Sparkles, X } from 'lucide-react'
+import { Plus, Target, Sparkles, X, Tag } from 'lucide-react'
+import * as Icons from 'lucide-react'
 import axios from 'axios'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/apiError'
@@ -362,29 +363,50 @@ export function PresupuestosPage(): JSX.Element {
                 Sin presupuesto
               </h2>
               <div className="finza-card p-0 overflow-hidden">
-                {categoriasSinPresupuesto.map((cat, idx) => (
-                  <div
-                    key={cat.id}
-                    className={`flex items-center justify-between px-4 py-3 ${
-                      idx < categoriasSinPresupuesto.length - 1
-                        ? 'border-b border-border'
-                        : ''
-                    }`}
-                  >
-                    <span className="text-sm text-[var(--text-primary)]">
-                      {cat.icono ? `${cat.icono} ` : ''}
-                      {cat.nombre}
-                    </span>
-                    <Button
-                      variant="secondary"
-                      onClick={() => handleOpenAsignar(cat.id)}
-                      className="text-xs py-1 px-3 h-auto"
+                {categoriasSinPresupuesto.map((cat, idx) => {
+                  const iconName = cat.icono ?? ''
+                  const IconComponent =
+                    iconName && (Icons as Record<string, unknown>)[iconName]
+                      ? (Icons as Record<string, React.ComponentType<{ className?: string }>>)[iconName]
+                      : Tag
+                  return (
+                    <div
+                      key={cat.id}
+                      className={`flex items-center justify-between px-4 py-3 ${
+                        idx < categoriasSinPresupuesto.length - 1
+                          ? 'border-b border-border'
+                          : ''
+                      }`}
                     >
-                      <Plus size={13} className="mr-1" />
-                      Asignar limite
-                    </Button>
-                  </div>
-                ))}
+                      <span className="flex items-center gap-2 text-sm text-[var(--text-primary)]">
+                        <IconComponent className="w-4 h-4 shrink-0 text-[var(--text-muted)]" />
+                        {cat.nombre}
+                      </span>
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleOpenAsignar(cat.id)}
+                        className="text-xs py-1 px-3 h-auto"
+                      >
+                        <Plus size={13} className="mr-1" />
+                        Asignar limite
+                      </Button>
+                    </div>
+                  )
+                })}
+                {/* Boton para agregar presupuesto de categoria no listada */}
+                <div className="border-t border-border px-4 py-3 flex items-center justify-between">
+                  <span className="text-xs text-[var(--text-muted)]">
+                    ¿No ves tu categoria?
+                  </span>
+                  <Button
+                    variant="secondary"
+                    onClick={handleOpenCreate}
+                    className="text-xs py-1 px-3 h-auto"
+                  >
+                    <Plus size={13} className="mr-1" />
+                    Agregar otro
+                  </Button>
+                </div>
               </div>
             </>
           )}

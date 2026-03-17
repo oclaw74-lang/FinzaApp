@@ -1,4 +1,4 @@
-import { useState, useRef, ChangeEvent } from 'react'
+import { useState, useRef, useEffect, ChangeEvent } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -47,13 +47,13 @@ export function ConfiguracionPage(): JSX.Element {
   const [salarioValue, setSalarioValue] = useState('')
   const [mostrarHoras, setMostrarHoras] = useState(false)
 
-  // Sync profile data when loaded
-  const [profileLoaded, setProfileLoaded] = useState(false)
-  if (profile && !profileLoaded) {
-    setSalarioValue(profile.salario_mensual_neto != null ? String(profile.salario_mensual_neto) : '')
-    setMostrarHoras(profile.mostrar_horas_trabajo ?? false)
-    setProfileLoaded(true)
-  }
+  // Sync profile data when loaded (useEffect avoids stale state from render-time mutation)
+  useEffect(() => {
+    if (profile) {
+      setSalarioValue(profile.salario_mensual_neto != null ? String(profile.salario_mensual_neto) : '')
+      setMostrarHoras(profile.mostrar_horas_trabajo ?? false)
+    }
+  }, [profile])
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
   const [passwordError, setPasswordError] = useState<string | null>(null)

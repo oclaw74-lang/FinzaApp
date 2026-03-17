@@ -4,26 +4,26 @@ import { Loader2 } from 'lucide-react'
 import { ButtonHTMLAttributes, forwardRef } from 'react'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-offset-2',
+  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95',
   {
     variants: {
       variant: {
         primary:
-          'bg-finza-blue text-white hover:bg-finza-blue-dark active:scale-[.98] focus:ring-finza-blue/30',
+          '[background:linear-gradient(135deg,#366092,#5B9BD5)] text-white shadow-[0_2px_8px_rgba(54,96,146,0.30)] hover:shadow-[0_4px_20px_rgba(54,96,146,0.45)] hover:brightness-110 focus:ring-finza-blue/30',
         default:
-          'bg-finza-blue text-white hover:bg-finza-blue-dark active:scale-[.98] focus:ring-finza-blue/30',
+          '[background:linear-gradient(135deg,#366092,#5B9BD5)] text-white shadow-[0_2px_8px_rgba(54,96,146,0.30)] hover:shadow-[0_4px_20px_rgba(54,96,146,0.45)] hover:brightness-110 focus:ring-finza-blue/30',
         secondary:
-          'bg-surface border border-border text-[var(--text-primary)] hover:bg-surface-raised focus:ring-border',
+          'bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--surface-raised)] hover:border-[var(--border-strong)] focus:ring-[var(--border)]',
         ghost:
-          'text-[var(--text-muted)] hover:bg-surface-raised hover:text-[var(--text-primary)]',
+          'text-[var(--text-muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--text-primary)]',
         destructive:
-          'bg-alert-red text-white hover:bg-red-600 focus:ring-alert-red/30',
+          'bg-alert-red text-white hover:bg-red-600 shadow-[0_2px_8px_rgba(239,68,68,0.25)] hover:shadow-[0_4px_16px_rgba(239,68,68,0.35)] focus:ring-alert-red/30',
         danger:
-          'bg-alert-red text-white hover:bg-red-600 focus:ring-alert-red/30',
+          'bg-alert-red text-white hover:bg-red-600 shadow-[0_2px_8px_rgba(239,68,68,0.25)] hover:shadow-[0_4px_16px_rgba(239,68,68,0.35)] focus:ring-alert-red/30',
         outline:
           'border border-finza-blue text-finza-blue hover:bg-finza-blue/10 focus:ring-finza-blue/30',
         success:
-          'bg-prosperity-green text-white hover:opacity-90 active:scale-[0.98]',
+          'bg-prosperity-green text-white shadow-[0_2px_8px_rgba(0,176,80,0.25)] hover:brightness-110 focus:ring-prosperity-green/30',
         link:
           'text-finza-blue underline-offset-4 hover:underline',
       },

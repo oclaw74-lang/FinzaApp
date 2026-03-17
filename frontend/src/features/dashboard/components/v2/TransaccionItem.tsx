@@ -11,12 +11,14 @@ export function TransaccionItem({ transaccion }: TransaccionItemProps): JSX.Elem
   const isIngreso = tipo === 'ingreso'
 
   return (
-    <div className="flex items-center justify-between py-3 border-b border-border last:border-0">
+    <div className="flex items-center justify-between py-3 border-b border-[var(--border)] last:border-0 row-hover px-2 -mx-2 rounded-lg">
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <div
           className={cn(
-            'w-2 h-2 rounded-full flex-shrink-0',
-            isIngreso ? 'bg-prosperity-green' : 'bg-alert-red'
+            'w-2 h-2 rounded-full flex-shrink-0 ring-2',
+            isIngreso
+              ? 'bg-prosperity-green ring-prosperity-green/20'
+              : 'bg-alert-red ring-alert-red/20'
           )}
           aria-hidden="true"
         />
@@ -27,10 +29,10 @@ export function TransaccionItem({ transaccion }: TransaccionItemProps): JSX.Elem
           <p className="text-xs text-[var(--text-muted)] flex items-center gap-1">
             <span
               className={cn(
-                'inline-block px-1.5 py-0.5 rounded text-[10px] font-medium',
+                'inline-block px-1.5 py-0.5 rounded-full text-[10px] font-medium',
                 isIngreso
-                  ? 'bg-prosperity-green/10 text-prosperity-green'
-                  : 'bg-alert-red/10 text-alert-red'
+                  ? 'bg-prosperity-green/10 text-prosperity-green border border-prosperity-green/20'
+                  : 'bg-alert-red/10 text-alert-red border border-alert-red/20'
               )}
             >
               {isIngreso ? 'INGRESO' : 'EGRESO'}
@@ -45,7 +47,7 @@ export function TransaccionItem({ transaccion }: TransaccionItemProps): JSX.Elem
       <div className="ml-4 flex-shrink-0">
         <span
           className={cn(
-            'text-sm font-semibold font-mono',
+            'text-sm font-semibold font-mono tabular-nums',
             isIngreso ? 'text-prosperity-green' : 'text-alert-red'
           )}
         >
