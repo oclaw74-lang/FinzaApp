@@ -45,8 +45,10 @@ export function PresupuestoForm({
   const { data: categorias = [], isLoading: loadingCategorias } =
     useCategorias()
 
-  // Todas las categorias — los presupuestos aplican a cualquier categoria
-  const categoriasEgreso = categorias
+  // Solo categorias de egreso o ambos
+  const categoriasEgreso = categorias.filter(
+    (c) => c.tipo === 'egreso' || c.tipo === 'ambos'
+  )
 
   const {
     register,
