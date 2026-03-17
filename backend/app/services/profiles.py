@@ -47,7 +47,7 @@ def get_or_create_profile(user_jwt: str, user_id: str) -> dict:
 
 def update_profile(user_jwt: str, user_id: str, data: ProfileUpdate) -> dict:
     client = get_user_client(user_jwt)
-    payload = {k: v for k, v in data.model_dump().items() if v is not None}
+    payload = data.model_dump(exclude_none=True)
     if not payload:
         return get_or_create_profile(user_jwt, user_id)
 

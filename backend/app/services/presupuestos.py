@@ -120,6 +120,114 @@ def delete_presupuesto(user_jwt: str, presupuesto_id: str) -> None:
         _handle_api_error(e)
 
 
+def get_sugeridos(user_jwt: str, user_id: str, mes: int, year: int) -> list[dict]:
+    """
+    Returns suggested budget limits for the target month/year.
+    Algorithm:
+    1. Find the last 3 calendar months BEFORE the target month
+    2. For each category that has egresos in those 3 months, compute average monthly spend
+    3. Suggest limit = round(avg * 1.10, -1)  # 10% buffer, rounded to nearest 10
+    4. Skip categories that already have a presupuesto for the target mes/year
+    5. Return list sorted by suggested amount desc
+    """
+    from calendar import monthrange
+    from collections import defaultdict
+    from datetime import datetime
+
+    client = get_user_client(user_jwt)
+
+    # Compute last 3 months before target
+    meses_ref: list[tuple[int, int]] = []
+    m, y = mes, year
+    for _ in range(3):
+        m -= 1
+        if m == 0:
+            m = 12
+            y -= 1
+        meses_ref.append((y, m))
+
+    oldest_y, oldest_m = meses_ref[-1]
+    newest_y, newest_m = meses_ref[0]
+    fecha_inicio = f"{oldest_y}-{oldest_m:02d}-01"
+    last_day = monthrange(newest_y, newest_m)[1]
+    fecha_fin = f"{newest_y}-{newest_m:02d}-{last_day:02d}"
+
+    # Fetch egresos in range
+    try:
+        eg_r = (
+            client.table("egresos")
+            .select("monto,categoria_id,fecha")
+            .eq("user_id", user_id)
+            .gte("fecha", fecha_inicio)
+            .lte("fecha", fecha_fin)
+            .execute()
+        )
+    except APIError:
+        return []
+
+    # Fetch categories
+    try:
+        cat_r = client.table("categorias").select("id,nombre").execute()
+    except APIError:
+        return []
+
+    cat_map = {c["id"]: c["nombre"] for c in (cat_r.data or [])}
+
+    # Group by category, by month
+    meses_set = set(meses_ref)
+    totales: dict[str, dict[tuple[int, int], float]] = defaultdict(
+        lambda: defaultdict(float)
+    )
+
+    for e in eg_r.data or []:
+        cat_id = e.get("categoria_id")
+        fecha_str = e.get("fecha", "")[:10]
+        if not cat_id or not fecha_str:
+            continue
+        d = datetime.strptime(fecha_str, "%Y-%m-%d")
+        key = (d.year, d.month)
+        if key in meses_set:
+            totales[cat_id][key] += float(e["monto"])
+
+    # Fetch existing presupuestos for target month to exclude
+    try:
+        existing_r = (
+            client.table("presupuestos")
+            .select("categoria_id")
+            .eq("user_id", user_id)
+            .eq("mes", mes)
+            .eq("year", year)
+            .execute()
+        )
+    except APIError:
+        existing_r = type("_R", (), {"data": []})()
+
+    existing_cats = {p["categoria_id"] for p in (existing_r.data or [])}
+
+    # Build suggestions
+    suggestions = []
+    for cat_id, monthly_totals in totales.items():
+        if cat_id in existing_cats:
+            continue
+        avg = sum(monthly_totals.values()) / 3  # divide by 3 months always
+        suggested = round(avg * 1.10 / 10) * 10  # 10% buffer, round to nearest 10
+        if suggested <= 0:
+            continue
+        suggestions.append(
+            {
+                "categoria_id": cat_id,
+                "categoria_nombre": cat_map.get(cat_id, "Sin categoría"),
+                "promedio_mensual": round(avg, 2),
+                "sugerido": float(suggested),
+                "mes": mes,
+                "year": year,
+            }
+        )
+
+    suggestions.sort(key=lambda x: x["sugerido"], reverse=True)
+    return suggestions
+
+
 def get_estado_presupuestos(user_jwt: str, mes: int, year: int) -> list[dict]:
     """Retorna presupuestos del mes con gasto_actual calculado desde egresos."""
     client = get_user_client(user_jwt)

@@ -33,8 +33,20 @@ async def create_presupuesto(
     return svc.create_presupuesto(user_jwt=token, user_id=current_user["user_id"], data=data)
 
 
-# IMPORTANTE: /estado debe ir ANTES de /{presupuesto_id} para evitar que el
-# path param capture la cadena literal "estado"
+# IMPORTANTE: /sugeridos y /estado deben ir ANTES de /{presupuesto_id} para
+# evitar que el path param capture cadenas literales
+@router.get("/sugeridos")
+async def get_presupuestos_sugeridos(
+    mes: int = Query(..., ge=1, le=12),
+    year: int = Query(..., ge=2020, le=2100),
+    token: str = Depends(get_raw_token),
+    current_user: dict = Depends(get_current_user),
+) -> list[dict]:
+    return svc.get_sugeridos(
+        user_jwt=token, user_id=current_user["user_id"], mes=mes, year=year
+    )
+
+
 @router.get("/estado", response_model=list[PresupuestoEstado])
 async def get_estado(
     mes: int = Query(..., ge=1, le=12, description="Mes (1-12)"),

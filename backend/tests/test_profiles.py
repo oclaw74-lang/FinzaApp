@@ -63,3 +63,71 @@ def test_update_profile_sets_salario(mock_client: MagicMock) -> None:
     result = update_profile("jwt", "u-1", ProfileUpdate(salario_mensual_neto=50000))
     assert result["salario_mensual_neto"] == 50000.0
     assert result["horas_por_peso"] is not None
+
+
+@patch("app.services.profiles.get_user_client")
+def test_onboarding_completed_defaults_false(mock_client: MagicMock) -> None:
+    from app.services.profiles import get_or_create_profile
+
+    mock = MagicMock()
+    mock.table.return_value.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = MagicMock(
+        data={
+            "user_id": "u-1",
+            "salario_mensual_neto": None,
+            "mostrar_horas_trabajo": False,
+            "onboarding_completed": False,
+        }
+    )
+    mock_client.return_value = mock
+
+    result = get_or_create_profile("jwt", "u-1")
+    assert result["onboarding_completed"] is False
+
+
+@patch("app.services.profiles.get_user_client")
+def test_onboarding_completed_can_be_set_true(mock_client: MagicMock) -> None:
+    from app.services.profiles import update_profile
+    from app.schemas.profile import ProfileUpdate
+
+    mock = MagicMock()
+    mock.table.return_value.upsert.return_value.execute.return_value = MagicMock(
+        data=[{
+            "user_id": "u-1",
+            "salario_mensual_neto": None,
+            "mostrar_horas_trabajo": False,
+            "onboarding_completed": True,
+        }]
+    )
+    mock_client.return_value = mock
+
+    result = update_profile("jwt", "u-1", ProfileUpdate(onboarding_completed=True))
+    assert result["onboarding_completed"] is True
+
+    # Verify upsert was called with onboarding_completed in payload
+    call_kwargs = mock.table.return_value.upsert.call_args[0][0]
+    assert call_kwargs.get("onboarding_completed") is True
+
+
+@patch("app.services.profiles.get_user_client")
+def test_onboarding_completed_false_not_filtered_out(mock_client: MagicMock) -> None:
+    """Setting onboarding_completed=False must reach the DB (not be filtered by exclude_none)."""
+    from app.services.profiles import update_profile
+    from app.schemas.profile import ProfileUpdate
+
+    mock = MagicMock()
+    mock.table.return_value.upsert.return_value.execute.return_value = MagicMock(
+        data=[{
+            "user_id": "u-1",
+            "salario_mensual_neto": None,
+            "mostrar_horas_trabajo": False,
+            "onboarding_completed": False,
+        }]
+    )
+    mock_client.return_value = mock
+
+    result = update_profile("jwt", "u-1", ProfileUpdate(onboarding_completed=False))
+    assert result["onboarding_completed"] is False
+
+    call_kwargs = mock.table.return_value.upsert.call_args[0][0]
+    assert "onboarding_completed" in call_kwargs
+    assert call_kwargs["onboarding_completed"] is False
