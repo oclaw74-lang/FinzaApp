@@ -124,4 +124,35 @@ describe('NotificacionesPage', () => {
     render(<NotificacionesPage />)
     expect(mutate).toHaveBeenCalled()
   })
+
+  it('renders advertencia notification with correct section header', () => {
+    const mockAdvertenciaNotif: NotificacionData = {
+      id: 'notif-adv-1',
+      tipo: 'advertencia',
+      categoria: 'prestamo_pago_proximo',
+      titulo: 'Pago proximo de prestamo',
+      mensaje: 'Tienes un pago de prestamo en 3 dias.',
+      leida: false,
+      created_at: new Date().toISOString(),
+    }
+    setupMocks([mockAdvertenciaNotif])
+    render(<NotificacionesPage />)
+    expect(screen.getByText('Pago proximo de prestamo')).toBeInTheDocument()
+    expect(screen.getAllByText('Advertencia').length).toBeGreaterThan(0)
+  })
+
+  it('renders advertencia notification type badge', () => {
+    const mockAdvertenciaNotif: NotificacionData = {
+      id: 'notif-adv-2',
+      tipo: 'advertencia',
+      categoria: 'suscripcion_cobro_proximo',
+      titulo: 'Cobro de suscripcion manana',
+      mensaje: 'Netflix se cobra manana por RD$500.',
+      leida: false,
+      created_at: new Date().toISOString(),
+    }
+    setupMocks([mockAdvertenciaNotif])
+    render(<NotificacionesPage />)
+    expect(screen.getByText('Cobro de suscripcion manana')).toBeInTheDocument()
+  })
 })

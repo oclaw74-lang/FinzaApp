@@ -24,6 +24,11 @@ export interface Prestamo {
   notas?: string
   pagos?: PagoPrestamo[]
   created_at: string
+  tasa_interes?: number | null
+  plazo_meses?: number | null
+  cuota_mensual?: number | null
+  total_intereses?: number | null
+  proximo_pago?: string | null
 }
 
 export interface PrestamoCreate {
@@ -35,6 +40,8 @@ export interface PrestamoCreate {
   fecha_vencimiento?: string
   descripcion?: string
   notas?: string
+  tasa_interes?: number | null
+  plazo_meses?: number | null
 }
 
 export interface PrestamoUpdate {
@@ -46,6 +53,8 @@ export interface PrestamoUpdate {
   descripcion?: string
   notas?: string
   estado?: EstadoPrestamo
+  tasa_interes?: number | null
+  plazo_meses?: number | null
 }
 
 export interface PagoPrestamoCreate {

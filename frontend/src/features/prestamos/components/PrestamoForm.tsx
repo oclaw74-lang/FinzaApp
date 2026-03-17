@@ -17,6 +17,19 @@ const prestamoSchema = z
     fecha_vencimiento: z.string().optional(),
     descripcion: z.string().optional(),
     notas: z.string().optional(),
+    tasa_interes: z
+      .number({ invalid_type_error: 'Ingresa una tasa valida' })
+      .min(0, 'La tasa no puede ser negativa')
+      .max(1000, 'La tasa parece demasiado alta')
+      .optional()
+      .nullable(),
+    plazo_meses: z
+      .number({ invalid_type_error: 'Ingresa un plazo valido' })
+      .int('Debe ser un numero entero')
+      .min(1, 'El plazo debe ser al menos 1 mes')
+      .max(600, 'El plazo maximo es 600 meses')
+      .optional()
+      .nullable(),
   })
   .refine(
     (data) => {
@@ -135,6 +148,38 @@ export function PrestamoForm({
         placeholder="Ej: Prestamo para reparar carro"
         {...register('descripcion')}
       />
+
+      {/* Tasa de interes + Plazo */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="tasa_interes" className="text-sm font-medium text-gray-700">
+            Tasa de interes (%)
+          </label>
+          <Input
+            id="tasa_interes"
+            type="number"
+            step="0.01"
+            placeholder="Ej: 18.5"
+            error={errors.tasa_interes?.message}
+            {...register('tasa_interes', { valueAsNumber: true, setValueAs: (v) => v === '' ? null : Number(v) })}
+          />
+          <p className="text-xs text-gray-400">Opcional — tasa anual en %</p>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="plazo_meses" className="text-sm font-medium text-gray-700">
+            Plazo (meses)
+          </label>
+          <Input
+            id="plazo_meses"
+            type="number"
+            step="1"
+            placeholder="Ej: 24"
+            error={errors.plazo_meses?.message}
+            {...register('plazo_meses', { valueAsNumber: true, setValueAs: (v) => v === '' ? null : Number(v) })}
+          />
+          <p className="text-xs text-gray-400">Opcional — numero de cuotas</p>
+        </div>
+      </div>
 
       {/* Notas */}
       <div className="flex flex-col gap-1.5">

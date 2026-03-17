@@ -84,6 +84,8 @@ export function PrestamosPage(): JSX.Element {
         fecha_vencimiento: data.fecha_vencimiento || undefined,
         descripcion: data.descripcion || undefined,
         notas: data.notas || undefined,
+        tasa_interes: data.tasa_interes ?? null,
+        plazo_meses: data.plazo_meses ?? null,
       })
       setIsModalOpen(false)
       toast.success(t('prestamos.created'))
@@ -104,6 +106,8 @@ export function PrestamosPage(): JSX.Element {
         fecha_vencimiento: data.fecha_vencimiento || undefined,
         descripcion: data.descripcion || undefined,
         notas: data.notas || undefined,
+        tasa_interes: data.tasa_interes ?? null,
+        plazo_meses: data.plazo_meses ?? null,
       })
       setPrestamoEditando(null)
       toast.success(t('prestamos.updated'))

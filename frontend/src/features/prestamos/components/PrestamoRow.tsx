@@ -1,5 +1,63 @@
+import { AlertCircle, Clock } from 'lucide-react'
 import { formatMoney, formatDate, cn } from '@/lib/utils'
 import type { Prestamo, EstadoPrestamo } from '@/types/prestamo'
+
+function calcularDiasHastaProximoPago(proximoPago: string): number {
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+  const fechaPago = new Date(proximoPago)
+  fechaPago.setHours(0, 0, 0, 0)
+  return Math.round((fechaPago.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24))
+}
+
+function ProximoPagoBadge({ proximoPago }: { proximoPago: string }): JSX.Element {
+  const dias = calcularDiasHastaProximoPago(proximoPago)
+
+  if (dias <= 0) {
+    return (
+      <span
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[#FFEBEB] text-alert-red"
+        role="status"
+        aria-label="Pago hoy"
+      >
+        <AlertCircle size={11} aria-hidden="true" />
+        ¡Pago hoy!
+      </span>
+    )
+  }
+
+  if (dias <= 3) {
+    return (
+      <span
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[#FFF9E6] text-[#B8860B]"
+        role="status"
+        aria-label={`Pago en ${dias} dias`}
+      >
+        <Clock size={11} aria-hidden="true" />
+        Pago en {dias} {dias === 1 ? 'dia' : 'dias'}
+      </span>
+    )
+  }
+
+  if (dias <= 7) {
+    return (
+      <span
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[#FFF3E0] text-[#E65100]"
+        role="status"
+        aria-label={`Pago en ${dias} dias`}
+      >
+        <Clock size={11} aria-hidden="true" />
+        Pago en {dias} dias
+      </span>
+    )
+  }
+
+  return (
+    <span className="text-xs text-[var(--text-muted)]">
+      Prox. pago: {formatDate(proximoPago)}
+    </span>
+  )
+}
 
 interface PrestamoRowProps {
   prestamo: Prestamo
@@ -99,6 +157,25 @@ export function PrestamoRow({ prestamo, onClick }: PrestamoRowProps): JSX.Elemen
               </div>
               <p className="text-xs text-[var(--text-muted)]">{porcentajePagado}% pagado</p>
             </div>
+
+            {/* Intereses y proximo pago — solo en prestamos activos */}
+            {prestamo.estado === 'activo' && (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {prestamo.cuota_mensual != null && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#EBF3FB] text-finza-blue">
+                    Cuota: {formatMoney(prestamo.cuota_mensual, prestamo.moneda)}/mes
+                  </span>
+                )}
+                {prestamo.proximo_pago != null && (
+                  <ProximoPagoBadge proximoPago={prestamo.proximo_pago} />
+                )}
+              </div>
+            )}
+            {prestamo.estado === 'activo' && prestamo.total_intereses != null && prestamo.total_intereses > 0 && (
+              <p className="text-xs text-[var(--text-muted)] mt-1">
+                Intereses totales: {formatMoney(prestamo.total_intereses, prestamo.moneda)}
+              </p>
+            )}
           </div>
         </div>
 

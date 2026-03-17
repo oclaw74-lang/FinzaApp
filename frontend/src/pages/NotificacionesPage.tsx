@@ -1,4 +1,4 @@
-import { CheckCheck, Trash2, AlertTriangle, Info, Trophy } from 'lucide-react'
+import { CheckCheck, Trash2, AlertTriangle, Info, Trophy, Bell } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import {
@@ -35,6 +35,12 @@ const TIPO_CONFIG: Record<
     bgColor: 'var(--success)',
     icon: Trophy,
     label: 'notificaciones.logro',
+  },
+  advertencia: {
+    color: '#E65100',
+    bgColor: '#E65100',
+    icon: Bell,
+    label: 'notificaciones.advertencia',
   },
 }
 
@@ -165,6 +171,7 @@ export function NotificacionesPage(): JSX.Element {
 
   // Group by tipo
   const urgentes = notificaciones.filter((n) => n.tipo === 'urgente')
+  const advertencias = notificaciones.filter((n) => n.tipo === 'advertencia')
   const logros = notificaciones.filter((n) => n.tipo === 'logro')
   const informativas = notificaciones.filter((n) => n.tipo === 'informativa')
 
@@ -225,6 +232,26 @@ export function NotificacionesPage(): JSX.Element {
           </h2>
           <div className="space-y-2">
             {urgentes.map((n) => (
+              <NotificacionItem
+                key={n.id}
+                notificacion={n}
+                onLeer={handleLeer}
+                onEliminar={handleEliminar}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Advertencias */}
+      {advertencias.length > 0 && (
+        <section className="mb-5">
+          <h2 className="text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5" style={{ color: '#E65100' }}>
+            <Bell size={12} />
+            {t('notificaciones.advertencia')}
+          </h2>
+          <div className="space-y-2">
+            {advertencias.map((n) => (
               <NotificacionItem
                 key={n.id}
                 notificacion={n}

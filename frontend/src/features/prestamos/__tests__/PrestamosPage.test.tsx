@@ -159,4 +159,66 @@ describe('PrestamosPage', () => {
     const tab = screen.getByRole('tab', { name: /me deben/i })
     expect(tab).toHaveAttribute('aria-selected', 'true')
   })
+
+  it('renders cuota_mensual badge when present', () => {
+    const prestamoConCuota: Prestamo = {
+      id: 'pre-cuota',
+      tipo: 'me_deben',
+      persona: 'Carlos Lopez',
+      monto_original: 12000,
+      monto_pendiente: 10000,
+      moneda: 'DOP',
+      fecha_prestamo: '2026-01-01',
+      estado: 'activo',
+      created_at: '2026-01-01T00:00:00Z',
+      cuota_mensual: 1150.50,
+      tasa_interes: 18.5,
+      plazo_meses: 12,
+    }
+    setupMocks({ prestamosData: [prestamoConCuota] })
+    render(<PrestamosPage />)
+    expect(screen.getByText(/Cuota:/i)).toBeInTheDocument()
+  })
+
+  it('renders pago hoy badge when proximo_pago is today', () => {
+    const today = new Date()
+    const todayStr = today.toISOString().split('T')[0]
+    const prestamoHoy: Prestamo = {
+      id: 'pre-hoy',
+      tipo: 'me_deben',
+      persona: 'Banco Central',
+      monto_original: 50000,
+      monto_pendiente: 40000,
+      moneda: 'DOP',
+      fecha_prestamo: '2026-01-01',
+      estado: 'activo',
+      created_at: '2026-01-01T00:00:00Z',
+      proximo_pago: todayStr,
+    }
+    setupMocks({ prestamosData: [prestamoHoy] })
+    render(<PrestamosPage />)
+    expect(screen.getByRole('status', { name: /pago hoy/i })).toBeInTheDocument()
+  })
+
+  it('renders "Pago en X dias" badge when proximo_pago is within 3 days', () => {
+    const futureDate = new Date()
+    futureDate.setDate(futureDate.getDate() + 3)
+    const futureDateStr = futureDate.toISOString().split('T')[0]
+    const prestamoCercano: Prestamo = {
+      id: 'pre-3d',
+      tipo: 'me_deben',
+      persona: 'Prestamista',
+      monto_original: 20000,
+      monto_pendiente: 15000,
+      moneda: 'DOP',
+      fecha_prestamo: '2026-01-01',
+      estado: 'activo',
+      created_at: '2026-01-01T00:00:00Z',
+      proximo_pago: futureDateStr,
+    }
+    setupMocks({ prestamosData: [prestamoCercano] })
+    render(<PrestamosPage />)
+    // Badge shows "Pago en 3 dias" — text may be split across icon + text nodes
+    expect(screen.getByRole('status', { name: /pago en 3 dias/i })).toBeInTheDocument()
+  })
 })
