@@ -1,0 +1,694 @@
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Plus, CreditCard, Info, Pencil, Trash2, X } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
+import {
+  useTarjetas,
+  useCreateTarjeta,
+  useUpdateTarjeta,
+  useDeleteTarjeta,
+} from '@/hooks/useTarjetas'
+import type { Tarjeta, TarjetaCreate, TarjetaUpdate } from '@/types/tarjeta'
+
+// ─── Zod schema ────────────────────────────────────────────────────────────────
+
+const preprocessNumber = (v: unknown) => {
+  if (v == null || v === '') return null
+  const n = typeof v === 'number' ? v : Number(v)
+  return isNaN(n) ? null : n
+}
+
+const TarjetaSchema = z
+  .object({
+    nombre: z.string().min(1, 'Requerido').max(100),
+    tipo: z.enum(['credito', 'debito']),
+    red: z.enum(['visa', 'mastercard', 'amex', 'discover', 'otro']),
+    ultimos_digitos: z
+      .string()
+      .length(4, 'Debe tener 4 digitos')
+      .regex(/^\d{4}$/, 'Solo digitos'),
+    saldo_actual: z.coerce.number({ invalid_type_error: 'Ingresa un monto' }).min(0),
+    limite_credito: z.preprocess(
+      preprocessNumber,
+      z.number().positive().nullable().optional(),
+    ),
+    fecha_corte: z.preprocess(
+      preprocessNumber,
+      z.number().int().min(1).max(31).nullable().optional(),
+    ),
+    fecha_pago: z.preprocess(
+      preprocessNumber,
+      z.number().int().min(1).max(31).nullable().optional(),
+    ),
+    color: z.string().optional().nullable(),
+    activa: z.boolean().default(true),
+  })
+  .superRefine((val, ctx) => {
+    if (val.tipo === 'credito' && (val.limite_credito == null || val.limite_credito <= 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Requerido para tarjeta de credito',
+        path: ['limite_credito'],
+      })
+    }
+  })
+
+type TarjetaFormData = z.infer<typeof TarjetaSchema>
+
+// ─── Card visual component ─────────────────────────────────────────────────────
+
+function getCardGradient(red: Tarjeta['red'], color: string | null): string {
+  if (color) return `linear-gradient(135deg, ${color}dd, ${color}88)`
+  const gradients: Record<Tarjeta['red'], string> = {
+    visa: 'linear-gradient(135deg, #1a1f71, #2563eb)',
+    mastercard: 'linear-gradient(135deg, #eb4d1c, #f59e0b)',
+    amex: 'linear-gradient(135deg, #0a6640, #16a34a)',
+    discover: 'linear-gradient(135deg, #ea580c, #f97316)',
+    otro: 'linear-gradient(135deg, #6d28d9, #a78bfa)',
+  }
+  return gradients[red]
+}
+
+interface CardVisualProps {
+  tarjeta: Tarjeta
+  onClick?: () => void
+}
+
+function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
+  const formattedBalance = new Intl.NumberFormat('es-DO', {
+    style: 'currency',
+    currency: 'DOP',
+    maximumFractionDigits: 0,
+  }).format(tarjeta.saldo_actual)
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'relative w-full rounded-2xl p-5 text-white overflow-hidden',
+        'transition-transform duration-200 ease-out',
+        'hover:-translate-y-1 hover:scale-[1.01]',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50',
+        !tarjeta.activa && 'opacity-60'
+      )}
+      style={{ background: getCardGradient(tarjeta.red, tarjeta.color), minHeight: 180 }}
+      aria-label={`Tarjeta ${tarjeta.nombre}`}
+    >
+      {/* Chip SVG */}
+      <div className="absolute top-5 left-5">
+        <svg width="40" height="30" viewBox="0 0 40 30" aria-hidden="true">
+          <rect x="2" y="2" width="36" height="26" rx="4" fill="#d4a017" stroke="#b8860b" strokeWidth="0.5" />
+          <rect x="2" y="11" width="36" height="8" fill="#b8860b" opacity="0.7" />
+          <rect x="15" y="2" width="10" height="26" fill="#b8860b" opacity="0.7" />
+          <rect x="8" y="2" width="2" height="26" fill="#b8860b" opacity="0.4" />
+          <rect x="30" y="2" width="2" height="26" fill="#b8860b" opacity="0.4" />
+        </svg>
+      </div>
+
+      {/* Bank name */}
+      <div className="absolute top-5 right-5 text-right">
+        <p className="text-xs font-semibold tracking-wide text-white/80 uppercase">{tarjeta.nombre}</p>
+        {!tarjeta.activa && (
+          <span className="text-xs bg-white/20 rounded px-1.5 py-0.5 mt-1 inline-block">Inactiva</span>
+        )}
+      </div>
+
+      {/* Card number */}
+      <div className="absolute bottom-14 left-5 text-base font-mono tracking-widest text-white/90">
+        •••• •••• •••• {tarjeta.ultimos_digitos}
+      </div>
+
+      {/* Footer */}
+      <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between">
+        <div>
+          <p className="text-xs text-white/60 uppercase tracking-wider">Saldo</p>
+          <p className="text-lg font-bold text-white">{formattedBalance}</p>
+        </div>
+        <p className="text-sm font-bold text-white/80 uppercase tracking-widest">{tarjeta.red}</p>
+      </div>
+    </button>
+  )
+}
+
+// ─── Utilization bar ───────────────────────────────────────────────────────────
+
+interface UtilizationBarProps {
+  saldo: number
+  limite: number
+}
+
+function UtilizationBar({ saldo, limite }: UtilizationBarProps): JSX.Element {
+  const pct = Math.min((saldo / limite) * 100, 100)
+  const colorClass =
+    pct > 70 ? 'bg-red-500' : pct > 40 ? 'bg-yellow-500' : 'bg-green-500'
+
+  return (
+    <div>
+      <div className="flex justify-between text-xs text-[var(--text-muted)] mb-1">
+        <span>Utilizacion</span>
+        <span>{pct.toFixed(0)}%</span>
+      </div>
+      <div className="h-2 rounded-full bg-[var(--bg-tertiary)] overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+        <div className={cn('h-full rounded-full transition-all', colorClass)} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  )
+}
+
+// ─── Stats cards ───────────────────────────────────────────────────────────────
+
+interface StatItem {
+  label: string
+  value: string
+}
+
+function StatsGrid({ stats }: { stats: StatItem[] }): JSX.Element {
+  return (
+    <div className="grid grid-cols-3 gap-3 mb-6">
+      {stats.map((s) => (
+        <div key={s.label} className="finza-card p-4">
+          <p className="text-xs text-[var(--text-muted)] mb-1">{s.label}</p>
+          <p className="text-lg font-bold text-[var(--text-primary)]">{s.value}</p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─── Form modal ────────────────────────────────────────────────────────────────
+
+interface TarjetaModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (data: TarjetaFormData) => Promise<void>
+  isLoading: boolean
+  tarjeta?: Tarjeta
+}
+
+function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: TarjetaModalProps): JSX.Element | null {
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm<TarjetaFormData>({
+    resolver: zodResolver(TarjetaSchema),
+    defaultValues: tarjeta
+      ? {
+          nombre: tarjeta.nombre,
+          tipo: tarjeta.tipo,
+          red: tarjeta.red,
+          ultimos_digitos: tarjeta.ultimos_digitos,
+          saldo_actual: tarjeta.saldo_actual,
+          limite_credito: tarjeta.limite_credito ?? undefined,
+          fecha_corte: tarjeta.fecha_corte ?? undefined,
+          fecha_pago: tarjeta.fecha_pago ?? undefined,
+          color: tarjeta.color ?? undefined,
+          activa: tarjeta.activa,
+        }
+      : { tipo: 'credito', red: 'visa', activa: true },
+  })
+
+  const tipo = watch('tipo')
+
+  const handleClose = (): void => {
+    reset()
+    onClose()
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
+      <div className="finza-card w-full max-w-md max-h-[90vh] overflow-y-auto p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 id="modal-title" className="text-base font-semibold text-[var(--text-primary)]">
+            {tarjeta ? 'Editar tarjeta' : 'Nueva tarjeta'}
+          </h2>
+          <button
+            type="button"
+            onClick={handleClose}
+            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+            aria-label="Cerrar"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          {/* Nombre */}
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Nombre</label>
+            <input
+              {...register('nombre')}
+              placeholder="Visa Banco Popular"
+              className="finza-input w-full"
+            />
+            {errors.nombre && <p className="text-xs text-red-500 mt-1">{errors.nombre.message}</p>}
+          </div>
+
+          {/* Tipo / Red */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Tipo</label>
+              <select {...register('tipo')} className="finza-input w-full">
+                <option value="credito">Credito</option>
+                <option value="debito">Debito</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Red</label>
+              <select {...register('red')} className="finza-input w-full">
+                <option value="visa">Visa</option>
+                <option value="mastercard">Mastercard</option>
+                <option value="amex">Amex</option>
+                <option value="discover">Discover</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Ultimos digitos */}
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Ultimos 4 digitos</label>
+            <input
+              {...register('ultimos_digitos')}
+              placeholder="1234"
+              maxLength={4}
+              className="finza-input w-full"
+            />
+            {errors.ultimos_digitos && (
+              <p className="text-xs text-red-500 mt-1">{errors.ultimos_digitos.message}</p>
+            )}
+          </div>
+
+          {/* Saldo */}
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Saldo actual</label>
+            <input
+              {...register('saldo_actual')}
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+              className="finza-input w-full"
+            />
+            {errors.saldo_actual && (
+              <p className="text-xs text-red-500 mt-1">{errors.saldo_actual.message}</p>
+            )}
+          </div>
+
+          {/* Limite credito — solo para credito */}
+          {tipo === 'credito' && (
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Limite de credito</label>
+              <input
+                {...register('limite_credito')}
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="50000.00"
+                className="finza-input w-full"
+              />
+              {errors.limite_credito && (
+                <p className="text-xs text-red-500 mt-1">{errors.limite_credito.message}</p>
+              )}
+            </div>
+          )}
+
+          {/* Fechas corte / pago */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Dia de corte</label>
+              <input
+                {...register('fecha_corte')}
+                type="number"
+                min="1"
+                max="31"
+                placeholder="15"
+                className="finza-input w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Dia de pago</label>
+              <input
+                {...register('fecha_pago')}
+                type="number"
+                min="1"
+                max="31"
+                placeholder="5"
+                className="finza-input w-full"
+              />
+            </div>
+          </div>
+
+          {/* Color */}
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Color (opcional)</label>
+            <input
+              {...register('color')}
+              type="color"
+              className="h-9 w-full rounded-lg border border-[var(--border)] cursor-pointer bg-transparent"
+            />
+          </div>
+
+          {/* Activa */}
+          <div className="flex items-center gap-2">
+            <input
+              {...register('activa')}
+              id="activa-check"
+              type="checkbox"
+              className="rounded"
+            />
+            <label htmlFor="activa-check" className="text-sm text-[var(--text-primary)]">Tarjeta activa</label>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isLoading} className="flex-1">
+              {isLoading ? 'Guardando...' : tarjeta ? 'Actualizar' : 'Crear tarjeta'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// ─── Detail modal ──────────────────────────────────────────────────────────────
+
+interface DetailModalProps {
+  tarjeta: Tarjeta
+  onClose: () => void
+  onEdit: (t: Tarjeta) => void
+  onDelete: (id: string) => void
+}
+
+function getNextDayOfMonth(day: number): string {
+  const now = new Date()
+  const candidate = new Date(now.getFullYear(), now.getMonth(), day)
+  if (candidate <= now) {
+    candidate.setMonth(candidate.getMonth() + 1)
+  }
+  return candidate.toLocaleDateString('es-DO', { day: 'numeric', month: 'long' })
+}
+
+function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): JSX.Element {
+  const fmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 })
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Detalle ${tarjeta.nombre}`}
+    >
+      <div className="finza-card w-full max-w-sm p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">{tarjeta.nombre}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+            aria-label="Cerrar"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <CardVisual tarjeta={tarjeta} />
+
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-[var(--text-muted)]">Tipo</span>
+            <span className="text-[var(--text-primary)] capitalize">{tarjeta.tipo}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[var(--text-muted)]">Red</span>
+            <span className="text-[var(--text-primary)] capitalize">{tarjeta.red}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[var(--text-muted)]">Saldo actual</span>
+            <span className="text-[var(--text-primary)]">{fmt.format(tarjeta.saldo_actual)}</span>
+          </div>
+          {tarjeta.tipo === 'credito' && tarjeta.limite_credito && (
+            <>
+              <div className="flex justify-between">
+                <span className="text-[var(--text-muted)]">Limite</span>
+                <span className="text-[var(--text-primary)]">{fmt.format(tarjeta.limite_credito)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--text-muted)]">Disponible</span>
+                <span className="text-green-500 font-medium">{fmt.format(tarjeta.disponible ?? 0)}</span>
+              </div>
+              <UtilizationBar saldo={tarjeta.saldo_actual} limite={tarjeta.limite_credito} />
+            </>
+          )}
+          {tarjeta.fecha_corte && (
+            <div className="flex justify-between">
+              <span className="text-[var(--text-muted)]">Proximo corte</span>
+              <span className="text-[var(--text-primary)]">{getNextDayOfMonth(tarjeta.fecha_corte)}</span>
+            </div>
+          )}
+          {tarjeta.fecha_pago && (
+            <div className="flex justify-between">
+              <span className="text-[var(--text-muted)]">Proximo pago</span>
+              <span className="text-[var(--text-primary)]">{getNextDayOfMonth(tarjeta.fecha_pago)}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-3 pt-2">
+          <Button
+            variant="outline"
+            className="flex-1 gap-2"
+            onClick={() => { onClose(); onEdit(tarjeta) }}
+          >
+            <Pencil size={14} />
+            Editar
+          </Button>
+          <Button
+            variant="destructive"
+            className="flex-1 gap-2"
+            onClick={() => onDelete(tarjeta.id)}
+          >
+            <Trash2 size={14} />
+            Eliminar
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Empty state ───────────────────────────────────────────────────────────────
+
+function EmptyState(): JSX.Element {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <CreditCard size={44} className="text-[var(--text-muted)] opacity-30 mb-3" aria-hidden="true" />
+      <p className="text-sm font-medium text-[var(--text-primary)]">Sin tarjetas registradas</p>
+      <p className="text-xs text-[var(--text-muted)] mt-1">Agrega tu primera tarjeta para hacer seguimiento</p>
+    </div>
+  )
+}
+
+// ─── Skeleton ──────────────────────────────────────────────────────────────────
+
+function CardSkeleton(): JSX.Element {
+  return <Skeleton className="w-full rounded-2xl" style={{ height: 180 }} />
+}
+
+// ─── Main page ─────────────────────────────────────────────────────────────────
+
+export function TarjetasPage(): JSX.Element {
+  const { t } = useTranslation()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [tarjetaEditando, setTarjetaEditando] = useState<Tarjeta | null>(null)
+  const [tarjetaDetalle, setTarjetaDetalle] = useState<Tarjeta | null>(null)
+
+  const { data: tarjetas = [], isLoading, isError } = useTarjetas()
+  const createTarjeta = useCreateTarjeta()
+  const updateTarjeta = useUpdateTarjeta()
+  const deleteTarjeta = useDeleteTarjeta()
+
+  const activas = tarjetas.filter((t) => t.activa)
+  const totalSaldo = activas.reduce((sum, t) => sum + t.saldo_actual, 0)
+  const totalDisponible = activas
+    .filter((t) => t.tipo === 'credito' && t.disponible !== null)
+    .reduce((sum, t) => sum + (t.disponible ?? 0), 0)
+
+  const fmt = (n: number): string =>
+    new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 }).format(n)
+
+  const stats = [
+    { label: 'Total saldo', value: fmt(totalSaldo) },
+    { label: 'Disponible credito', value: fmt(totalDisponible) },
+    { label: 'Tarjetas activas', value: String(activas.length) },
+  ]
+
+  const credito = tarjetas.filter((t) => t.tipo === 'credito')
+  const debito = tarjetas.filter((t) => t.tipo === 'debito')
+
+  const handleCreate = async (data: TarjetaFormData): Promise<void> => {
+    try {
+      const payload: TarjetaCreate = {
+        ...data,
+        limite_credito: data.limite_credito ?? null,
+        fecha_corte: data.fecha_corte ?? null,
+        fecha_pago: data.fecha_pago ?? null,
+        color: data.color ?? null,
+      }
+      await createTarjeta.mutateAsync(payload)
+      setIsModalOpen(false)
+      toast.success('Tarjeta creada')
+    } catch {
+      toast.error(t('common.error'))
+    }
+  }
+
+  const handleEdit = async (data: TarjetaFormData): Promise<void> => {
+    if (!tarjetaEditando) return
+    try {
+      const payload: { id: string } & TarjetaUpdate = {
+        id: tarjetaEditando.id,
+        ...data,
+        limite_credito: data.limite_credito ?? null,
+        fecha_corte: data.fecha_corte ?? null,
+        fecha_pago: data.fecha_pago ?? null,
+        color: data.color ?? null,
+      }
+      await updateTarjeta.mutateAsync(payload)
+      setTarjetaEditando(null)
+      toast.success('Tarjeta actualizada')
+    } catch {
+      toast.error(t('common.error'))
+    }
+  }
+
+  const handleDelete = async (id: string): Promise<void> => {
+    if (!window.confirm('Eliminar esta tarjeta?')) return
+    try {
+      await deleteTarjeta.mutateAsync(id)
+      setTarjetaDetalle(null)
+      toast.success('Tarjeta eliminada')
+    } catch {
+      toast.error(t('common.error'))
+    }
+  }
+
+  const renderCardSection = (list: Tarjeta[], title: string): JSX.Element => (
+    <div className="mb-6">
+      <h3 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">{title}</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {list.map((tarjeta) => (
+          <div key={tarjeta.id} className="relative group">
+            <CardVisual tarjeta={tarjeta} onClick={() => setTarjetaDetalle(tarjeta)} />
+            <button
+              type="button"
+              onClick={() => setTarjetaDetalle(tarjeta)}
+              className="absolute top-3 right-14 p-1.5 rounded-lg bg-white/10 text-white/70 hover:bg-white/20 transition-opacity opacity-0 group-hover:opacity-100"
+              aria-label="Ver detalle"
+            >
+              <Info size={14} />
+            </button>
+            {tarjeta.tipo === 'credito' && tarjeta.limite_credito && (
+              <div className="mt-2 px-1">
+                <UtilizationBar saldo={tarjeta.saldo_actual} limite={tarjeta.limite_credito} />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-xl font-bold text-[var(--text-primary)]">{t('nav.tarjetas')}</h1>
+          <p className="text-[var(--text-muted)] text-sm">Gestiona tus tarjetas de credito y debito</p>
+        </div>
+        <Button onClick={() => setIsModalOpen(true)} variant="default">
+          <Plus size={16} className="mr-1" />
+          Nueva tarjeta
+        </Button>
+      </div>
+
+      {/* Stats */}
+      <StatsGrid stats={stats} />
+
+      {/* Loading */}
+      {isLoading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="Cargando tarjetas">
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+      )}
+
+      {/* Error */}
+      {isError && !isLoading && (
+        <p className="text-sm text-[var(--text-muted)] text-center py-8">
+          El servidor no esta disponible. La lista se mostrara cuando el backend responda.
+        </p>
+      )}
+
+      {/* Empty state */}
+      {!isLoading && !isError && tarjetas.length === 0 && <EmptyState />}
+
+      {/* Card sections */}
+      {!isLoading && !isError && tarjetas.length > 0 && (
+        <>
+          {credito.length > 0 && renderCardSection(credito, 'Credito')}
+          {debito.length > 0 && renderCardSection(debito, 'Debito')}
+        </>
+      )}
+
+      {/* Create modal */}
+      <TarjetaModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreate}
+        isLoading={createTarjeta.isPending}
+      />
+
+      {/* Edit modal */}
+      {tarjetaEditando && (
+        <TarjetaModal
+          isOpen={true}
+          onClose={() => setTarjetaEditando(null)}
+          onSubmit={handleEdit}
+          isLoading={updateTarjeta.isPending}
+          tarjeta={tarjetaEditando}
+        />
+      )}
+
+      {/* Detail modal */}
+      {tarjetaDetalle && (
+        <DetailModal
+          tarjeta={tarjetaDetalle}
+          onClose={() => setTarjetaDetalle(null)}
+          onEdit={(t) => setTarjetaEditando(t)}
+          onDelete={handleDelete}
+        />
+      )}
+    </div>
+  )
+}

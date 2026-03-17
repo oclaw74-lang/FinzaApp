@@ -5,7 +5,7 @@ const es = {
     reportes: 'Reportes', configuracion: 'Configuracion', categorias: 'Categorias',
     fondoEmergencia: 'Fondo emergencia', suscripciones: 'Suscripciones',
     retos: 'Retos', educacion: 'Educacion', notificaciones: 'Notificaciones',
-    recurrentes: 'Recurrentes',
+    recurrentes: 'Recurrentes', tarjetas: 'Tarjetas',
   },
   common: {
     save: 'Guardar', saveChanges: 'Guardar cambios', cancel: 'Cancelar', create: 'Crear', edit: 'Editar',
