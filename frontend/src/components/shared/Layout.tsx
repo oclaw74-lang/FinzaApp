@@ -28,8 +28,10 @@ export function Layout(): JSX.Element {
         )}
       >
         <Header />
-        <main className="flex-1 p-6 animate-fade-in">
-          <Outlet />
+        <main className="flex-1 p-6">
+          <div className="animate-fade-in">
+            <Outlet />
+          </div>
         </main>
       </div>
       {showOnboarding && (
