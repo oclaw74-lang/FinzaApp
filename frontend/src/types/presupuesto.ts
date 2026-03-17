@@ -31,3 +31,12 @@ export interface PresupuestoEstado {
   porcentaje_usado: number
   alerta: boolean
 }
+
+export interface PresupuestoSugerido {
+  categoria_id: string
+  categoria_nombre: string
+  promedio_mensual: number
+  sugerido: number
+  mes: number
+  year: number
+}

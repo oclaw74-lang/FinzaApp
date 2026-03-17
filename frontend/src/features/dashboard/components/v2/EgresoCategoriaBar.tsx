@@ -12,15 +12,15 @@ export function EgresoCategoriaBar({ item }: EgresoCategoriaBarProps): JSX.Eleme
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-sm">
-        <span className="font-medium text-gray-700 truncate mr-2">{categoria}</span>
+        <span className="font-medium text-[var(--text-secondary)] truncate mr-2">{categoria}</span>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-xs text-gray-400">{pct.toFixed(1)}%</span>
+          <span className="text-xs text-[var(--text-muted)]">{pct.toFixed(1)}%</span>
           <span className="text-sm font-semibold font-mono text-alert-red">
             {formatMoney(total)}
           </span>
         </div>
       </div>
-      <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+      <div className="w-full bg-[var(--surface-raised)] rounded-full h-2 overflow-hidden">
         <div
           className="bg-finza-blue h-2 rounded-full transition-all duration-300"
           style={{ width: `${pct}%` }}

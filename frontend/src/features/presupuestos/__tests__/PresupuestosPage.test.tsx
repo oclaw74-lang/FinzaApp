@@ -7,6 +7,7 @@ import type { CategoriaResponse } from '@/types/transacciones'
 // Mock hooks
 vi.mock('@/hooks/usePresupuestos', () => ({
   usePresupuestosEstado: vi.fn(),
+  usePresupuestosSugeridos: vi.fn(),
   useCreatePresupuesto: vi.fn(),
   useUpdatePresupuesto: vi.fn(),
   useDeletePresupuesto: vi.fn(),
@@ -18,11 +19,13 @@ vi.mock('@/hooks/useCategorias', () => ({
 
 import {
   usePresupuestosEstado,
+  usePresupuestosSugeridos,
   useCreatePresupuesto,
   useUpdatePresupuesto,
   useDeletePresupuesto,
 } from '@/hooks/usePresupuestos'
 import { useCategorias } from '@/hooks/useCategorias'
+import type { PresupuestoSugerido } from '@/types/presupuesto'
 
 const mockEstados: PresupuestoEstado[] = [
   {
@@ -127,6 +130,12 @@ function setupMocks({
     mutateAsync: vi.fn(),
     isPending: false,
   } as unknown as ReturnType<typeof useDeletePresupuesto>)
+
+  vi.mocked(usePresupuestosSugeridos).mockReturnValue({
+    data: [],
+    isFetching: false,
+    refetch: vi.fn().mockResolvedValue({ data: [] }),
+  } as unknown as ReturnType<typeof usePresupuestosSugeridos>)
 }
 
 describe('PresupuestosPage', () => {
@@ -217,5 +226,102 @@ describe('PresupuestosPage', () => {
     const mesSelect = screen.getByLabelText('Mes')
     fireEvent.change(mesSelect, { target: { value: '6' } })
     expect((mesSelect as HTMLSelectElement).value).toBe('6')
+  })
+
+  it('renders Sugerir presupuestos button', () => {
+    render(<PresupuestosPage />)
+    expect(screen.getByRole('button', { name: /sugerir presupuestos/i })).toBeInTheDocument()
+  })
+
+  it('opens suggestions modal when Sugerir button is clicked', async () => {
+    const refetch = vi.fn().mockResolvedValue({ data: [] })
+    vi.mocked(usePresupuestosSugeridos).mockReturnValue({
+      data: [],
+      isFetching: false,
+      refetch,
+    } as unknown as ReturnType<typeof usePresupuestosSugeridos>)
+
+    render(<PresupuestosPage />)
+    fireEvent.click(screen.getByRole('button', { name: /sugerir presupuestos/i }))
+    expect(screen.getByRole('dialog', { name: /sugerencias inteligentes/i })).toBeInTheDocument()
+  })
+
+  it('shows empty state in suggestions modal when no data', async () => {
+    const refetch = vi.fn().mockResolvedValue({ data: [] })
+    vi.mocked(usePresupuestosSugeridos).mockReturnValue({
+      data: [],
+      isFetching: false,
+      refetch,
+    } as unknown as ReturnType<typeof usePresupuestosSugeridos>)
+
+    render(<PresupuestosPage />)
+    fireEvent.click(screen.getByRole('button', { name: /sugerir presupuestos/i }))
+    expect(screen.getByText(/sin datos suficientes/i)).toBeInTheDocument()
+  })
+
+  it('renders suggestion rows with Aplicar buttons when data is available', async () => {
+    const mockSugeridos: PresupuestoSugerido[] = [
+      { categoria_id: 'cat-1', categoria_nombre: 'Alimentacion', promedio_mensual: 400, sugerido: 440, mes: 3, year: 2026 },
+      { categoria_id: 'cat-3', categoria_nombre: 'Servicios', promedio_mensual: 200, sugerido: 220, mes: 3, year: 2026 },
+    ]
+    const refetch = vi.fn().mockResolvedValue({ data: mockSugeridos })
+    vi.mocked(usePresupuestosSugeridos).mockReturnValue({
+      data: mockSugeridos,
+      isFetching: false,
+      refetch,
+    } as unknown as ReturnType<typeof usePresupuestosSugeridos>)
+
+    render(<PresupuestosPage />)
+    fireEvent.click(screen.getByRole('button', { name: /sugerir presupuestos/i }))
+    // Multiple elements with same text are OK — just check at least one exists per category
+    expect(screen.getAllByText('Alimentacion').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Servicios').length).toBeGreaterThanOrEqual(1)
+    const aplicarBtns = screen.getAllByRole('button', { name: /aplicar$/i })
+    expect(aplicarBtns.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('calls createPresupuesto when Aplicar button is clicked', async () => {
+    const mockSugeridos: PresupuestoSugerido[] = [
+      { categoria_id: 'cat-1', categoria_nombre: 'Alimentacion', promedio_mensual: 400, sugerido: 440, mes: 3, year: 2026 },
+    ]
+    const mutateAsync = vi.fn().mockResolvedValue({})
+    const refetch = vi.fn().mockResolvedValue({ data: mockSugeridos })
+    vi.mocked(usePresupuestosSugeridos).mockReturnValue({
+      data: mockSugeridos,
+      isFetching: false,
+      refetch,
+    } as unknown as ReturnType<typeof usePresupuestosSugeridos>)
+    vi.mocked(useCreatePresupuesto).mockReturnValue({
+      mutateAsync,
+      isPending: false,
+    } as unknown as ReturnType<typeof useCreatePresupuesto>)
+
+    render(<PresupuestosPage />)
+    fireEvent.click(screen.getByRole('button', { name: /sugerir presupuestos/i }))
+    const aplicarBtn = screen.getByRole('button', { name: /aplicar$/i })
+    fireEvent.click(aplicarBtn)
+    await vi.waitFor(() => {
+      expect(mutateAsync).toHaveBeenCalledWith({
+        categoria_id: 'cat-1',
+        mes: expect.any(Number),
+        year: expect.any(Number),
+        monto_limite: 440,
+      })
+    })
+  })
+
+  it('closes suggestions modal when X button is clicked', async () => {
+    const refetch = vi.fn().mockResolvedValue({ data: [] })
+    vi.mocked(usePresupuestosSugeridos).mockReturnValue({
+      data: [],
+      isFetching: false,
+      refetch,
+    } as unknown as ReturnType<typeof usePresupuestosSugeridos>)
+
+    render(<PresupuestosPage />)
+    fireEvent.click(screen.getByRole('button', { name: /sugerir presupuestos/i }))
+    expect(screen.getByRole('dialog', { name: /sugerencias inteligentes/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /cerrar/i }))
+    expect(screen.queryByRole('dialog', { name: /sugerencias inteligentes/i })).not.toBeInTheDocument()
   })
 })

@@ -69,6 +69,9 @@
 }
 
 @layer components {
+  label {
+    color: var(--text-secondary);
+  }
   .finza-card {
     @apply bg-[var(--surface)] rounded-xl border border-[var(--border)] p-5;
     box-shadow: var(--shadow-sm);

@@ -67,16 +67,16 @@ export function PresupuestoForm({
   return (
     <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
       {/* Periodo — read only */}
-      <div className="flex gap-2 p-3 bg-gray-50 rounded-lg">
+      <div className="flex gap-2 p-3 bg-[var(--surface-raised)] rounded-lg">
         <div className="flex-1">
-          <p className="text-xs text-gray-500 mb-0.5">Mes</p>
-          <p className="text-sm font-medium text-gray-800">
+          <p className="text-xs text-[var(--text-muted)] mb-0.5">Mes</p>
+          <p className="text-sm font-medium text-[var(--text-primary)]">
             {MESES[mes - 1]}
           </p>
         </div>
         <div className="flex-1">
-          <p className="text-xs text-gray-500 mb-0.5">Año</p>
-          <p className="text-sm font-medium text-gray-800">{year}</p>
+          <p className="text-xs text-[var(--text-muted)] mb-0.5">Año</p>
+          <p className="text-sm font-medium text-[var(--text-primary)]">{year}</p>
         </div>
       </div>
 
@@ -84,7 +84,7 @@ export function PresupuestoForm({
       <div className="flex flex-col gap-1.5">
         <label
           htmlFor="presupuesto-categoria"
-          className="text-sm font-medium text-gray-700"
+          className="text-sm font-medium text-[var(--text-secondary)]"
         >
           Categoria
         </label>

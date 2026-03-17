@@ -83,7 +83,7 @@ export function TransaccionForm({
     <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
       {/* Categoria */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="categoria_id" className="text-sm font-medium text-gray-700">
+        <label htmlFor="categoria_id" className="text-sm font-medium text-[var(--text-secondary)]">
           Categoria
         </label>
         <select
@@ -118,7 +118,7 @@ export function TransaccionForm({
           {...register('monto', { valueAsNumber: true })}
         />
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="moneda" className="text-sm font-medium text-gray-700">
+          <label htmlFor="moneda" className="text-sm font-medium text-[var(--text-secondary)]">
             Moneda
           </label>
           <select id="moneda" {...register('moneda')} className="finza-input w-full" aria-label="Moneda">
@@ -159,7 +159,7 @@ export function TransaccionForm({
       {/* Metodo de pago — solo egreso */}
       {tipo === 'egreso' && (
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="metodo_pago" className="text-sm font-medium text-gray-700">
+          <label htmlFor="metodo_pago" className="text-sm font-medium text-[var(--text-secondary)]">
             Metodo de pago
           </label>
           <select
@@ -179,7 +179,7 @@ export function TransaccionForm({
 
       {/* Notas */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="notas" className="text-sm font-medium text-gray-700">
+        <label htmlFor="notas" className="text-sm font-medium text-[var(--text-secondary)]">
           Notas (opcional)
         </label>
         <textarea

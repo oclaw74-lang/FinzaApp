@@ -5,11 +5,13 @@ import {
   updatePresupuesto,
   deletePresupuesto,
 } from '@/lib/api/presupuestos'
+import { apiClient } from '@/lib/api'
 import type {
   PresupuestoCreate,
   PresupuestoUpdate,
   PresupuestoEstado,
   Presupuesto,
+  PresupuestoSugerido,
 } from '@/types/presupuesto'
 
 // ─── Dashboard invalidation keys ────────────────────────────────────────────
@@ -69,6 +71,20 @@ export function useUpdatePresupuesto(mes: number, year: number) {
       })
       DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
+  })
+}
+
+export function usePresupuestosSugeridos(mes: number, year: number) {
+  return useQuery({
+    queryKey: ['presupuestos-sugeridos', mes, year],
+    queryFn: async (): Promise<PresupuestoSugerido[]> => {
+      const { data } = await apiClient.get<PresupuestoSugerido[]>(
+        `/presupuestos/sugeridos?mes=${mes}&year=${year}`
+      )
+      return data
+    },
+    enabled: false,
+    staleTime: 5 * 60 * 1000,
   })
 }
 

@@ -18,9 +18,9 @@ function estadoLabel(estado: EstadoMeta): string {
 
 function estadoBadgeClasses(estado: EstadoMeta): string {
   const map: Record<EstadoMeta, string> = {
-    activa: 'bg-blue-100 text-finza-blue',
-    completada: 'bg-green-100 text-prosperity-green',
-    cancelada: 'bg-gray-100 text-gray-500',
+    activa: 'bg-[var(--accent-muted)] text-[var(--accent)]',
+    completada: 'bg-[var(--success-muted)] text-[var(--success)]',
+    cancelada: 'bg-[var(--surface-raised)] text-[var(--text-muted)]',
   }
   return map[estado]
 }
@@ -68,7 +68,7 @@ export function MetaCard({ meta, onClick }: MetaCardProps): JSX.Element {
 
         {/* Badge estado */}
         {isCompletada ? (
-          <span className="flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-prosperity-green whitespace-nowrap">
+          <span className="flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full bg-[var(--success-muted)] text-[var(--success)] whitespace-nowrap">
             Completada
           </span>
         ) : (

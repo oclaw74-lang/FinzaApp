@@ -82,7 +82,7 @@ export function MetaForm({
       <div className="flex flex-col gap-1.5">
         <label
           htmlFor="meta-descripcion"
-          className="text-sm font-medium text-gray-700"
+          className="text-sm font-medium text-[var(--text-secondary)]"
         >
           Descripcion (opcional)
         </label>
@@ -126,7 +126,7 @@ export function MetaForm({
         <div className="flex flex-col gap-1.5">
           <label
             htmlFor="meta-color"
-            className="text-sm font-medium text-gray-700"
+            className="text-sm font-medium text-[var(--text-secondary)]"
           >
             Color
           </label>
@@ -134,7 +134,7 @@ export function MetaForm({
             id="meta-color"
             type="color"
             {...register('color')}
-            className="h-10 w-full rounded-lg border border-gray-300 cursor-pointer px-1"
+            className="h-10 w-full rounded-lg border border-[var(--border)] cursor-pointer px-1"
             aria-label="Color de la meta"
           />
         </div>

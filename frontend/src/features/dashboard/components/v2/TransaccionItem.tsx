@@ -21,10 +21,10 @@ export function TransaccionItem({ transaccion }: TransaccionItemProps): JSX.Elem
           aria-hidden="true"
         />
         <div className="min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">
+          <p className="text-sm font-medium text-[var(--text-primary)] truncate">
             {descripcion}
           </p>
-          <p className="text-xs text-gray-400 flex items-center gap-1">
+          <p className="text-xs text-[var(--text-muted)] flex items-center gap-1">
             <span
               className={cn(
                 'inline-block px-1.5 py-0.5 rounded text-[10px] font-medium',

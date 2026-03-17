@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, Target } from 'lucide-react'
+import { Plus, Target, Sparkles, X } from 'lucide-react'
 import axios from 'axios'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/apiError'
@@ -11,13 +11,14 @@ import { PresupuestoModal } from '@/features/presupuestos/components/Presupuesto
 import type { PresupuestoFormData } from '@/features/presupuestos/components/PresupuestoForm'
 import {
   usePresupuestosEstado,
+  usePresupuestosSugeridos,
   useCreatePresupuesto,
   useUpdatePresupuesto,
   useDeletePresupuesto,
 } from '@/hooks/usePresupuestos'
 import { useCategorias } from '@/hooks/useCategorias'
 import { formatCurrency, MESES } from '@/lib/utils'
-import type { PresupuestoEstado } from '@/types/presupuesto'
+import type { PresupuestoEstado, PresupuestoSugerido } from '@/types/presupuesto'
 
 function getDefaultMesYear(): { mes: number; year: number } {
   const now = new Date()
@@ -73,8 +74,15 @@ export function PresupuestosPage(): JSX.Element {
   const [editingEstado, setEditingEstado] = useState<PresupuestoEstado | null>(null)
   const [preselectedCategoriaId, setPreselectedCategoriaId] = useState<string | undefined>(undefined)
   const [formError, setFormError] = useState<string | null>(null)
+  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false)
+  const [applyingAll, setApplyingAll] = useState(false)
 
   const { data: estadoList = [], isLoading, isError } = usePresupuestosEstado(mes, year)
+  const {
+    data: sugeridos = [],
+    isFetching: isFetchingSugeridos,
+    refetch: refetchSugeridos,
+  } = usePresupuestosSugeridos(mes, year)
   const { data: todasCategorias = [] } = useCategorias()
 
   const createPresupuesto = useCreatePresupuesto(mes, year)
@@ -129,6 +137,51 @@ export function PresupuestosPage(): JSX.Element {
   const handleCloseEdit = (): void => {
     setEditingEstado(null)
     setFormError(null)
+  }
+
+  const handleOpenSugerencias = async (): Promise<void> => {
+    setIsSuggestionsOpen(true)
+    await refetchSugeridos()
+  }
+
+  const handleAplicarSugerido = async (sugerido: PresupuestoSugerido): Promise<void> => {
+    try {
+      await createPresupuesto.mutateAsync({
+        categoria_id: sugerido.categoria_id,
+        mes,
+        year,
+        monto_limite: sugerido.sugerido,
+      })
+      toast.success(`Presupuesto para ${sugerido.categoria_nombre} creado`)
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        toast.error(`Ya existe un presupuesto para ${sugerido.categoria_nombre}`)
+      } else {
+        toast.error(getApiErrorMessage(error))
+      }
+    }
+  }
+
+  const handleAplicarTodos = async (): Promise<void> => {
+    if (sugeridos.length === 0) return
+    setApplyingAll(true)
+    let applied = 0
+    for (const sug of sugeridos) {
+      try {
+        await createPresupuesto.mutateAsync({
+          categoria_id: sug.categoria_id,
+          mes,
+          year,
+          monto_limite: sug.sugerido,
+        })
+        applied++
+      } catch {
+        // skip already-existing ones
+      }
+    }
+    setApplyingAll(false)
+    toast.success(t('presupuestos.sugerenciasAplicadas', { n: applied }))
+    setIsSuggestionsOpen(false)
   }
 
   const handleCreate = async (data: PresupuestoFormData): Promise<void> => {
@@ -188,10 +241,21 @@ export function PresupuestosPage(): JSX.Element {
         <p className="text-[var(--text-muted)] text-sm">
           Controla tus limites de gasto por categoria
         </p>
-        <Button onClick={handleOpenCreate} variant="default" size="md">
-          <Plus size={16} />
-          {t('common.new')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={handleOpenSugerencias}
+            variant="secondary"
+            size="md"
+            aria-label={t('presupuestos.sugerir')}
+          >
+            <Sparkles size={16} />
+            {t('presupuestos.sugerir')}
+          </Button>
+          <Button onClick={handleOpenCreate} variant="default" size="md">
+            <Plus size={16} />
+            {t('common.new')}
+          </Button>
+        </div>
       </div>
 
       {/* Selector de mes / año */}
@@ -354,6 +418,105 @@ export function PresupuestosPage(): JSX.Element {
           onDelete={handleDelete}
           isLoading={updatePresupuesto.isPending}
         />
+      )}
+
+      {/* Sugerencias modal */}
+      {isSuggestionsOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="sugerencias-title"
+        >
+          <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Modal header */}
+            <div className="flex items-start justify-between p-5 border-b border-[var(--border)]">
+              <div>
+                <h2
+                  id="sugerencias-title"
+                  className="font-bold text-[var(--text-primary)]"
+                >
+                  {t('presupuestos.sugerenciasTitle')}
+                </h2>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                  {t('presupuestos.sugerenciasSubtitle')}
+                </p>
+              </div>
+              <button
+                onClick={() => setIsSuggestionsOpen(false)}
+                className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-raised)]"
+                aria-label={t('common.close')}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal body */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-2">
+              {isFetchingSugeridos ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-16 rounded-xl" />
+                  ))}
+                </div>
+              ) : sugeridos.length === 0 ? (
+                <div className="text-center py-8">
+                  <Sparkles
+                    size={32}
+                    className="mx-auto mb-2 text-[var(--text-muted)] opacity-40"
+                    aria-hidden="true"
+                  />
+                  <p className="text-sm text-[var(--text-muted)]">
+                    {t('presupuestos.sinSugerencias')}
+                  </p>
+                </div>
+              ) : (
+                sugeridos.map((sug) => (
+                  <div
+                    key={sug.categoria_id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-raised)]"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-[var(--text-primary)] text-sm truncate">
+                        {sug.categoria_nombre}
+                      </p>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        {t('presupuestos.promedio')}: {formatCurrency(sug.promedio_mensual)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 ml-3">
+                      <span className="font-bold text-[var(--accent)] text-sm whitespace-nowrap">
+                        {formatCurrency(sug.sugerido)}
+                      </span>
+                      <button
+                        onClick={() => handleAplicarSugerido(sug)}
+                        disabled={createPresupuesto.isPending}
+                        className="text-xs px-2.5 py-1.5 rounded-lg bg-[var(--accent)] text-white font-medium hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {t('presupuestos.aplicar')}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Modal footer */}
+            {sugeridos.length > 0 && (
+              <div className="p-5 border-t border-[var(--border)]">
+                <Button
+                  onClick={handleAplicarTodos}
+                  isLoading={applyingAll}
+                  className="w-full"
+                  variant="default"
+                >
+                  <Sparkles size={16} />
+                  {t('presupuestos.aplicarTodos')}
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   )
