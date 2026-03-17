@@ -33,10 +33,15 @@ describe('themeStore', () => {
     vi.resetModules()
   })
 
-  it('defaults to light theme when no localStorage value', async () => {
+  it('defaults to dark theme when no localStorage value', async () => {
     const { useThemeStore } = await import('@/store/themeStore')
     const state = useThemeStore.getState()
-    expect(state.theme).toBe('light')
+    expect(state.theme).toBe('dark')
+  })
+
+  it('applies dark class to documentElement on load when default is dark', async () => {
+    await import('@/store/themeStore')
+    expect(classListMock.add).toHaveBeenCalledWith('dark')
   })
 
   it('defaults to "es" language when no localStorage value', async () => {
@@ -45,30 +50,30 @@ describe('themeStore', () => {
     expect(state.language).toBe('es')
   })
 
-  it('toggleTheme switches light to dark', async () => {
+  it('toggleTheme switches dark to light (default is dark)', async () => {
     const { useThemeStore } = await import('@/store/themeStore')
     const { toggleTheme } = useThemeStore.getState()
     toggleTheme()
-    expect(useThemeStore.getState().theme).toBe('dark')
+    expect(useThemeStore.getState().theme).toBe('light')
   })
 
   it('toggleTheme persists to localStorage', async () => {
     const { useThemeStore } = await import('@/store/themeStore')
-    useThemeStore.getState().toggleTheme()
-    expect(localStorageMock.getItem('finza-theme')).toBe('dark')
-  })
-
-  it('toggleTheme applies dark class to documentElement', async () => {
-    const { useThemeStore } = await import('@/store/themeStore')
-    useThemeStore.getState().toggleTheme()
-    expect(classListMock.toggle).toHaveBeenCalledWith('dark', true)
-  })
-
-  it('toggleTheme switches dark back to light', async () => {
-    const { useThemeStore } = await import('@/store/themeStore')
-    useThemeStore.getState().toggleTheme() // light -> dark
     useThemeStore.getState().toggleTheme() // dark -> light
-    expect(useThemeStore.getState().theme).toBe('light')
+    expect(localStorageMock.getItem('finza-theme')).toBe('light')
+  })
+
+  it('toggleTheme removes dark class when switching to light', async () => {
+    const { useThemeStore } = await import('@/store/themeStore')
+    useThemeStore.getState().toggleTheme() // dark -> light
+    expect(classListMock.toggle).toHaveBeenCalledWith('dark', false)
+  })
+
+  it('toggleTheme switches light back to dark', async () => {
+    const { useThemeStore } = await import('@/store/themeStore')
+    useThemeStore.getState().toggleTheme() // dark -> light
+    useThemeStore.getState().toggleTheme() // light -> dark
+    expect(useThemeStore.getState().theme).toBe('dark')
   })
 
   it('setTheme explicitly sets dark theme', async () => {

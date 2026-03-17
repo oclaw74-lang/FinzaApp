@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { MetaForm } from './MetaForm'
 import type { MetaFormData } from './MetaForm'
@@ -22,9 +23,9 @@ export function MetaModal({
 
   const title = meta ? 'Editar meta' : 'Nueva meta de ahorro'
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label={title}
@@ -53,6 +54,7 @@ export function MetaModal({
           isLoading={isLoading}
         />
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

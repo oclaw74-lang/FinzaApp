@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { TransaccionForm } from './TransaccionForm'
 import type { IngresoFormData, EgresoFormData } from './TransaccionForm'
 
@@ -24,9 +25,9 @@ export function TransaccionModal({
 }: TransaccionModalProps): JSX.Element | null {
   if (!isOpen) return null
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label={title ?? (tipo === 'ingreso' ? 'Nuevo ingreso' : 'Nuevo egreso')}
@@ -49,6 +50,7 @@ export function TransaccionModal({
           submitLabel={submitLabel}
         />
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

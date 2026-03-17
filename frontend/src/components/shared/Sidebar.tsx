@@ -1,24 +1,20 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  BarChart3,
+  LayoutDashboard,
   TrendingUp,
   TrendingDown,
-  Settings,
+  PieChart,
+  Banknote,
+  CreditCard,
   Target,
-  FileText,
+  RefreshCw,
+  Shield,
+  Bell,
+  Settings,
   X,
-  HandCoins,
-  PiggyBank,
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Tag,
-  ShieldCheck,
-  CreditCard,
-  Trophy,
-  BookOpen,
-  Bell,
-  RefreshCw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUiStore } from '@/store/uiStore'
@@ -27,23 +23,48 @@ import { useTranslation } from 'react-i18next'
 import { Avatar } from '@/components/ui/avatar'
 import { ScoreWidget } from '@/components/shared/ScoreWidget'
 
-const navItems = [
-  { to: '/', icon: BarChart3, labelKey: 'nav.dashboard' },
-  { to: '/ingresos', icon: TrendingUp, labelKey: 'nav.ingresos' },
-  { to: '/egresos', icon: TrendingDown, labelKey: 'nav.egresos' },
-  { to: '/recurrentes', icon: RefreshCw, labelKey: 'nav.recurrentes' },
-  { to: '/prestamos', icon: HandCoins, labelKey: 'nav.prestamos' },
-  { to: '/tarjetas', icon: CreditCard, labelKey: 'nav.tarjetas' },
-  { to: '/metas', icon: PiggyBank, labelKey: 'nav.metas' },
-  { to: '/presupuestos', icon: Target, labelKey: 'nav.presupuestos' },
-  { to: '/categorias', icon: Tag, labelKey: 'nav.categorias' },
-  { to: '/fondo-emergencia', icon: ShieldCheck, labelKey: 'nav.fondoEmergencia' },
-  { to: '/suscripciones', icon: CreditCard, labelKey: 'nav.suscripciones' },
-  { to: '/notificaciones', icon: Bell, labelKey: 'nav.notificaciones' },
-  { to: '/retos', icon: Trophy, labelKey: 'nav.retos' },
-  { to: '/educacion', icon: BookOpen, labelKey: 'nav.educacion' },
-  { to: '/reportes', icon: FileText, labelKey: 'nav.reportes' },
-  { to: '/configuracion', icon: Settings, labelKey: 'nav.configuracion' },
+interface NavItemDef {
+  to: string
+  icon: React.ElementType
+  labelKey: string
+}
+
+interface NavGroup {
+  sectionKey: string
+  label: string
+  items: NavItemDef[]
+}
+
+const navGroups: NavGroup[] = [
+  {
+    sectionKey: 'principal',
+    label: 'PRINCIPAL',
+    items: [
+      { to: '/', icon: LayoutDashboard, labelKey: 'nav.dashboard' },
+      { to: '/ingresos', icon: TrendingUp, labelKey: 'nav.ingresos' },
+      { to: '/egresos', icon: TrendingDown, labelKey: 'nav.egresos' },
+      { to: '/presupuestos', icon: PieChart, labelKey: 'nav.presupuestos' },
+    ],
+  },
+  {
+    sectionKey: 'compromisos',
+    label: 'COMPROMISOS',
+    items: [
+      { to: '/prestamos', icon: Banknote, labelKey: 'nav.prestamos' },
+      { to: '/tarjetas', icon: CreditCard, labelKey: 'nav.tarjetas' },
+      { to: '/metas', icon: Target, labelKey: 'nav.metas' },
+      { to: '/recurrentes', icon: RefreshCw, labelKey: 'nav.recurrentes' },
+      { to: '/fondo-emergencia', icon: Shield, labelKey: 'nav.fondoEmergencia' },
+    ],
+  },
+  {
+    sectionKey: 'analisis',
+    label: 'ANALISIS',
+    items: [
+      { to: '/notificaciones', icon: Bell, labelKey: 'nav.notificaciones' },
+      { to: '/configuracion', icon: Settings, labelKey: 'nav.configuracion' },
+    ],
+  },
 ]
 
 function NavItem({
@@ -228,14 +249,27 @@ export function Sidebar(): JSX.Element {
 
         {/* Navigation */}
         <nav className="flex-1 px-2 py-3 overflow-y-auto overflow-x-hidden">
-          {navItems.map(({ to, icon, labelKey }) => (
-            <NavItem
-              key={to}
-              to={to}
-              icon={icon}
-              labelKey={labelKey}
-              collapsed={sidebarCollapsed}
-            />
+          {navGroups.map((group) => (
+            <div key={group.sectionKey}>
+              {/* Section label — hidden when collapsed */}
+              {!sidebarCollapsed && (
+                <p
+                  className="text-[10px] font-semibold tracking-widest text-white/30 px-3 mt-4 mb-1"
+                  aria-label={`Seccion ${group.label}`}
+                >
+                  {group.label}
+                </p>
+              )}
+              {group.items.map(({ to, icon, labelKey }) => (
+                <NavItem
+                  key={to}
+                  to={to}
+                  icon={icon}
+                  labelKey={labelKey}
+                  collapsed={sidebarCollapsed}
+                />
+              ))}
+            </div>
           ))}
         </nav>
 
