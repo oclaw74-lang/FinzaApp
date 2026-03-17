@@ -378,14 +378,21 @@ html.dark body::after {
     border-color: rgba(255,255,255,0.10);
     box-shadow: 0 4px 30px rgba(0,0,0,0.3);
   }
+  .dark .card-glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+  }
 
   /* ===== KPI typography — premium ===== */
   .kpi-value {
-    font-size: 26px;
+    font-size: 1.75rem;
     font-weight: 700;
-    letter-spacing: -0.04em;
-    line-height: 1;
     font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1;
   }
   .kpi-label {
     font-size: 11px;

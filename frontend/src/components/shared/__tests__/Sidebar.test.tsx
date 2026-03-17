@@ -104,9 +104,7 @@ describe('Sidebar', () => {
     setupMocks({ sidebarCollapsed: true })
     renderSidebar()
     // When collapsed there are two "Expandir sidebar" buttons: logo (type=button) and toggle
-    // The logo button is the one with type="button" explicitly set
     const logoBtns = screen.getAllByLabelText('Expandir sidebar')
-    // Logo button is the first one (has type="button" and contains the F icon)
     const logoBtn = logoBtns.find((el) => el.getAttribute('type') === 'button') as HTMLElement
     fireEvent.click(logoBtn)
     expect(mockSetSidebarCollapsed).toHaveBeenCalledWith(false)
@@ -115,7 +113,6 @@ describe('Sidebar', () => {
   it('logo button does not call setSidebarCollapsed when expanded', () => {
     setupMocks({ sidebarCollapsed: false })
     renderSidebar()
-    // When expanded the logo button has tabIndex=-1 and no aria-label
     const fIcon = screen.getByText('F').closest('button')
     if (fIcon) fireEvent.click(fIcon)
     expect(mockSetSidebarCollapsed).not.toHaveBeenCalled()
@@ -139,6 +136,57 @@ describe('Sidebar', () => {
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
     expect(screen.getByText('Ingresos')).toBeInTheDocument()
     expect(screen.getByText('Egresos')).toBeInTheDocument()
+  })
+
+  it('renders section label PRINCIPAL', () => {
+    setupMocks({ sidebarCollapsed: false })
+    renderSidebar()
+    expect(screen.getByText('PRINCIPAL')).toBeInTheDocument()
+  })
+
+  it('renders section label COMPROMISOS', () => {
+    setupMocks({ sidebarCollapsed: false })
+    renderSidebar()
+    expect(screen.getByText('COMPROMISOS')).toBeInTheDocument()
+  })
+
+  it('renders section label ANALISIS', () => {
+    setupMocks({ sidebarCollapsed: false })
+    renderSidebar()
+    expect(screen.getByText('ANALISIS')).toBeInTheDocument()
+  })
+
+  it('hides section labels when sidebar is collapsed', () => {
+    setupMocks({ sidebarCollapsed: true })
+    renderSidebar()
+    expect(screen.queryByText('PRINCIPAL')).not.toBeInTheDocument()
+    expect(screen.queryByText('COMPROMISOS')).not.toBeInTheDocument()
+    expect(screen.queryByText('ANALISIS')).not.toBeInTheDocument()
+  })
+
+  it('does not render Categorias in nav', () => {
+    renderSidebar()
+    expect(screen.queryByText('Categorias')).not.toBeInTheDocument()
+  })
+
+  it('does not render Suscripciones in nav', () => {
+    renderSidebar()
+    expect(screen.queryByText('Suscripciones')).not.toBeInTheDocument()
+  })
+
+  it('does not render Retos in nav', () => {
+    renderSidebar()
+    expect(screen.queryByText('Retos')).not.toBeInTheDocument()
+  })
+
+  it('does not render Educacion in nav', () => {
+    renderSidebar()
+    expect(screen.queryByText('Educacion')).not.toBeInTheDocument()
+  })
+
+  it('does not render Reportes in nav', () => {
+    renderSidebar()
+    expect(screen.queryByText('Reportes')).not.toBeInTheDocument()
   })
 
   it('renders user name in user section', () => {

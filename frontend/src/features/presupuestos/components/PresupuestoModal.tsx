@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { Trash2, X } from 'lucide-react'
 import { PresupuestoForm } from './PresupuestoForm'
 import type { PresupuestoFormData } from './PresupuestoForm'
@@ -33,9 +34,9 @@ export function PresupuestoModal({
 
   const title = isEditing ? 'Editar presupuesto' : 'Nuevo presupuesto'
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label={title}
@@ -83,6 +84,7 @@ export function PresupuestoModal({
           isLoading={isLoading}
         />
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
