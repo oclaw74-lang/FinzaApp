@@ -6,6 +6,7 @@ from app.api.v1.routes.impulso import router as impulso_router
 from app.api.v1.routes.comparativa import router as comparativa_router
 from app.api.v1.routes.educacion import router as educacion_router
 from app.api.v1.routes.profiles import router as profiles_router
+from app.api.v1.routes.recurrentes import router as recurrentes_router
 from app.api.v1.routes.retos import router as retos_router
 from app.api.v1.routes.suscripciones import router as suscripciones_router
 from app.api.v1.routes.dashboard import router as dashboard_router
@@ -28,6 +29,7 @@ api_router.include_router(dashboard_router)
 api_router.include_router(prestamos_router)
 api_router.include_router(metas_router)
 api_router.include_router(presupuestos_router)
+api_router.include_router(recurrentes_router)
 api_router.include_router(score_router)
 api_router.include_router(prediccion_router)
 api_router.include_router(notificaciones_router)
