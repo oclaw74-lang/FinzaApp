@@ -32,7 +32,7 @@ function getYearOptions(currentYear: number): number[] {
 
 function SkeletonCard(): JSX.Element {
   return (
-    <div className="finza-card animate-pulse">
+    <div className="card-glass animate-pulse p-5">
       <div className="flex items-start justify-between gap-2 mb-3">
         <Skeleton className="h-4 w-32" />
         <Skeleton className="h-5 w-16 rounded-full" />
@@ -236,7 +236,7 @@ export function PresupuestosPage(): JSX.Element {
   }
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in p-6 md:p-8 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <p className="text-[var(--text-muted)] text-sm">
@@ -300,21 +300,21 @@ export function PresupuestosPage(): JSX.Element {
       {/* Summary cards */}
       {!isError && !isLoading && estadoList.length > 0 && (
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="finza-card">
-            <p className="text-xs text-[var(--text-muted)] mb-1">{t('presupuestos.budgeted')}</p>
-            <p className="text-lg font-bold font-mono text-[var(--text-primary)]">
+          <div className="card-glass p-5">
+            <p className="kpi-label dark:text-finza-t2">{t('presupuestos.budgeted')}</p>
+            <p className="kpi-value dark:text-finza-blue mt-2">
               {formatCurrency(totalPresupuestado)}
             </p>
           </div>
-          <div className="finza-card">
-            <p className="text-xs text-[var(--text-muted)] mb-1">{t('presupuestos.spent')}</p>
-            <p className="text-lg font-bold font-mono text-[var(--text-primary)]">
+          <div className="card-glass p-5">
+            <p className="kpi-label dark:text-finza-t2">{t('presupuestos.spent')}</p>
+            <p className={`kpi-value mt-2 ${totalGastado > totalPresupuestado ? 'dark:text-finza-red' : 'dark:text-finza-green'}`}>
               {formatCurrency(totalGastado)}
             </p>
           </div>
-          <div className="finza-card">
-            <p className="text-xs text-[var(--text-muted)] mb-1">{t('presupuestos.available')}</p>
-            <p className={`text-lg font-bold font-mono ${disponible >= 0 ? 'text-prosperity-green' : 'text-alert-red'}`}>
+          <div className="card-glass p-5">
+            <p className="kpi-label dark:text-finza-t2">{t('presupuestos.available')}</p>
+            <p className={`kpi-value mt-2 ${disponible >= 0 ? 'text-prosperity-green dark:text-finza-green' : 'text-alert-red dark:text-finza-red'}`}>
               {formatCurrency(Math.abs(disponible))}
             </p>
           </div>
@@ -362,7 +362,7 @@ export function PresupuestosPage(): JSX.Element {
               <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-3">
                 Sin presupuesto
               </h2>
-              <div className="finza-card p-0 overflow-hidden">
+              <div className="card-glass p-0 overflow-hidden">
                 {categoriasSinPresupuesto.map((cat, idx) => {
                   const iconName = cat.icono ?? ''
                   const IconComponent =
@@ -372,7 +372,7 @@ export function PresupuestosPage(): JSX.Element {
                   return (
                     <div
                       key={cat.id}
-                      className={`flex items-center justify-between px-4 py-3 ${
+                      className={`flex items-center justify-between px-4 py-3 dark:hover:bg-white/[0.03] transition-colors ${
                         idx < categoriasSinPresupuesto.length - 1
                           ? 'border-b border-border'
                           : ''

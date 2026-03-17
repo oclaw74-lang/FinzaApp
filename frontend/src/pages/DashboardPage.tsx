@@ -48,11 +48,11 @@ export function DashboardPage(): JSX.Element {
   const tasaAhorro = data?.resumen_financiero.tasa_ahorro ?? 0
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in p-6 md:p-8 space-y-6">
       {/* Error state */}
       {isError && (
         <div
-          className="flex items-center gap-3 p-4 mb-6 bg-[var(--danger-muted)] border border-[var(--danger)] rounded-lg text-[var(--danger)]"
+          className="flex items-center gap-3 p-4 mb-6 bg-[var(--danger-muted)] border border-[var(--danger)] dark:border-finza-red/30 rounded-lg text-[var(--danger)]"
           role="alert"
         >
           <AlertCircle size={18} className="flex-shrink-0" />
@@ -64,7 +64,7 @@ export function DashboardPage(): JSX.Element {
 
       {/* Hero balance card */}
       <div className="relative overflow-hidden rounded-2xl p-6 sm:p-8 mb-6
-        text-white shadow-xl"
+        text-white shadow-xl dark:shadow-finza-blue/10"
         style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #366092 100%)' }}
       >
         {/* Decorative orbs */}
@@ -144,37 +144,39 @@ export function DashboardPage(): JSX.Element {
               title={t('dashboard.income')}
               value={formatMoney(ingresos)}
               variationPct={data?.resumen_financiero.variacion_ingresos_pct ?? 0}
-              icon={<TrendingUp size={18} style={{ color: 'var(--success)' }} />}
+              icon={<TrendingUp size={18} style={{ color: 'var(--success)' }} className="dark:text-finza-green" />}
               iconBg="var(--success-muted)"
-              valueColorClass="text-[var(--success)]"
+              valueColorClass="text-[var(--success)] dark:text-finza-green"
               subtitle={t('dashboard.vsLastMonth')}
-              className="border-l-4 border-[#00B050]"
+              className="border-l-4 border-[#00B050] dark:bg-finza-blue/10 card-glass"
             />
             <KpiCard
               title={t('dashboard.expenses')}
               value={formatMoney(egresos)}
               variationPct={data?.resumen_financiero.variacion_egresos_pct ?? 0}
-              icon={<TrendingDown size={18} style={{ color: 'var(--danger)' }} />}
+              icon={<TrendingDown size={18} style={{ color: 'var(--danger)' }} className="dark:text-finza-red" />}
               iconBg="var(--danger-muted)"
-              valueColorClass="text-[var(--danger)]"
+              valueColorClass="text-[var(--danger)] dark:text-finza-red"
               subtitle={t('dashboard.vsLastMonth')}
-              className="border-l-4 border-[#FF0000]"
+              className="border-l-4 border-[#FF0000] dark:bg-finza-red/10 card-glass"
             />
             <KpiCard
               title="Metas activas"
               value={String(data?.metas_activas.length ?? 0)}
-              icon={<Target size={18} style={{ color: 'var(--accent)' }} />}
+              icon={<Target size={18} style={{ color: 'var(--accent)' }} className="dark:text-finza-purple" />}
               iconBg="var(--accent-muted)"
-              valueColorClass="text-[var(--accent)]"
+              valueColorClass="text-[var(--accent)] dark:text-finza-purple"
               subtitle="En progreso"
+              className="card-glass"
             />
             <KpiCard
               title={t('dashboard.savingsRate')}
               value={`${tasaAhorro.toFixed(1)}%`}
-              icon={<PiggyBank size={18} style={{ color: 'var(--warning)' }} />}
+              icon={<PiggyBank size={18} style={{ color: 'var(--warning)' }} className="dark:text-finza-yellow" />}
               iconBg="var(--warning-muted)"
-              valueColorClass="text-[var(--warning)]"
+              valueColorClass="text-[var(--warning)] dark:text-finza-yellow"
               subtitle="Del total de ingresos"
+              className="dark:bg-finza-yellow/10 card-glass"
             />
           </>
         )}
@@ -213,7 +215,7 @@ export function DashboardPage(): JSX.Element {
       {/* Bottom section: recent transactions + loans + goals */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Recent transactions (2 cols) */}
-        <div className="lg:col-span-2 finza-card">
+        <div className="lg:col-span-2 finza-card dark:bg-[rgba(8,15,30,0.6)] dark:backdrop-blur-xl dark:border-white/[0.06]">
           <div className="flex items-center justify-between mb-4">
             <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
               {t('dashboard.recentTransactions')}
@@ -240,7 +242,7 @@ export function DashboardPage(): JSX.Element {
               {(data?.ultimas_transacciones ?? []).slice(0, 6).map((tx, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center gap-3 py-2.5 border-b border-[var(--border)] last:border-0"
+                  className="flex items-center gap-3 py-2.5 border-b border-[var(--border)] last:border-0 dark:hover:bg-white/[0.03] transition-colors rounded-xl px-2"
                 >
                   <div
                     className={cn(
@@ -283,7 +285,7 @@ export function DashboardPage(): JSX.Element {
         {/* Right column: loans + goals */}
         <div className="space-y-4">
           {/* Prestamos activos */}
-          <div className="finza-card">
+          <div className="finza-card dark:bg-[rgba(8,15,30,0.6)] dark:backdrop-blur-xl dark:border-white/[0.06]">
             <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">
               {t('dashboard.activeLoans')}
             </p>
@@ -305,7 +307,7 @@ export function DashboardPage(): JSX.Element {
               <div className="space-y-3">
                 <div>
                   <p className="text-xs text-[var(--text-muted)] mb-0.5">Deuda total</p>
-                  <p className="text-2xl font-bold font-mono text-[var(--danger)]">
+                  <p className="text-2xl font-bold font-mono text-[var(--danger)] dark:text-finza-red">
                     {formatMoney(data?.prestamos_activos.total_deuda ?? 0)}
                   </p>
                 </div>
@@ -333,7 +335,7 @@ export function DashboardPage(): JSX.Element {
           </div>
 
           {/* Metas activas */}
-          <div className="finza-card">
+          <div className="finza-card dark:bg-[rgba(8,15,30,0.6)] dark:backdrop-blur-xl dark:border-white/[0.06]">
             <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">
               {t('dashboard.activeGoals')}
             </p>
@@ -360,7 +362,7 @@ export function DashboardPage(): JSX.Element {
           </div>
 
           {/* Presupuestos */}
-          <div className="finza-card">
+          <div className="finza-card dark:bg-[rgba(8,15,30,0.6)] dark:backdrop-blur-xl dark:border-white/[0.06]">
             <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">
               {t('dashboard.activeBudgets')}
             </p>

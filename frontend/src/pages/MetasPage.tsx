@@ -15,7 +15,7 @@ import { getApiErrorMessage } from '@/lib/apiError'
 
 function SkeletonCard(): JSX.Element {
   return (
-    <div className="finza-card animate-pulse">
+    <div className="card-glass animate-pulse p-5">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
           <Skeleton className="w-3 h-3 rounded-full" />
@@ -132,13 +132,15 @@ export function MetasPage(): JSX.Element {
   }
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in p-6 md:p-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <p className="text-[var(--text-muted)] text-sm">
-          Gestiona tus objetivos financieros
-        </p>
-        <Button onClick={() => setIsModalOpen(true)} variant="default" size="md">
+        <div>
+          <h1 className="page-title-premium dark:text-[#e8f0ff]">{t('nav.metas')}</h1>
+          <p className="text-sm dark:text-finza-t2 mt-1">Gestiona tus objetivos financieros</p>
+        </div>
+        <Button onClick={() => setIsModalOpen(true)} variant="default" size="md"
+          className="dark:bg-finza-blue dark:hover:bg-finza-blue/80">
           <Plus size={16} />
           {t('metas.newMeta')}
         </Button>
