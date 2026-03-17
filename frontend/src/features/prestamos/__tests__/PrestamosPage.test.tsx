@@ -181,8 +181,13 @@ describe('PrestamosPage', () => {
   })
 
   it('renders pago hoy badge when proximo_pago is today', () => {
-    const today = new Date()
-    const todayStr = today.toISOString().split('T')[0]
+    // Build local date string to avoid UTC offset issues
+    const hoy = new Date()
+    hoy.setHours(0, 0, 0, 0)
+    const year = hoy.getFullYear()
+    const month = String(hoy.getMonth() + 1).padStart(2, '0')
+    const day = String(hoy.getDate()).padStart(2, '0')
+    const todayStr = `${year}-${month}-${day}`
     const prestamoHoy: Prestamo = {
       id: 'pre-hoy',
       tipo: 'me_deben',
@@ -196,14 +201,22 @@ describe('PrestamosPage', () => {
       proximo_pago: todayStr,
     }
     setupMocks({ prestamosData: [prestamoHoy] })
-    render(<PrestamosPage />)
-    expect(screen.getByRole('status', { name: /pago hoy/i })).toBeInTheDocument()
+    const { container } = render(<PrestamosPage />)
+    // The span badge has aria-label "Pago hoy"
+    const badge = container.querySelector('[aria-label="Pago hoy"]')
+    expect(badge).toBeInTheDocument()
   })
 
   it('renders "Pago en X dias" badge when proximo_pago is within 3 days', () => {
-    const futureDate = new Date()
+    // Build local date string +3 days from today to avoid UTC offset issues
+    const hoy = new Date()
+    hoy.setHours(0, 0, 0, 0)
+    const futureDate = new Date(hoy)
     futureDate.setDate(futureDate.getDate() + 3)
-    const futureDateStr = futureDate.toISOString().split('T')[0]
+    const year = futureDate.getFullYear()
+    const month = String(futureDate.getMonth() + 1).padStart(2, '0')
+    const day = String(futureDate.getDate()).padStart(2, '0')
+    const futureDateStr = `${year}-${month}-${day}`
     const prestamoCercano: Prestamo = {
       id: 'pre-3d',
       tipo: 'me_deben',
@@ -217,8 +230,9 @@ describe('PrestamosPage', () => {
       proximo_pago: futureDateStr,
     }
     setupMocks({ prestamosData: [prestamoCercano] })
-    render(<PrestamosPage />)
-    // Badge shows "Pago en 3 dias" — text may be split across icon + text nodes
-    expect(screen.getByRole('status', { name: /pago en 3 dias/i })).toBeInTheDocument()
+    const { container } = render(<PrestamosPage />)
+    // The span badge has aria-label "Pago en 3 dias"
+    const badge = container.querySelector('[aria-label="Pago en 3 dias"]')
+    expect(badge).toBeInTheDocument()
   })
 })

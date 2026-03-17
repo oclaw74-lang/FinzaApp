@@ -5,8 +5,9 @@ import type { Prestamo, EstadoPrestamo } from '@/types/prestamo'
 function calcularDiasHastaProximoPago(proximoPago: string): number {
   const hoy = new Date()
   hoy.setHours(0, 0, 0, 0)
-  const fechaPago = new Date(proximoPago)
-  fechaPago.setHours(0, 0, 0, 0)
+  // Parse date parts directly to avoid UTC offset issues with ISO date strings
+  const [year, month, day] = proximoPago.split('-').map(Number)
+  const fechaPago = new Date(year, month - 1, day, 0, 0, 0, 0)
   return Math.round((fechaPago.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24))
 }
 
