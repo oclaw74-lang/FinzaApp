@@ -34,33 +34,44 @@
     --card-glow-hover: 0 12px 40px rgba(99, 102, 241, 0.18);
   }
   .dark {
-    --bg: #0a0f1e;
-    --surface: #111827;
-    --surface-raised: #1f2937;
-    --surface-overlay: rgba(17,24,39,0.85);
-    --border: #1f2937;
-    --border-strong: #374151;
-    --text-primary: #f9fafb;
-    --text-secondary: #f3f4f6;
-    --text-muted: #9ca3af;
-    --text-subtle: #6b7280;
-    --sidebar: #07090f;
-    --sidebar-fg: rgba(255,255,255,0.90);
-    --sidebar-muted: rgba(255,255,255,0.45);
-    --accent: #818cf8;
-    --accent-hover: #6366f1;
-    --accent-muted: rgba(129,140,248,0.15);
-    --success: #34d399;
-    --success-muted: rgba(52,211,153,0.15);
-    --danger: #f87171;
-    --danger-muted: rgba(248,113,113,0.15);
-    --warning: #fbbf24;
-    --warning-muted: rgba(251,191,36,0.15);
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
-    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
-    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5);
-    --card-glow: 0 8px 32px rgba(129, 140, 248, 0.08);
-    --card-glow-hover: 0 12px 40px rgba(129, 140, 248, 0.20);
+    /* Premium dark palette — mockup tokens */
+    --bg: #04080f;
+    --surface: #080f1e;
+    --surface-raised: #0d1829;
+    --surface-overlay: rgba(8,15,30,0.85);
+    --border: #1f2e45;
+    --border-strong: #1f2e45;
+    --text-primary: #e8f0ff;
+    --text-secondary: #c8d8f0;
+    --text-muted: #657a9e;
+    --text-subtle: #4a5e7a;
+    --sidebar: #080f1e;
+    --sidebar-fg: rgba(232,240,255,0.95);
+    --sidebar-muted: rgba(101,122,158,0.7);
+    --accent: #3d8ef8;
+    --accent-hover: #2a7be8;
+    --accent-muted: rgba(61,142,248,0.15);
+    --success: #00dfa2;
+    --success-muted: rgba(0,223,162,0.15);
+    --danger: #ff4060;
+    --danger-muted: rgba(255,64,96,0.15);
+    --warning: #ffb340;
+    --warning-muted: rgba(255,179,64,0.15);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.6);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.7);
+    --card-glow: 0 8px 32px rgba(61,142,248,0.08);
+    --card-glow-hover: 0 12px 40px rgba(61,142,248,0.18);
+    /* Finza premium tokens */
+    --finza-blue: #3d8ef8;
+    --finza-green: #00dfa2;
+    --finza-red: #ff4060;
+    --finza-yellow: #ffb340;
+    --finza-purple: #9768ff;
+    --finza-cyan: #00dfff;
+    --finza-t2: #657a9e;
+    --finza-border: rgba(255,255,255,0.06);
+    --finza-glass: rgba(8,15,30,0.6);
   }
   * { @apply border-border; }
   body {
@@ -158,7 +169,7 @@
 }
 
 /* ========== Cursor glow — dark only ========== */
-.dark #cursor-glow {
+html.dark #cursor-glow {
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -171,17 +182,18 @@
 }
 
 /* ========== Ambient blobs — dark only ========== */
-.blob {
+html.dark .blob {
   position: fixed;
   border-radius: 50%;
   filter: blur(120px);
   pointer-events: none;
-  opacity: 0.18;
+  z-index: 0;
+  opacity: 0.15;
   animation: blobdrift 18s ease-in-out infinite alternate;
 }
-.blob-1 { width: 500px; height: 500px; background: #3d8ef8; top: -200px; left: -100px; animation-delay: 0s; }
-.blob-2 { width: 400px; height: 400px; background: #9768ff; top: 40%; right: -150px; animation-delay: -6s; }
-.blob-3 { width: 350px; height: 350px; background: #00dfff; bottom: -100px; left: 30%; animation-delay: -12s; }
+html.dark .blob-1 { width: 500px; height: 500px; background: #3d8ef8; top: -200px; left: -100px; animation-delay: 0s; }
+html.dark .blob-2 { width: 400px; height: 400px; background: #9768ff; top: 40%; right: -150px; animation-delay: -6s; }
+html.dark .blob-3 { width: 350px; height: 350px; background: #00dfff; bottom: -100px; left: 30%; animation-delay: -12s; }
 
 @keyframes blobdrift {
   0%   { transform: translate(0, 0) scale(1); }
@@ -189,26 +201,26 @@
 }
 
 /* ========== Dot grid — dark only ========== */
-.dark body::before {
+html.dark body::before {
   content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 1;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.13) 1px, transparent 1px);
+  z-index: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.10) 1px, transparent 1px);
   background-size: 28px 28px;
   mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
   -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
 }
 
 /* ========== Film grain — dark only ========== */
-.dark body::after {
+html.dark body::after {
   content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 2;
-  opacity: 0.035;
+  z-index: 1;
+  opacity: 0.03;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -348,5 +360,60 @@
     width: 3px;
     background: linear-gradient(180deg, #5B9BD5, #366092);
     border-radius: 0 3px 3px 0;
+  }
+  .dark .sidebar-item-active::before {
+    background: linear-gradient(180deg, #3d8ef8, #9768ff);
+  }
+
+  /* ===== Card glassmorphism — premium ===== */
+  .card-glass {
+    background: rgba(8,15,30,0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .card-glass:hover {
+    border-color: rgba(255,255,255,0.10);
+    box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+  }
+
+  /* ===== KPI typography — premium ===== */
+  .kpi-value {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .kpi-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--finza-t2, #657a9e);
+  }
+
+  /* ===== Page title — premium ===== */
+  .page-title-premium {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  /* ===== Nav active — premium ===== */
+  .nav-active {
+    background: rgba(61,142,248,0.12) !important;
+    color: #3d8ef8 !important;
+  }
+
+  /* ===== Prediction card variants ===== */
+  .pred-card-positive {
+    border-color: rgba(0,223,162,0.3) !important;
+  }
+  .pred-card-negative {
+    border-color: rgba(255,64,96,0.3) !important;
+    background: rgba(255,64,96,0.04) !important;
   }
 }

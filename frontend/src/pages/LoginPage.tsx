@@ -16,6 +16,185 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>
 
+const FEATURES = [
+  { icon: TrendingUp, text: 'Seguimiento de ingresos y egresos en tiempo real' },
+  { icon: Shield, text: 'Tus datos financieros protegidos y privados' },
+  { icon: Zap, text: 'Metas de ahorro y presupuestos inteligentes' },
+] as const
+
+function BrandPanel(): JSX.Element {
+  return (
+    <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 text-white relative overflow-hidden bg-gradient-to-br from-[#020812] via-[#04080f] to-[#080f1e]">
+      {/* Decorative blob inside brand panel */}
+      <div
+        className="absolute -top-32 -left-20 w-96 h-96 rounded-full opacity-20 pointer-events-none"
+        style={{ background: '#3d8ef8', filter: 'blur(100px)' }}
+        aria-hidden="true"
+      />
+      <div
+        className="absolute bottom-0 right-0 w-72 h-72 rounded-full opacity-15 pointer-events-none"
+        style={{ background: '#9768ff', filter: 'blur(80px)' }}
+        aria-hidden="true"
+      />
+
+      {/* Logo */}
+      <div className="flex items-center gap-3 relative z-10">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg bg-gradient-to-br from-[#3d8ef8] to-[#9768ff]">
+          <span className="font-bold text-white text-lg">Fz</span>
+        </div>
+        <span className="font-bold text-2xl tracking-tight text-[#e8f0ff]">Finza</span>
+      </div>
+
+      {/* Tagline */}
+      <div className="space-y-8 relative z-10">
+        <div>
+          <h2 className="text-4xl font-bold leading-tight mb-4 text-[#e8f0ff]">
+            Gestiona tus finanzas con claridad
+          </h2>
+          <p className="text-[#657a9e] text-lg">
+            Controla ingresos, egresos, metas y mas — todo en un solo lugar.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          {FEATURES.map(({ icon: Icon, text }) => (
+            <div key={text} className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-white/[0.06] border border-white/[0.08] rounded-lg flex items-center justify-center shrink-0">
+                <Icon size={16} className="text-[#3d8ef8]" />
+              </div>
+              <span className="text-[#657a9e] text-sm">{text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <p className="text-[#657a9e]/60 text-sm italic relative z-10">
+        "Fluye hacia tu libertad financiera"
+      </p>
+    </div>
+  )
+}
+
+function LoginFormCard({
+  onSubmit,
+  serverError,
+  showPassword,
+  onTogglePassword,
+  isSubmitting,
+  register,
+  errors,
+  t,
+}: {
+  onSubmit: (e: React.FormEvent) => void
+  serverError: string | null
+  showPassword: boolean
+  onTogglePassword: () => void
+  isSubmitting: boolean
+  register: ReturnType<typeof useForm<LoginForm>>['register']
+  errors: ReturnType<typeof useForm<LoginForm>>['formState']['errors']
+  t: (key: string) => string
+}): JSX.Element {
+  return (
+    <div className="w-full max-w-md space-y-6">
+      {/* Mobile logo */}
+      <div className="lg:hidden flex items-center gap-2 mb-2">
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-[#3d8ef8] to-[#9768ff]">
+          <span className="font-bold text-white text-sm">Fz</span>
+        </div>
+        <span className="font-bold text-xl text-[var(--text-primary)]">Finza</span>
+      </div>
+
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] dark:text-[#e8f0ff]">
+          {t('auth.loginTitle')}
+        </h1>
+        <p className="text-sm text-[var(--text-muted)] dark:text-[#657a9e] mt-1">
+          {t('auth.loginSubtitle')}
+        </p>
+      </div>
+
+      {/* Glass card form */}
+      <div className="finza-card dark:card-glass dark:!bg-[rgba(8,15,30,0.7)] dark:!border-white/[0.08] dark:!rounded-2xl dark:!p-10 space-y-4">
+        <form onSubmit={onSubmit} className="space-y-4">
+          {/* Email */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-[var(--text-primary)] dark:text-[#e8f0ff]">
+              {t('auth.email')}
+            </label>
+            <input
+              type="email"
+              placeholder="tu@email.com"
+              className="finza-input w-full dark:bg-white/[0.05] dark:border-white/[0.08] dark:text-[#e8f0ff] dark:placeholder:text-[#657a9e] dark:focus:border-[#3d8ef8]/50 dark:rounded-xl"
+              {...register('email')}
+            />
+            {errors.email && (
+              <p className="text-xs text-alert-red dark:text-[#ff4060]">{errors.email.message}</p>
+            )}
+          </div>
+
+          {/* Password with show/hide */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-[var(--text-primary)] dark:text-[#e8f0ff]">
+                {t('auth.password')}
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-xs text-finza-blue dark:text-[#3d8ef8] hover:underline"
+              >
+                {t('auth.forgotPassword')}
+              </Link>
+            </div>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="..."
+                className="finza-input w-full pr-10 dark:bg-white/[0.05] dark:border-white/[0.08] dark:text-[#e8f0ff] dark:placeholder:text-[#657a9e] dark:focus:border-[#3d8ef8]/50 dark:rounded-xl"
+                {...register('password')}
+              />
+              <button
+                type="button"
+                onClick={onTogglePassword}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] dark:text-[#657a9e] hover:text-[var(--text-primary)] dark:hover:text-[#e8f0ff]"
+                aria-label={showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {errors.password && (
+              <p className="text-xs text-alert-red dark:text-[#ff4060]">{errors.password.message}</p>
+            )}
+          </div>
+
+          {serverError && (
+            <p className="text-sm text-alert-red bg-red-50 dark:bg-[#ff4060]/10 border border-red-200 dark:border-[#ff4060]/20 rounded-lg p-3 dark:text-[#ff4060]">
+              {serverError}
+            </p>
+          )}
+
+          <Button
+            type="submit"
+            isLoading={isSubmitting}
+            className="w-full dark:!bg-gradient-to-r dark:!from-[#3d8ef8] dark:!to-[#9768ff] dark:!rounded-xl dark:!py-3 dark:!font-semibold dark:!text-white dark:!border-0"
+          >
+            {t('auth.login')}
+          </Button>
+        </form>
+
+        <p className="text-center text-sm text-[var(--text-muted)] dark:text-[#657a9e]">
+          {t('auth.noAccount')}{' '}
+          <Link
+            to="/register"
+            className="text-finza-blue dark:text-[#3d8ef8] font-medium hover:underline"
+          >
+            {t('auth.register')}
+          </Link>
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export function LoginPage(): JSX.Element {
   const navigate = useNavigate()
   const { session, isLoading, setSession } = useAuthStore()
@@ -58,142 +237,21 @@ export function LoginPage(): JSX.Element {
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left brand panel — hidden on mobile */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#0f2544] via-[#1a3a6b] to-[#2563eb] flex-col justify-between p-12 text-white">
-        {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-golden-flow rounded-xl flex items-center justify-center">
-            <span className="font-bold text-[#0f2544] text-lg">F</span>
-          </div>
-          <span className="font-bold text-2xl tracking-tight">Finza</span>
-        </div>
-
-        {/* Tagline */}
-        <div className="space-y-8">
-          <div>
-            <h2 className="text-4xl font-bold leading-tight mb-4">
-              Gestiona tus finanzas con claridad
-            </h2>
-            <p className="text-white/70 text-lg">
-              Controla ingresos, egresos, metas y mas — todo en un solo lugar.
-            </p>
-          </div>
-
-          {/* Feature bullets */}
-          <div className="space-y-4">
-            {[
-              { icon: TrendingUp, text: 'Seguimiento de ingresos y egresos en tiempo real' },
-              { icon: Shield, text: 'Tus datos financieros protegidos y privados' },
-              { icon: Zap, text: 'Metas de ahorro y presupuestos inteligentes' },
-            ].map(({ icon: Icon, text }) => (
-              <div key={text} className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center shrink-0">
-                  <Icon size={16} className="text-golden-flow" />
-                </div>
-                <span className="text-white/80 text-sm">{text}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Decorative quote */}
-        <p className="text-white/40 text-sm italic">
-          "Fluye hacia tu libertad financiera"
-        </p>
-      </div>
+    <div className="min-h-screen flex bg-[var(--bg)] dark:bg-[#04080f]">
+      <BrandPanel />
 
       {/* Right form panel */}
-      <div className="flex-1 lg:w-1/2 flex items-center justify-center p-8 bg-background">
-        <div className="w-full max-w-md space-y-6">
-          {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-[#0f2544] rounded-lg flex items-center justify-center">
-              <div className="w-5 h-5 bg-golden-flow rounded-md flex items-center justify-center">
-                <span className="font-bold text-[#0f2544] text-xs">F</span>
-              </div>
-            </div>
-            <span className="font-bold text-xl text-[var(--text-primary)]">Finza</span>
-          </div>
-
-          <div>
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-              {t('auth.loginTitle')}
-            </h1>
-            <p className="text-sm text-[var(--text-muted)] mt-1">{t('auth.loginSubtitle')}</p>
-          </div>
-
-          <div className="finza-card space-y-4">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              {/* Email */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[var(--text-primary)]">
-                  {t('auth.email')}
-                </label>
-                <input
-                  type="email"
-                  placeholder="tu@email.com"
-                  className="finza-input w-full"
-                  {...register('email')}
-                />
-                {errors.email && (
-                  <p className="text-xs text-alert-red">{errors.email.message}</p>
-                )}
-              </div>
-
-              {/* Password with show/hide */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-[var(--text-primary)]">
-                    {t('auth.password')}
-                  </label>
-                  <Link
-                    to="/forgot-password"
-                    className="text-xs text-finza-blue hover:underline"
-                  >
-                    {t('auth.forgotPassword')}
-                  </Link>
-                </div>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="..."
-                    className="finza-input w-full pr-10"
-                    {...register('password')}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                    aria-label={showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="text-xs text-alert-red">{errors.password.message}</p>
-                )}
-              </div>
-
-              {serverError && (
-                <p className="text-sm text-alert-red bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                  {serverError}
-                </p>
-              )}
-
-              <Button type="submit" isLoading={isSubmitting} className="w-full">
-                {t('auth.login')}
-              </Button>
-            </form>
-
-            <p className="text-center text-sm text-[var(--text-muted)]">
-              {t('auth.noAccount')}{' '}
-              <Link to="/register" className="text-finza-blue font-medium hover:underline">
-                {t('auth.register')}
-              </Link>
-            </p>
-          </div>
-        </div>
+      <div className="flex-1 lg:w-1/2 flex items-center justify-center p-8 bg-background dark:bg-[#04080f]">
+        <LoginFormCard
+          onSubmit={handleSubmit(onSubmit)}
+          serverError={serverError}
+          showPassword={showPassword}
+          onTogglePassword={() => setShowPassword((v) => !v)}
+          isSubmitting={isSubmitting}
+          register={register}
+          errors={errors}
+          t={t}
+        />
       </div>
     </div>
   )
