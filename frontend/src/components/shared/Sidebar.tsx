@@ -18,6 +18,7 @@ import {
   Trophy,
   BookOpen,
   Bell,
+  RefreshCw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUiStore } from '@/store/uiStore'
@@ -30,6 +31,7 @@ const navItems = [
   { to: '/', icon: BarChart3, labelKey: 'nav.dashboard' },
   { to: '/ingresos', icon: TrendingUp, labelKey: 'nav.ingresos' },
   { to: '/egresos', icon: TrendingDown, labelKey: 'nav.egresos' },
+  { to: '/recurrentes', icon: RefreshCw, labelKey: 'nav.recurrentes' },
   { to: '/prestamos', icon: HandCoins, labelKey: 'nav.prestamos' },
   { to: '/metas', icon: PiggyBank, labelKey: 'nav.metas' },
   { to: '/presupuestos', icon: Target, labelKey: 'nav.presupuestos' },
