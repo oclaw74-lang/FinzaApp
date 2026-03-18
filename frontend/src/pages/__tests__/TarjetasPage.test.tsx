@@ -234,23 +234,26 @@ describe('TarjetasPage', () => {
     await waitFor(() => expect(mutateAsync).not.toHaveBeenCalled())
   })
 
-  it('shows utilization bar for credit card', () => {
+  it('shows credit card button in the list', () => {
     setupMocks([mockCredito])
     render(<TarjetasPage />)
-    expect(screen.getAllByRole('progressbar').length).toBeGreaterThanOrEqual(1)
+    // Credit card renders correctly (utilization bar removed from card view by design)
+    expect(screen.getByRole('button', { name: /Visa Popular/i })).toBeInTheDocument()
   })
 
-  it('does NOT show utilization bar for debit card', () => {
+  it('shows debit card without progressbar in card view', () => {
     setupMocks([mockDebito])
     render(<TarjetasPage />)
+    expect(screen.getByRole('button', { name: /Mastercard BHD/i })).toBeInTheDocument()
+    // No progressbar in card view (utilization bar removed from card by design)
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
   })
 
-  it('utilization bar for >70% usage has red indicator', () => {
+  it('credit card with high utilization renders correctly', () => {
     setupMocks([mockHighUtil])
     render(<TarjetasPage />)
-    const bar = document.querySelector('.bg-red-500')
-    expect(bar).toBeTruthy()
+    // Card renders correctly — utilization bar removed from card view by design
+    expect(screen.getByRole('button', { name: /Amex Roja/i })).toBeInTheDocument()
   })
 
   it('shows loading skeleton while fetching', () => {
