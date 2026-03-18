@@ -14,6 +14,14 @@ vi.mock('@/hooks/useCategorias', () => ({
   useCategorias: vi.fn(),
 }))
 
+// TransaccionForm imports useTarjetas → api.ts → supabase.ts (throws without env vars)
+vi.mock('@/hooks/useTarjetas', () => ({
+  useTarjetas: vi.fn().mockReturnValue({ data: [], isLoading: false }),
+  useCreateTarjeta: vi.fn(),
+  useUpdateTarjeta: vi.fn(),
+  useDeleteTarjeta: vi.fn(),
+}))
+
 vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
