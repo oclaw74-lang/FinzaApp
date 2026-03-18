@@ -51,14 +51,8 @@ function BrandPanel(): JSX.Element {
       />
 
       {/* Logo */}
-      <div className="flex items-center gap-3 relative z-10">
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, #0d2a52, #1a5cad)' }}
-        >
-          <img src="/logo.svg" alt="Finza" className="w-7 h-7 object-contain" />
-        </div>
-        <span className="font-bold text-2xl tracking-tight text-[#e8f0ff]">Finza</span>
+      <div className="relative z-10">
+        <img src="/logo-full.png" alt="Finza" className="h-12 object-contain mb-6" />
       </div>
 
       {/* Content */}
@@ -127,13 +121,7 @@ function LoginFormCard({
     <div className="w-full max-w-md space-y-6">
       {/* Mobile logo */}
       <div className="lg:hidden flex items-center gap-2 mb-2">
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, #0d2a52, #1a5cad)' }}
-        >
-          <img src="/logo.svg" alt="Finza" className="w-6 h-6 object-contain" />
-        </div>
-        <span className="font-bold text-xl text-[var(--text-primary)]">Finza</span>
+        <img src="/logo-full.png" alt="Finza" className="h-9 object-contain" />
       </div>
 
       {/* Glass card form */}

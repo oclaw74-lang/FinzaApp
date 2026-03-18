@@ -84,10 +84,10 @@ export function DashboardPage(): JSX.Element {
       {/* Greeting header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-1" data-testid="dashboard-greeting">
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] dark:text-white mb-1" data-testid="dashboard-greeting">
             {getGreeting()}, {firstName}
           </h1>
-          <p className="text-white/50 text-sm">
+          <p className="text-[var(--text-muted)] dark:text-white/50 text-sm">
             {getWeekContext()} · {getFinancialContext(data)}
           </p>
         </div>
@@ -95,7 +95,7 @@ export function DashboardPage(): JSX.Element {
         {/* Period selectors */}
         <div className="flex flex-wrap items-center gap-2 shrink-0">
           {/* Month pills */}
-          <div className="flex items-center gap-1 bg-white/[0.05] rounded-xl p-1 flex-wrap">
+          <div className="flex items-center gap-1 bg-[var(--surface-raised)] dark:bg-white/[0.05] rounded-xl p-1 flex-wrap">
             {MESES_SHORT.map((m, i) => (
               <button
                 key={i}
@@ -105,7 +105,7 @@ export function DashboardPage(): JSX.Element {
                   'px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all',
                   mes === i + 1
                     ? 'bg-[#3d8ef8] text-white shadow'
-                    : 'text-[#657a9e] hover:text-[#e8f0ff]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 )}
               >
                 {m}
@@ -117,16 +117,16 @@ export function DashboardPage(): JSX.Element {
             <button
               type="button"
               onClick={() => setYear((y) => y - 1)}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-[#657a9e] hover:text-[#e8f0ff] hover:bg-white/[0.06] transition-all text-sm font-bold"
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-raised)] dark:hover:bg-white/[0.06] transition-all text-sm font-bold"
               aria-label="Ano anterior"
             >
               ←
             </button>
-            <span className="text-sm font-semibold text-[#e8f0ff] min-w-[40px] text-center tabular-nums">{year}</span>
+            <span className="text-sm font-semibold text-[var(--text-primary)] min-w-[40px] text-center tabular-nums">{year}</span>
             <button
               type="button"
               onClick={() => setYear((y) => y + 1)}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-[#657a9e] hover:text-[#e8f0ff] hover:bg-white/[0.06] transition-all text-sm font-bold"
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-raised)] dark:hover:bg-white/[0.06] transition-all text-sm font-bold"
               aria-label="Ano siguiente"
             >
               →
@@ -232,8 +232,8 @@ export function DashboardPage(): JSX.Element {
       {/* Charts row: flujo mensual + distribucion egresos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <div className="card-glass dark:bg-white/[0.02] rounded-2xl p-5">
-          <h3 className="text-xs uppercase tracking-widest text-white/40 mb-1">Flujo mensual</h3>
-          <p className="text-white/50 text-xs mb-4">Ingresos vs egresos — ultimos 6 meses</p>
+          <h3 className="text-xs uppercase tracking-widest text-[var(--text-muted)] dark:text-white/40 mb-1">Flujo mensual</h3>
+          <p className="text-[var(--text-muted)] dark:text-white/50 text-xs mb-4">Ingresos vs egresos — ultimos 6 meses</p>
           {isLoading ? (
             <Skeleton className="h-52 rounded-xl" />
           ) : (
@@ -254,8 +254,8 @@ export function DashboardPage(): JSX.Element {
           )}
         </div>
         <div className="card-glass dark:bg-white/[0.02] rounded-2xl p-5">
-          <h3 className="text-xs uppercase tracking-widest text-white/40 mb-1">Distribucion egresos</h3>
-          <p className="text-white/50 text-xs mb-4">Por categoria este mes</p>
+          <h3 className="text-xs uppercase tracking-widest text-[var(--text-muted)] dark:text-white/40 mb-1">Distribucion egresos</h3>
+          <p className="text-[var(--text-muted)] dark:text-white/50 text-xs mb-4">Por categoria este mes</p>
           {isLoading ? (
             <Skeleton className="h-52 rounded-xl" />
           ) : (

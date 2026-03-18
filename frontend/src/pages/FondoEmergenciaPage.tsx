@@ -87,7 +87,7 @@ export function FondoEmergenciaPage(): JSX.Element {
     <div className="animate-fade-in p-4 md:p-6 space-y-6">
       <div className="mb-6">
         <h1 className="page-title-premium dark:text-[#e8f0ff]">{t('fondoEmergencia.title')}</h1>
-        <p className="text-sm dark:text-finza-t2 mt-0.5">{t('fondoEmergencia.subtitle')}</p>
+        <p className="text-sm text-[var(--text-muted)] mt-0.5">{t('fondoEmergencia.subtitle')}</p>
       </div>
 
       {!fondo ? (
@@ -130,12 +130,12 @@ export function FondoEmergenciaPage(): JSX.Element {
             </p>
 
             {/* Subtitle */}
-            <p className="text-sm text-[#657a9e] mb-5">
+            <p className="text-sm text-[var(--text-muted)] mb-5">
               Cobertura para ~{fondo.meta_meses} {fondo.meta_meses === 1 ? 'mes' : 'meses'} de gastos
             </p>
 
             {/* Progress bar */}
-            <div className="h-2 rounded-full bg-white/10 overflow-hidden mb-2">
+            <div className="h-2 rounded-full bg-[var(--surface-raised)] dark:bg-white/10 overflow-hidden mb-2">
               <div
                 className="h-2 rounded-full transition-all duration-500"
                 style={{
@@ -146,7 +146,7 @@ export function FondoEmergenciaPage(): JSX.Element {
             </div>
 
             {/* Meta row */}
-            <div className="flex justify-between text-xs text-[#657a9e]">
+            <div className="flex justify-between text-xs text-[var(--text-muted)]">
               <span>{fondo.porcentaje.toFixed(1)}% de la meta</span>
               {fondo.meta_calculada && fondo.meta_calculada > fondo.monto_actual && (
                 <span>Faltan {formatCurrency(fondo.meta_calculada - fondo.monto_actual)}</span>

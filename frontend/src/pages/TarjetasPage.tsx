@@ -1038,7 +1038,7 @@ export function TarjetasPage(): JSX.Element {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="page-title-premium dark:text-[#e8f0ff]">{t('nav.tarjetas')}</h1>
-          <p className="text-sm dark:text-finza-t2 mt-1">Gestiona tus tarjetas de credito y debito</p>
+          <p className="text-sm text-[var(--text-muted)] mt-1">Gestiona tus tarjetas de credito y debito</p>
         </div>
         <Button onClick={() => setIsModalOpen(true)} variant="default"
           className="dark:bg-finza-blue dark:hover:bg-finza-blue/80">

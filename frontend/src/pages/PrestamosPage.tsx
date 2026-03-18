@@ -144,7 +144,7 @@ export function PrestamosPage(): JSX.Element {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="page-title-premium dark:text-[#e8f0ff]">{t('nav.prestamos')}</h1>
-          <p className="text-sm dark:text-finza-t2 mt-1">Gestiona tus prestamos y cobros</p>
+          <p className="text-sm text-[var(--text-muted)] mt-1">Gestiona tus prestamos y cobros</p>
         </div>
         <Button onClick={() => setIsModalOpen(true)} variant="default" size="md"
           className="dark:bg-finza-blue dark:hover:bg-finza-blue/80">

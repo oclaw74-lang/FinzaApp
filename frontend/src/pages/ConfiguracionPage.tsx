@@ -103,8 +103,8 @@ function NuevaCategoriaForm({ onDone }: NuevaCategoriaFormProps): JSX.Element {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card-glass rounded-xl p-4 space-y-3 border border-white/[0.12]">
-      <p className="text-xs font-semibold text-white/50 uppercase tracking-widest">Nueva categoria</p>
+    <form onSubmit={handleSubmit} className="card-glass rounded-xl p-4 space-y-3 border border-[var(--border)]">
+      <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest">Nueva categoria</p>
       <div className="flex gap-2">
         <input
           type="text"
@@ -209,15 +209,15 @@ function CategoriasTab({ navigate }: CategoriasTabProps): JSX.Element {
             return (
               <div
                 key={cat.id}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl dark:hover:bg-white/[0.04] transition-colors"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--surface-raised)] dark:hover:bg-white/[0.04] transition-colors"
               >
-                <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center flex-shrink-0">
-                  <IconComp size={15} className="text-white/50" />
+                <div className="w-8 h-8 rounded-lg bg-[var(--surface-raised)] flex items-center justify-center flex-shrink-0">
+                  <IconComp size={15} className="text-[var(--text-muted)]" />
                 </div>
                 <span className="flex-1 text-sm text-[var(--text-primary)] truncate">{cat.nombre}</span>
                 {getTipoBadge(cat.tipo)}
                 {cat.es_sistema && (
-                  <span className="text-[10px] text-white/20 px-1.5 py-0.5 rounded bg-white/[0.04]">
+                  <span className="text-[10px] text-[var(--text-muted)] px-1.5 py-0.5 rounded bg-[var(--surface-raised)]">
                     Sistema
                   </span>
                 )}
@@ -359,7 +359,7 @@ export function ConfiguracionPage(): JSX.Element {
                 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
                 activeTab === id
                   ? 'bg-[#3d8ef8] text-white'
-                  : 'text-[#657a9e] hover:text-[#e8f0ff] hover:bg-white/[0.04]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-raised)] dark:hover:bg-white/[0.04]'
               )}
             >
               {label}
@@ -462,21 +462,21 @@ export function ConfiguracionPage(): JSX.Element {
       {/* Tab: Appearance */}
       {activeTab === 'appearance' && (
         <div
-          className="rounded-[20px] border border-[rgba(255,255,255,0.06)] bg-[rgba(8,15,30,0.6)] overflow-hidden"
+          className="rounded-[20px] overflow-hidden card-glass"
         >
           {/* Row: Modo oscuro */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[rgba(255,255,255,0.06)]">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
             <div>
               <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
                 {t('settings.darkMode')}
               </h4>
-              <p className="text-[12px] text-[#657a9e]">{t('settings.currentTheme')}</p>
+              <p className="text-[12px] text-[var(--text-muted)]">{t('settings.currentTheme')}</p>
             </div>
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className={cn(
                 'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
-                theme === 'dark' ? 'bg-[#3d8ef8]' : 'bg-[#1f2e45]'
+                theme === 'dark' ? 'bg-[#3d8ef8]' : 'bg-[var(--border-strong)]'
               )}
               aria-label="Toggle modo oscuro"
             >
@@ -501,7 +501,7 @@ export function ConfiguracionPage(): JSX.Element {
               onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
               className={cn(
                 'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
-                theme === 'light' ? 'bg-[#3d8ef8]' : 'bg-[#1f2e45]'
+                theme === 'light' ? 'bg-[#3d8ef8]' : 'bg-[var(--border-strong)]'
               )}
               aria-label="Toggle modo claro"
             >
