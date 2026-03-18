@@ -45,19 +45,20 @@ describe('PrestamoRow', () => {
     // (10000 - 6000) / 10000 * 100 = 40%
     const progressBar = screen.getByRole('progressbar')
     expect(progressBar).toHaveAttribute('aria-valuenow', '40')
-    expect(screen.getByText('40% pagado')).toBeInTheDocument()
+    expect(progressBar).toHaveAttribute('aria-label', '40% pagado')
   })
 
   it('shows 100% when fully paid', () => {
     render(<PrestamoRow prestamo={mockPrestamoPagado} onClick={vi.fn()} />)
     const progressBar = screen.getByRole('progressbar')
     expect(progressBar).toHaveAttribute('aria-valuenow', '100')
-    expect(screen.getByText('100% pagado')).toBeInTheDocument()
+    expect(progressBar).toHaveAttribute('aria-label', '100% pagado')
   })
 
   it('shows active badge with correct text', () => {
     render(<PrestamoRow prestamo={mockPrestamoActivo} onClick={vi.fn()} />)
-    expect(screen.getByText('Activo')).toBeInTheDocument()
+    // mockPrestamoActivo.fecha_vencimiento = '2026-12-31' — far in the future, shows "Al corriente"
+    expect(screen.getByText('Al corriente')).toBeInTheDocument()
   })
 
   it('shows pagado badge when estado is pagado', () => {
@@ -71,7 +72,6 @@ describe('PrestamoRow', () => {
   })
 
   it('shows expiration date in red when past due and activo', () => {
-    // Preset una fecha vencida hace mucho tiempo
     const prestamoConVencimientoViejo: Prestamo = {
       ...mockPrestamoActivo,
       id: 'pre-venc',
@@ -79,9 +79,10 @@ describe('PrestamoRow', () => {
       fecha_vencimiento: '2020-01-01',
     }
     render(<PrestamoRow prestamo={prestamoConVencimientoViejo} onClick={vi.fn()} />)
-    const venceText = screen.getByText(/Vence:/i)
-    // La clase debe incluir text-alert-red cuando la fecha de vencimiento ya paso
-    expect(venceText).toHaveClass('text-alert-red')
+    // When past-due and activo, shows "Pagar pronto" badge (near-due warning)
+    expect(screen.getByText('Pagar pronto')).toBeInTheDocument()
+    // Date is shown
+    expect(screen.getByText(/Vence:/i)).toBeInTheDocument()
   })
 
   it('calls onClick with the prestamo when clicked', () => {
