@@ -4,13 +4,12 @@ from typing import Literal, Optional
 from pydantic import BaseModel, Field, field_validator
 
 TipoTarjeta = Literal["credito", "debito"]
-RedTarjeta = Literal["visa", "mastercard", "amex", "otra"]
-ColorTarjeta = Literal["azul", "morado", "verde", "naranja"]
+RedTarjeta = Literal["visa", "mastercard", "amex", "discover", "otro"]
 
 
 class TarjetaCreate(BaseModel):
     banco: str
-    titular: str
+    titular: Optional[str] = None  # defaults to user email in service if not provided
     ultimos_digitos: str = Field(min_length=4, max_length=4)
     tipo: TipoTarjeta
     red: RedTarjeta
@@ -18,7 +17,8 @@ class TarjetaCreate(BaseModel):
     saldo_actual: float = 0.0
     fecha_corte: Optional[int] = Field(default=None, ge=1, le=31)
     fecha_pago: Optional[int] = Field(default=None, ge=1, le=31)
-    color: ColorTarjeta = "azul"
+    color: Optional[str] = None
+    activa: bool = True
 
     @field_validator("banco")
     @classmethod
@@ -29,10 +29,10 @@ class TarjetaCreate(BaseModel):
 
     @field_validator("titular")
     @classmethod
-    def titular_not_empty(cls, v: str) -> str:
-        if not v.strip():
+    def titular_not_empty(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not v.strip():
             raise ValueError("El titular no puede estar vacio.")
-        return v.strip()
+        return v.strip() if v else v
 
     @field_validator("ultimos_digitos")
     @classmethod
@@ -65,7 +65,7 @@ class TarjetaUpdate(BaseModel):
     saldo_actual: Optional[float] = None
     fecha_corte: Optional[int] = Field(default=None, ge=1, le=31)
     fecha_pago: Optional[int] = Field(default=None, ge=1, le=31)
-    color: Optional[ColorTarjeta] = None
+    color: Optional[str] = None
     activa: Optional[bool] = None
 
     @field_validator("banco")
@@ -101,7 +101,7 @@ class TarjetaResponse(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID
     banco: str
-    titular: str
+    titular: Optional[str] = None
     ultimos_digitos: str
     tipo: str
     red: str
@@ -109,7 +109,7 @@ class TarjetaResponse(BaseModel):
     saldo_actual: float
     fecha_corte: Optional[int] = None
     fecha_pago: Optional[int] = None
-    color: str
+    color: Optional[str] = None
     activa: bool
     disponible: Optional[float] = None  # computed: limite_credito - saldo_actual
 

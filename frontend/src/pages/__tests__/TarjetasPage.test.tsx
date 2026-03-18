@@ -23,7 +23,7 @@ import {
 const mockCredito: Tarjeta = {
   id: 't-1',
   user_id: 'u-1',
-  nombre: 'Visa Popular',
+  banco: 'Visa Popular',
   tipo: 'credito',
   red: 'visa',
   ultimos_digitos: '4242',
@@ -41,7 +41,7 @@ const mockCredito: Tarjeta = {
 const mockDebito: Tarjeta = {
   id: 't-2',
   user_id: 'u-1',
-  nombre: 'Mastercard BHD',
+  banco: 'Mastercard BHD',
   tipo: 'debito',
   red: 'mastercard',
   ultimos_digitos: '8888',
@@ -59,7 +59,7 @@ const mockDebito: Tarjeta = {
 const mockHighUtil: Tarjeta = {
   ...mockCredito,
   id: 't-3',
-  nombre: 'Amex Roja',
+  banco: 'Amex Roja',
   red: 'amex',
   saldo_actual: 40000,
   limite_credito: 50000,
@@ -70,7 +70,7 @@ const mockHighUtil: Tarjeta = {
 const mockInactiva: Tarjeta = {
   ...mockCredito,
   id: 't-4',
-  nombre: 'Inactiva',
+  banco: 'Inactiva',
   activa: false,
 }
 
@@ -155,7 +155,7 @@ describe('TarjetasPage', () => {
     fireEvent.click(screen.getByText('Nueva tarjeta'))
 
     // Fill required fields but leave limite_credito empty
-    fireEvent.change(screen.getByPlaceholderText('Visa Banco Popular'), { target: { value: 'Test' } })
+    fireEvent.change(screen.getByPlaceholderText('Banco Popular, BHD, etc.'), { target: { value: 'Test' } })
     fireEvent.change(screen.getByPlaceholderText('1234'), { target: { value: '1234' } })
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '1000' } })
 
@@ -171,7 +171,7 @@ describe('TarjetasPage', () => {
     render(<TarjetasPage />)
     fireEvent.click(screen.getByText('Nueva tarjeta'))
 
-    fireEvent.change(screen.getByPlaceholderText('Visa Banco Popular'), { target: { value: 'Mi Visa' } })
+    fireEvent.change(screen.getByPlaceholderText('Banco Popular, BHD, etc.'), { target: { value: 'Mi Visa' } })
     fireEvent.change(screen.getByPlaceholderText('1234'), { target: { value: '9999' } })
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '5000' } })
     fireEvent.change(screen.getByPlaceholderText('50000.00'), { target: { value: '20000' } })
