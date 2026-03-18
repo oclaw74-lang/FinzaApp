@@ -6,6 +6,7 @@ import type { DashboardV2Response } from '@/types/dashboard'
 vi.mock('@/hooks/useDashboardV2', () => ({ useDashboardV2: vi.fn() }))
 vi.mock('@/hooks/useScore', () => ({ useScore: vi.fn() }))
 vi.mock('@/hooks/useFondoEmergencia', () => ({ useFondoEmergencia: vi.fn() }))
+vi.mock('@/components/shared/NotificacionBadge', () => ({ NotificacionBadge: () => null }))
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
 }))
@@ -37,8 +38,6 @@ const mockData: DashboardV2Response = {
 }
 
 describe('StatsBar', () => {
-  const onOpen = vi.fn()
-
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(useScore).mockReturnValue({ data: undefined, isLoading: false } as ReturnType<typeof useScore>)
@@ -50,14 +49,14 @@ describe('StatsBar', () => {
 
   it('renders loading skeleton while fetching', () => {
     vi.mocked(useDashboardV2).mockReturnValue({ data: undefined, isLoading: true } as ReturnType<typeof useDashboardV2>)
-    const { container } = render(<StatsBar onCommandPaletteOpen={onOpen} />)
+    const { container } = render(<StatsBar  />)
     const shimmer = container.querySelector('.shimmer')
     expect(shimmer).not.toBeNull()
   })
 
   it('renders stats when data is loaded', () => {
     vi.mocked(useDashboardV2).mockReturnValue({ data: mockData, isLoading: false } as ReturnType<typeof useDashboardV2>)
-    render(<StatsBar onCommandPaletteOpen={onOpen} />)
+    render(<StatsBar  />)
     expect(screen.getByText('Balance')).toBeInTheDocument()
     expect(screen.getByText('Ingresos')).toBeInTheDocument()
     expect(screen.getByText('Egresos')).toBeInTheDocument()
@@ -65,33 +64,32 @@ describe('StatsBar', () => {
 
   it('renders proximo vencimiento label', () => {
     vi.mocked(useDashboardV2).mockReturnValue({ data: mockData, isLoading: false } as ReturnType<typeof useDashboardV2>)
-    render(<StatsBar onCommandPaletteOpen={onOpen} />)
+    render(<StatsBar  />)
     expect(screen.getByText('Prox. Venc.')).toBeInTheDocument()
   })
 
-  it('renders command palette trigger button', () => {
+  it('renders Score label', () => {
     vi.mocked(useDashboardV2).mockReturnValue({ data: mockData, isLoading: false } as ReturnType<typeof useDashboardV2>)
-    render(<StatsBar onCommandPaletteOpen={onOpen} />)
-    expect(screen.getByRole('button', { name: /abrir command palette/i })).toBeInTheDocument()
+    render(<StatsBar />)
+    expect(screen.getByText('Score')).toBeInTheDocument()
   })
 
-  it('calls onCommandPaletteOpen when button is clicked', () => {
+  it('renders Fondo label', () => {
     vi.mocked(useDashboardV2).mockReturnValue({ data: mockData, isLoading: false } as ReturnType<typeof useDashboardV2>)
-    render(<StatsBar onCommandPaletteOpen={onOpen} />)
-    fireEvent.click(screen.getByRole('button', { name: /abrir command palette/i }))
-    expect(onOpen).toHaveBeenCalledTimes(1)
+    render(<StatsBar />)
+    expect(screen.getByText('Fondo')).toBeInTheDocument()
   })
 
   it('renders no stats bar when no data and not loading (null/undefined)', () => {
     vi.mocked(useDashboardV2).mockReturnValue({ data: undefined, isLoading: false } as ReturnType<typeof useDashboardV2>)
-    const { container } = render(<StatsBar onCommandPaletteOpen={onOpen} />)
+    const { container } = render(<StatsBar  />)
     // Should render skeleton (loading-like fallback) when data is null
     expect(container.querySelector('.statsbar-glass')).not.toBeNull()
   })
 
   it('shows positive badge variant for positive tasa_ahorro', () => {
     vi.mocked(useDashboardV2).mockReturnValue({ data: mockData, isLoading: false } as ReturnType<typeof useDashboardV2>)
-    const { container } = render(<StatsBar onCommandPaletteOpen={onOpen} />)
+    const { container } = render(<StatsBar  />)
     // 30% savings rate — positive badge (emerald color)
     const positiveBadge = container.querySelector('.text-emerald-400')
     expect(positiveBadge).not.toBeNull()
@@ -103,7 +101,7 @@ describe('StatsBar', () => {
       prestamos_activos: { ...mockData.prestamos_activos, proximo_vencimiento: null },
     }
     vi.mocked(useDashboardV2).mockReturnValue({ data: dataNoVenc, isLoading: false } as ReturnType<typeof useDashboardV2>)
-    render(<StatsBar onCommandPaletteOpen={onOpen} />)
+    render(<StatsBar  />)
     // Multiple '—' can appear (score also shows '—' when data is undefined)
     expect(screen.getAllByText('—').length).toBeGreaterThan(0)
   })
@@ -127,7 +125,7 @@ describe('StatsBar', () => {
       isLoading: false,
     } as ReturnType<typeof useFondoEmergencia>)
 
-    render(<StatsBar onCommandPaletteOpen={onOpen} />)
+    render(<StatsBar  />)
 
     expect(screen.getByText('Score')).toBeInTheDocument()
     expect(screen.getByText('780')).toBeInTheDocument()
@@ -145,7 +143,7 @@ describe('StatsBar', () => {
       isLoading: true,
     } as ReturnType<typeof useFondoEmergencia>)
 
-    render(<StatsBar onCommandPaletteOpen={onOpen} />)
+    render(<StatsBar  />)
 
     expect(screen.getByText('Score')).toBeInTheDocument()
     // Score value shows '—' when no data
