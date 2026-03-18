@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDashboardV2 } from '@/hooks/useDashboardV2'
 import { useScore } from '@/hooks/useScore'
 import { useFondoEmergencia } from '@/hooks/useFondoEmergencia'
+import { NotificacionBadge } from '@/components/shared/NotificacionBadge'
 import { cn } from '@/lib/utils'
 
 interface StatItemProps {
@@ -76,11 +77,7 @@ function scoreEstadoLabel(estado?: string): string {
   return map[estado] ?? estado
 }
 
-interface StatsBarProps {
-  onCommandPaletteOpen: () => void
-}
-
-export function StatsBar({ onCommandPaletteOpen }: StatsBarProps): JSX.Element {
+export function StatsBar(): JSX.Element {
   const now = new Date()
   const { data, isLoading } = useDashboardV2({ mes: now.getMonth() + 1, year: now.getFullYear() })
   const { data: scoreData } = useScore()
@@ -178,24 +175,10 @@ export function StatsBar({ onCommandPaletteOpen }: StatsBarProps): JSX.Element {
         </button>
       </div>
 
-      {/* Command palette trigger */}
-      <button
-        onClick={onCommandPaletteOpen}
-        className={cn(
-          'ml-4 shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium',
-          'text-[var(--text-muted)] bg-[var(--surface-raised)] border border-[var(--border)]',
-          'hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-all duration-150',
-          'dark:text-[#657a9e] dark:bg-white/[0.04] dark:border-white/[0.06]',
-          'dark:hover:text-[#e8f0ff] dark:hover:border-[#3d8ef8]/50'
-        )}
-        aria-label="Abrir command palette"
-        title="Ctrl+K"
-      >
-        <span>Buscar</span>
-        <kbd className="text-[10px] font-mono bg-[var(--surface)] border border-[var(--border)] dark:bg-white/[0.06] dark:border-white/[0.08] px-1 rounded">
-          Ctrl K
-        </kbd>
-      </button>
+      {/* Notifications bell */}
+      <div className="ml-4 shrink-0 flex items-center">
+        <NotificacionBadge />
+      </div>
     </div>
   )
 }

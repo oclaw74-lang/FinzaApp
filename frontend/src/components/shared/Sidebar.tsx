@@ -224,26 +224,24 @@ export function Sidebar(): JSX.Element {
               <X size={18} />
             </button>
 
-            {/* Desktop collapse/expand toggle */}
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className={cn(
-                'hidden lg:flex items-center justify-center text-white/30 rounded-[7px]',
-                'transition-all duration-150',
-                'hover:text-white/80 hover:bg-white/10',
-                'dark:bg-white/[0.05] dark:border dark:border-white/[0.06]',
-                'dark:hover:bg-[#3d8ef8]/20 dark:hover:text-[#3d8ef8]'
-              )}
-              style={{ width: 26, height: 26 }}
-              aria-label={sidebarCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
-              title={sidebarCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
-            >
-              {sidebarCollapsed ? (
-                <ChevronRight size={15} />
-              ) : (
+            {/* Desktop collapse/expand toggle — only show when expanded */}
+            {!sidebarCollapsed && (
+              <button
+                onClick={() => setSidebarCollapsed(true)}
+                className={cn(
+                  'hidden lg:flex items-center justify-center text-white/30 rounded-[7px]',
+                  'transition-all duration-150',
+                  'hover:text-white/80 hover:bg-white/10',
+                  'dark:bg-white/[0.05] dark:border dark:border-white/[0.06]',
+                  'dark:hover:bg-[#3d8ef8]/20 dark:hover:text-[#3d8ef8]'
+                )}
+                style={{ width: 26, height: 26 }}
+                aria-label="Colapsar sidebar"
+                title="Colapsar sidebar"
+              >
                 <ChevronLeft size={15} />
-              )}
-            </button>
+              </button>
+            )}
           </div>
         </div>
 
