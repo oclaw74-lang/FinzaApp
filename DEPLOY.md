@@ -56,10 +56,11 @@ sudo /tmp/finza-setup/scripts/setup-vps.sh
 
 This script:
 - Installs Docker, Docker Compose v2, certbot, git, ufw, fail2ban
-- Creates a `finza` system user
+- Creates a `finza` system user (non-root, added to the `docker` group)
 - Clones the repo to `/opt/finza`
 - Creates `/opt/finza/.env.production` from the example template
 - Opens ports 22, 80, 443 in the firewall
+- Installs and enables a `finza.service` systemd unit so the app starts automatically on server reboot
 
 ---
 
@@ -162,7 +163,16 @@ To revert to a previous commit:
 cd /opt/finza
 git log --oneline -10          # find the commit hash to roll back to
 git checkout <commit-hash>
-sudo -u finza ./scripts/deploy.sh
+sudo -u finza /opt/finza/scripts/deploy.sh
+```
+
+To rollback without rebuilding (instant, uses last built image):
+
+```bash
+cd /opt/finza
+docker compose -f docker-compose.production.yml --env-file .env.production down
+git checkout <commit-hash>
+docker compose -f docker-compose.production.yml --env-file .env.production up -d
 ```
 
 ---
@@ -178,25 +188,71 @@ docker exec finza-nginx nginx -s reload
 
 ---
 
+## Systemd service controls
+
+After setup, `finza.service` manages the app as a systemd unit:
+
+```bash
+# Status
+systemctl status finza
+
+# Start / stop / restart
+sudo systemctl start finza
+sudo systemctl stop finza
+sudo systemctl restart finza
+
+# View service logs (combines all containers)
+journalctl -u finza -f
+
+# Disable auto-start (if needed)
+sudo systemctl disable finza
+```
+
+The service is of type `oneshot` with `RemainAfterExit=yes`. It calls
+`docker compose up -d` on start and `docker compose down` on stop.
+
+---
+
 ## File locations on the VPS
 
-| Path                                     | Purpose                          |
-|------------------------------------------|----------------------------------|
-| `/opt/finza/`                            | Application root                 |
-| `/opt/finza/.env.production`             | Production secrets (600 perms)   |
-| `/opt/finza/docker-compose.production.yml` | Production compose config      |
-| `/opt/finza/nginx/nginx.production.conf` | nginx config (domain replaced)   |
-| `/etc/letsencrypt/live/<domain>/`        | SSL certificates                 |
-| `/var/log/nginx/`                        | nginx access and error logs      |
+| Path                                       | Purpose                                |
+|--------------------------------------------|----------------------------------------|
+| `/opt/finza/`                              | Application root                       |
+| `/opt/finza/.env.production`               | Production secrets (chmod 600)         |
+| `/opt/finza/docker-compose.production.yml` | Production compose config              |
+| `/opt/finza/nginx/nginx.production.conf`   | nginx config (DOMINIO replaced by SSL script) |
+| `/opt/finza/scripts/setup-vps.sh`          | Initial server setup (run once)        |
+| `/opt/finza/scripts/setup-ssl.sh`          | Certbot certificate setup (run once)   |
+| `/opt/finza/scripts/deploy.sh`             | Subsequent deploys                     |
+| `/etc/systemd/system/finza.service`        | systemd unit for auto-start on reboot  |
+| `/etc/letsencrypt/live/<domain>/`          | SSL certificates                       |
+| `/var/log/nginx/`                          | nginx access and error logs            |
+
+---
+
+## Hardening SSH (recommended)
+
+After verifying you can log in with your SSH key, disable password authentication:
+
+```bash
+# On the VPS
+sudo sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+sudo sed -i 's/^#*PermitRootLogin.*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
+sudo systemctl reload sshd
+```
+
+Do not close your current session until you confirm you can open a new SSH connection successfully.
 
 ---
 
 ## Security checklist
 
-- [ ] `.env.production` permissions are 600 (`chmod 600 /opt/finza/.env.production`)
-- [ ] No secrets in any Dockerfile or committed file
-- [ ] UFW firewall allows only 22, 80, 443
+- [ ] `.env.production` permissions are 600 (`stat /opt/finza/.env.production`)
+- [ ] No secrets in any Dockerfile or committed file (`git log --all --full-diff -- '*.env'`)
+- [ ] UFW firewall allows only 22, 80, 443 (`ufw status verbose`)
 - [ ] fail2ban active (`systemctl status fail2ban`)
-- [ ] SSH key authentication configured (disable password auth in `/etc/ssh/sshd_config`)
+- [ ] SSH password authentication disabled (`sshd -T | grep passwordauth`)
+- [ ] `finza.service` enabled (`systemctl is-enabled finza`)
 - [ ] Auto-renewal cron present (`crontab -l | grep certbot`)
 - [ ] HSTS header confirmed (`curl -I https://your-domain.com | grep Strict`)
+- [ ] Containers not running as root (`docker exec finza-backend id`)

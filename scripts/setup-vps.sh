@@ -146,6 +146,49 @@ log "Enabling fail2ban..."
 systemctl enable --now fail2ban
 
 # ------------------------------------------------------------
+# 10. Install systemd service for auto-start on reboot
+# ------------------------------------------------------------
+log "Installing finza systemd service..."
+
+cat > /etc/systemd/system/finza.service <<EOF
+[Unit]
+Description=Finza App (docker-compose production)
+Documentation=https://github.com/oclaw74-lang/FinzaApp
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=${APP_DIR}
+User=${APP_USER}
+Group=${APP_USER}
+# Pull latest images / rebuild if needed at each boot is intentionally
+# omitted here — deploy.sh handles that. This unit just brings up
+# whatever images were last built.
+ExecStart=/usr/bin/docker compose -f ${APP_DIR}/docker-compose.production.yml \
+    --env-file ${APP_DIR}/.env.production up -d --remove-orphans
+ExecStop=/usr/bin/docker compose -f ${APP_DIR}/docker-compose.production.yml \
+    --env-file ${APP_DIR}/.env.production down
+ExecReload=/usr/bin/docker compose -f ${APP_DIR}/docker-compose.production.yml \
+    --env-file ${APP_DIR}/.env.production restart
+# Wait up to 3 minutes for containers to become healthy
+TimeoutStartSec=180
+TimeoutStopSec=60
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable finza.service
+log "finza.service installed and enabled (starts automatically on reboot)"
+log "Manual controls: systemctl start|stop|restart|status finza"
+
+# ------------------------------------------------------------
 # Done
 # ------------------------------------------------------------
 echo ""
@@ -156,4 +199,5 @@ log "  1. Edit $APP_DIR/.env.production with real values"
 log "  2. Point your domain DNS A record to this server IP"
 log "  3. Run: sudo $APP_DIR/scripts/setup-ssl.sh <your-domain>"
 log "  4. Run: sudo -u $APP_USER $APP_DIR/scripts/deploy.sh"
+log "  (After first deploy, finza.service will auto-start on reboot)"
 log "======================================================"
