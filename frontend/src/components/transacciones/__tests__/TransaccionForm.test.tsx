@@ -6,6 +6,20 @@ import { TransaccionForm } from '../TransaccionForm'
 vi.mock('@/hooks/useCategorias', () => ({
   useCategorias: () => ({ data: [], isLoading: false }),
 }))
+vi.mock('@/hooks/useTarjetas', () => ({
+  useTarjetas: () => ({
+    data: [
+      {
+        id: 't-1',
+        banco: 'Visa Popular',
+        ultimos_digitos: '4242',
+        tipo: 'credito',
+        activa: true,
+      },
+    ],
+    isLoading: false,
+  }),
+}))
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -81,5 +95,31 @@ describe('TransaccionForm', () => {
     const submitBtn = screen.getByRole('button', { name: /registrar ingreso/i })
     expect(submitBtn).toBeDisabled()
     expect(submitBtn.querySelector('svg')).toBeInTheDocument()
+  })
+
+  it('does NOT show tarjeta select when metodo_pago is efectivo', () => {
+    render(
+      <TransaccionForm tipo="egreso" onSubmit={vi.fn()} onCancel={vi.fn()} />,
+      { wrapper: createWrapper() }
+    )
+    // Default is efectivo — tarjeta select should not appear
+    expect(screen.queryByLabelText(/tarjeta/i)).not.toBeInTheDocument()
+  })
+
+  it('shows tarjeta select when metodo_pago is tarjeta', async () => {
+    const { getByLabelText } = render(
+      <TransaccionForm tipo="egreso" onSubmit={vi.fn()} onCancel={vi.fn()} defaultValues={{ metodo_pago: 'tarjeta' }} />,
+      { wrapper: createWrapper() }
+    )
+    // When default is tarjeta, the select should appear
+    expect(getByLabelText(/tarjeta/i)).toBeInTheDocument()
+  })
+
+  it('tarjeta select lists active tarjetas', async () => {
+    render(
+      <TransaccionForm tipo="egreso" onSubmit={vi.fn()} onCancel={vi.fn()} defaultValues={{ metodo_pago: 'tarjeta' }} />,
+      { wrapper: createWrapper() }
+    )
+    expect(screen.getByText('Visa Popular •••• 4242 (credito)')).toBeInTheDocument()
   })
 })

@@ -1,6 +1,27 @@
 export type TipoTarjeta = 'credito' | 'debito'
 export type RedTarjeta = 'visa' | 'mastercard' | 'amex' | 'discover' | 'otro'
 
+export interface MovimientoTarjeta {
+  id: string
+  tarjeta_id: string
+  tipo: 'compra' | 'pago'
+  monto: number
+  descripcion: string | null
+  fecha: string
+  egreso_id: string | null
+  notas: string | null
+  created_at: string
+}
+
+export interface MovimientoTarjetaCreate {
+  tipo: 'compra' | 'pago'
+  monto: number
+  descripcion?: string
+  fecha: string
+  categoria_id?: string
+  notas?: string
+}
+
 export interface Tarjeta {
   id: string
   user_id: string

@@ -13,6 +13,7 @@ vi.mock('@/hooks/usePrestamos', () => ({
   usePrestamoDetalle: vi.fn(),
   useRegistrarPago: vi.fn(),
   useDeletePago: vi.fn(),
+  useTablaAmortizacion: vi.fn(() => ({ data: undefined, isLoading: false, isError: false })),
 }))
 
 vi.mock('@/hooks/useComparativa', () => ({

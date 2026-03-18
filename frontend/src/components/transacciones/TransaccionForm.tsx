@@ -1,9 +1,10 @@
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useCategorias } from '@/hooks/useCategorias'
+import { useTarjetas } from '@/hooks/useTarjetas'
 
 const ingresoSchema = z.object({
   categoria_id: z.string().uuid('Selecciona una categoria'),
@@ -27,6 +28,7 @@ const egresoSchema = z.object({
   metodo_pago: z
     .enum(['efectivo', 'tarjeta', 'transferencia', 'otro'])
     .default('efectivo'),
+  tarjeta_id: z.string().optional(),
   fecha: z.string().min(1, 'La fecha es requerida'),
   notas: z.string().optional(),
 })
@@ -63,10 +65,13 @@ export function TransaccionForm({
   const categorias = todasCategorias.filter(
     (c) => c.tipo === tipo || c.tipo === 'ambos'
   )
+  const { data: tarjetas = [] } = useTarjetas()
+  const tarjetasActivas = tarjetas.filter((t) => t.activa)
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
@@ -77,6 +82,8 @@ export function TransaccionForm({
       ...defaultValues,
     },
   })
+
+  const metodoPagoValue = useWatch({ control, name: 'metodo_pago' as never }) as string | undefined
 
   const handleFormSubmit = handleSubmit((data) =>
     onSubmit(data as IngresoFormData | EgresoFormData)
@@ -174,6 +181,28 @@ export function TransaccionForm({
             {METODOS_PAGO.map((m) => (
               <option key={m.value} value={m.value}>
                 {m.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Tarjeta — solo egreso con metodo_pago=tarjeta */}
+      {tipo === 'egreso' && metodoPagoValue === 'tarjeta' && (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="tarjeta_id" className="text-sm font-medium text-[var(--text-secondary)]">
+            Tarjeta
+          </label>
+          <select
+            id="tarjeta_id"
+            {...(register as (name: string) => object)('tarjeta_id')}
+            className="finza-input w-full"
+            aria-label="Tarjeta"
+          >
+            <option value="">Sin tarjeta especifica</option>
+            {tarjetasActivas.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.banco} •••• {t.ultimos_digitos} ({t.tipo})
               </option>
             ))}
           </select>
