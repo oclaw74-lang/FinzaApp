@@ -52,8 +52,8 @@ function BrandPanel(): JSX.Element {
 
       {/* Logo */}
       <div className="relative z-10 flex items-center gap-3 mb-6">
-        <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0">
-          <img src="/logo-icon-dark.png" alt="Finza" className="w-full h-full object-cover scale-[1.08]" />
+        <div className="w-11 h-11 shrink-0 flex items-center justify-center">
+          <img src="/logo.svg" alt="Finza" className="w-full h-full" />
         </div>
         <span className="text-2xl font-bold text-white tracking-tight">Finza</span>
       </div>
@@ -124,8 +124,8 @@ function LoginFormCard({
     <div className="w-full max-w-md space-y-6">
       {/* Mobile logo */}
       <div className="lg:hidden flex items-center gap-2 mb-2">
-        <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0">
-          <img src="/logo-icon-dark.png" alt="Finza" className="w-full h-full object-cover scale-[1.08]" />
+        <div className="w-9 h-9 shrink-0 flex items-center justify-center">
+          <img src="/logo.svg" alt="Finza" className="w-full h-full" />
         </div>
         <span className="text-xl font-bold text-[var(--text-primary)] tracking-tight">Finza</span>
       </div>

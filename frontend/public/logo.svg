@@ -9,8 +9,6 @@
       <stop offset="100%" stop-color="#7ed8e8"/>
     </linearGradient>
   </defs>
-  <!-- Upper wing -->
   <path d="M18 62 C22 28, 58 14, 82 20 C72 24, 52 30, 38 50 Z" fill="url(#g1)"/>
-  <!-- Lower wing -->
   <path d="M22 70 C30 50, 56 42, 74 46 C62 50, 46 58, 36 75 Z" fill="url(#g2)" opacity="0.85"/>
 </svg>

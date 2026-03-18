@@ -191,11 +191,11 @@ export function Sidebar(): JSX.Element {
             aria-label={sidebarCollapsed ? 'Expandir sidebar' : undefined}
             tabIndex={sidebarCollapsed ? 0 : -1}
           >
-            <div className="w-9 h-9 rounded-xl shrink-0 overflow-hidden">
+            <div className="w-9 h-9 shrink-0 flex items-center justify-center">
               <img
-                src="/logo-icon-dark.png"
+                src="/logo.svg"
                 alt="Finza"
-                className="w-full h-full object-cover scale-[1.08]"
+                className="w-full h-full"
               />
             </div>
             {!sidebarCollapsed && (
