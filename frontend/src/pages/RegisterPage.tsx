@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Eye, EyeOff, CheckCircle } from 'lucide-react'
@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useTranslation } from 'react-i18next'
+import { usePaises } from '@/hooks/useCatalogos'
 
 const registerSchema = z
   .object({
@@ -18,6 +19,7 @@ const registerSchema = z
     confirmPassword: z.string(),
     currency: z.string().default('DOP'),
     country: z.string().optional(),
+    pais_codigo: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Las contrasenas no coinciden',
@@ -26,6 +28,13 @@ const registerSchema = z
 
 type RegisterForm = z.infer<typeof registerSchema>
 
+// Fallback options when the catalog has not loaded
+const FALLBACK_CURRENCIES = [
+  { value: 'DOP', label: 'Peso Dominicano (RD$)' },
+  { value: 'USD', label: 'Dolar Americano ($)' },
+  { value: 'EUR', label: 'Euro (EUR)' },
+]
+
 export function RegisterPage(): JSX.Element {
   const { t } = useTranslation()
   const [serverError, setServerError] = useState<string | null>(null)
@@ -33,14 +42,32 @@ export function RegisterPage(): JSX.Element {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
+  const { data: paises = [], isLoading: paisesLoading, isError: paisesError } = usePaises()
+  const catalogsAvailable = !paisesLoading && !paisesError && paises.length > 0
+
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { currency: 'DOP' },
+    defaultValues: { currency: 'DOP', pais_codigo: 'DO' },
   })
+
+  const selectedPaisCodigo = watch('pais_codigo')
+  const selectedPais = paises.find((p) => p.codigo === selectedPaisCodigo)
+
+  const handlePaisChange = (codigo: string): void => {
+    setValue('pais_codigo', codigo)
+    const pais = paises.find((p) => p.codigo === codigo)
+    if (pais) {
+      setValue('currency', pais.moneda_codigo)
+      setValue('country', pais.nombre)
+    }
+  }
 
   const onSubmit = async (data: RegisterForm): Promise<void> => {
     setServerError(null)
@@ -52,6 +79,7 @@ export function RegisterPage(): JSX.Element {
           full_name: `${data.firstName} ${data.lastName}`,
           currency: data.currency,
           country: data.country ?? '',
+          pais_codigo: data.pais_codigo ?? 'DO',
         },
       },
     })
@@ -174,23 +202,75 @@ export function RegisterPage(): JSX.Element {
               )}
             </div>
 
-            {/* Currency */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-[var(--text-primary)]">
-                {t('auth.currency')}
-              </label>
-              <select className="finza-input w-full" {...register('currency')}>
-                <option value="DOP">Peso Dominicano (RD$)</option>
-                <option value="USD">Dolar Americano ($)</option>
-                <option value="EUR">Euro (EUR)</option>
-              </select>
-            </div>
+            {/* Country + Currency — catalog or fallback */}
+            {catalogsAvailable ? (
+              <div className="space-y-3">
+                {/* Pais selector */}
+                <Controller
+                  name="pais_codigo"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-[var(--text-primary)]">
+                        {t('auth.country')}
+                      </label>
+                      <select
+                        className="finza-input w-full"
+                        value={field.value ?? 'DO'}
+                        onChange={(e) => handlePaisChange(e.target.value)}
+                      >
+                        {paises.map((p) => (
+                          <option key={p.codigo} value={p.codigo}>
+                            {p.bandera_emoji ? `${p.bandera_emoji} ` : ''}{p.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                />
 
-            <Input
-              label={t('auth.country')}
-              placeholder="Republica Dominicana"
-              {...register('country')}
-            />
+                {/* Currency — read only, driven by pais */}
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-[var(--text-primary)]">
+                    {t('auth.currency')}
+                  </label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={
+                      selectedPais
+                        ? `${selectedPais.moneda_codigo}`
+                        : watch('currency')
+                    }
+                    className="finza-input w-full opacity-70 cursor-not-allowed"
+                    aria-label="Moneda (determinada por el pais seleccionado)"
+                  />
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Determinada por el pais seleccionado
+                  </p>
+                </div>
+              </div>
+            ) : (
+              /* Fallback when catalog is loading or failed */
+              <>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-[var(--text-primary)]">
+                    {t('auth.currency')}
+                  </label>
+                  <select className="finza-input w-full" {...register('currency')}>
+                    {FALLBACK_CURRENCIES.map((c) => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <Input
+                  label={t('auth.country')}
+                  placeholder="Republica Dominicana"
+                  {...register('country')}
+                />
+              </>
+            )}
 
             {serverError && (
               <p className="text-sm text-alert-red bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">

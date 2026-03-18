@@ -3,11 +3,12 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Camera, DollarSign, Clock, Tag, Trash2, Plus } from 'lucide-react'
+import { Camera, DollarSign, Clock, Tag, Trash2, Plus, Globe, X } from 'lucide-react'
 import * as Icons from 'lucide-react'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
+import { usePaises } from '@/hooks/useCatalogos'
 import {
   useCategorias,
   useCreateCategoria,
@@ -240,6 +241,89 @@ function CategoriasTab({ navigate }: CategoriasTabProps): JSX.Element {
   )
 }
 
+// ─── PaisModal ─────────────────────────────────────────────────────────────────
+
+interface PaisModalProps {
+  currentPaisCodigo: string
+  onClose: () => void
+  onSave: (paisCodigo: string, monedaCodigo: string, nombrePais: string) => Promise<void>
+  isSaving: boolean
+}
+
+function PaisModal({ currentPaisCodigo, onClose, onSave, isSaving }: PaisModalProps): JSX.Element {
+  const { data: paises = [], isLoading } = usePaises()
+  const [selected, setSelected] = useState(currentPaisCodigo)
+
+  const handleSave = async (): Promise<void> => {
+    const pais = paises.find((p) => p.codigo === selected)
+    if (!pais) return
+    await onSave(pais.codigo, pais.moneda_codigo, pais.nombre)
+  }
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/60 z-40" onClick={onClose} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm bg-white dark:bg-[#0d1520] dark:border dark:border-white/[0.08] rounded-xl shadow-2xl p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">Cambiar pais</h2>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              aria-label="Cerrar"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {isLoading ? (
+            <div className="h-36 flex items-center justify-center">
+              <p className="text-sm text-[var(--text-muted)]">Cargando paises...</p>
+            </div>
+          ) : (
+            <div className="max-h-64 overflow-y-auto space-y-1 rounded-lg border border-[var(--border)]">
+              {paises.map((pais) => (
+                <button
+                  key={pais.codigo}
+                  type="button"
+                  onClick={() => setSelected(pais.codigo)}
+                  className={cn(
+                    'w-full text-left flex items-center gap-3 px-3 py-2.5 text-sm transition-colors',
+                    selected === pais.codigo
+                      ? 'bg-[var(--accent)]/10 text-[var(--accent)]'
+                      : 'hover:bg-[var(--surface-raised)] text-[var(--text-primary)]'
+                  )}
+                >
+                  {pais.bandera_emoji && (
+                    <span className="text-lg" aria-hidden="true">{pais.bandera_emoji}</span>
+                  )}
+                  <span className="flex-1">{pais.nombre}</span>
+                  <span className="text-xs text-[var(--text-muted)]">{pais.moneda_codigo}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              className="flex-1"
+              onClick={handleSave}
+              disabled={isSaving || isLoading}
+            >
+              {isSaving ? 'Guardando...' : 'Guardar'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
 export function ConfiguracionPage(): JSX.Element {
   const { t } = useTranslation()
   const { user } = useAuthStore()
@@ -250,6 +334,8 @@ export function ConfiguracionPage(): JSX.Element {
   const updateProfile = useUpdateProfile()
   const [salarioValue, setSalarioValue] = useState('')
   const [mostrarHoras, setMostrarHoras] = useState(false)
+  const [paisModalOpen, setPaisModalOpen] = useState(false)
+  const [savingPais, setSavingPais] = useState(false)
 
   // Sync profile data when loaded (useEffect avoids stale state from render-time mutation)
   useEffect(() => {
@@ -328,6 +414,29 @@ export function ConfiguracionPage(): JSX.Element {
       toast.success(t('profile.saved'))
     } catch {
       toast.error('Error al guardar perfil financiero')
+    }
+  }
+
+  const handleSavePais = async (paisCodigo: string, monedaCodigo: string, nombrePais: string): Promise<void> => {
+    setSavingPais(true)
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          country: nombrePais,
+          currency: monedaCodigo,
+          pais_codigo: paisCodigo,
+        },
+      })
+      if (error) {
+        toast.error(error.message)
+        return
+      }
+      toast.success('Pais actualizado')
+      setPaisModalOpen(false)
+    } catch {
+      toast.error('Error al actualizar el pais')
+    } finally {
+      setSavingPais(false)
     }
   }
 
@@ -442,11 +551,31 @@ export function ConfiguracionPage(): JSX.Element {
               </select>
             </div>
 
-            <Input
-              label={t('auth.country')}
-              placeholder="Republica Dominicana"
-              {...profileForm.register('country')}
-            />
+            {/* Pais y moneda — display + boton cambiar */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
+                <Globe size={14} className="text-[var(--accent)]" />
+                Pais y moneda principal
+              </label>
+              <div className="flex items-center gap-3 p-3 rounded-xl border border-[var(--border)] dark:border-white/[0.08] bg-[var(--surface-raised)]">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[var(--text-primary)] truncate">
+                    {metadata.country || 'No configurado'}
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Moneda: {metadata.currency || 'DOP'}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setPaisModalOpen(true)}
+                >
+                  Cambiar
+                </Button>
+              </div>
+            </div>
 
             <Button
               type="submit"
@@ -457,6 +586,16 @@ export function ConfiguracionPage(): JSX.Element {
             </Button>
           </form>
         </div>
+      )}
+
+      {/* Modal de cambio de pais */}
+      {paisModalOpen && (
+        <PaisModal
+          currentPaisCodigo={metadata.pais_codigo ?? 'DO'}
+          onClose={() => setPaisModalOpen(false)}
+          onSave={handleSavePais}
+          isSaving={savingPais}
+        />
       )}
 
       {/* Tab: Appearance */}

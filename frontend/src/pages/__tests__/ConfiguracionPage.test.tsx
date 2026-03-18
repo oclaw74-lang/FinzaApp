@@ -9,6 +9,20 @@ vi.mock('@/hooks/useProfile', () => ({
   useUpdateProfile: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
 }))
 
+// Mock useCatalogos
+vi.mock('@/hooks/useCatalogos', () => ({
+  usePaises: vi.fn(() => ({
+    data: [
+      { codigo: 'DO', nombre: 'Republica Dominicana', nombre_en: 'Dominican Republic', moneda_codigo: 'DOP', bandera_emoji: '🇩🇴', activo: true },
+      { codigo: 'US', nombre: 'Estados Unidos', nombre_en: 'United States', moneda_codigo: 'USD', bandera_emoji: '🇺🇸', activo: true },
+    ],
+    isLoading: false,
+    isError: false,
+  })),
+  useMonedas: vi.fn(() => ({ data: [], isLoading: false })),
+  useBancos: vi.fn(() => ({ data: [], isLoading: false })),
+}))
+
 // Mock supabase
 vi.mock('@/lib/supabase', () => ({
   supabase: {
@@ -175,5 +189,55 @@ describe('ConfiguracionPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'common.cancel' }))
     // Modal should close — cancel button no longer present
     expect(screen.queryByRole('button', { name: 'common.cancel' })).not.toBeInTheDocument()
+  })
+
+  // ─── Pais/Moneda section tests ───────────────────────────────────────────────
+
+  it('profile tab shows pais y moneda section', () => {
+    renderPage()
+    // Profile tab is active by default
+    expect(screen.getByText('Pais y moneda principal')).toBeInTheDocument()
+  })
+
+  it('profile tab shows current country from metadata', () => {
+    renderPage()
+    expect(screen.getByText('RD')).toBeInTheDocument()
+  })
+
+  it('profile tab shows current currency from metadata', () => {
+    renderPage()
+    expect(screen.getByText(/Moneda: DOP/)).toBeInTheDocument()
+  })
+
+  it('profile tab shows "Cambiar" button for pais', () => {
+    renderPage()
+    expect(screen.getByRole('button', { name: 'Cambiar' })).toBeInTheDocument()
+  })
+
+  it('opens pais modal when "Cambiar" button is clicked', () => {
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar' }))
+    expect(screen.getByText('Cambiar pais')).toBeInTheDocument()
+  })
+
+  it('pais modal shows list of countries', () => {
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar' }))
+    expect(screen.getByText('Republica Dominicana')).toBeInTheDocument()
+    expect(screen.getByText('Estados Unidos')).toBeInTheDocument()
+  })
+
+  it('pais modal closes on cancel', () => {
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+    expect(screen.queryByText('Cambiar pais')).not.toBeInTheDocument()
+  })
+
+  it('pais modal closes via X button', () => {
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
+    expect(screen.queryByText('Cambiar pais')).not.toBeInTheDocument()
   })
 })

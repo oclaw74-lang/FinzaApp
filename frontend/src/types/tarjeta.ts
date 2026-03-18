@@ -26,6 +26,8 @@ export interface Tarjeta {
   id: string
   user_id: string
   banco: string
+  banco_id?: string | null
+  banco_custom?: string | null
   titular: string | null
   tipo: TipoTarjeta
   red: RedTarjeta
@@ -43,6 +45,8 @@ export interface Tarjeta {
 
 export interface TarjetaCreate {
   banco: string
+  banco_id?: string | null
+  banco_custom?: string | null
   titular?: string | null
   tipo: TipoTarjeta
   red: RedTarjeta
@@ -57,6 +61,8 @@ export interface TarjetaCreate {
 
 export interface TarjetaUpdate {
   banco?: string
+  banco_id?: string | null
+  banco_custom?: string | null
   titular?: string | null
   tipo?: TipoTarjeta
   red?: RedTarjeta
