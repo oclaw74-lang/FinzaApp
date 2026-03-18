@@ -1,4 +1,6 @@
 import uuid
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
@@ -95,6 +97,29 @@ class TarjetaUpdate(BaseModel):
         if v is not None and v <= 0:
             raise ValueError("El limite de credito debe ser mayor a 0.")
         return v
+
+
+class MovimientoTarjetaCreate(BaseModel):
+    tipo: Literal["compra", "pago"]
+    monto: Decimal = Field(gt=0)
+    descripcion: Optional[str] = None
+    fecha: date
+    categoria_id: Optional[uuid.UUID] = None  # only relevant for compras
+    notas: Optional[str] = None
+
+
+class MovimientoTarjetaResponse(BaseModel):
+    id: uuid.UUID
+    tarjeta_id: uuid.UUID
+    tipo: str
+    monto: Decimal
+    descripcion: Optional[str] = None
+    fecha: date
+    egreso_id: Optional[uuid.UUID] = None
+    notas: Optional[str] = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
 
 
 class TarjetaResponse(BaseModel):

@@ -4,6 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.core.security import get_current_user, get_raw_token
+from app.core.supabase_client import get_user_client
 from app.schemas.prestamo import (
     PagoPrestamoCreate,
     PagoPrestamoResponse,
@@ -13,6 +14,7 @@ from app.schemas.prestamo import (
     PrestamoUpdate,
 )
 from app.services import prestamos as svc
+from app.services.prestamos import generar_tabla_amortizacion
 
 router = APIRouter(prefix="/prestamos", tags=["prestamos"])
 
@@ -153,3 +155,72 @@ async def delete_pago(
         prestamo_id=str(prestamo_id),
         pago_id=str(pago_id),
     )
+
+
+@router.get("/{prestamo_id}/amortizacion")
+async def get_tabla_amortizacion(
+    prestamo_id: UUID,
+    token: str = Depends(get_raw_token),
+    current_user: dict = Depends(get_current_user),
+) -> dict:
+    """Return the full amortization schedule for a loan, with actual payment data overlaid."""
+    client = get_user_client(token)
+
+    prestamo_r = (
+        client.table("prestamos")
+        .select("*")
+        .eq("id", str(prestamo_id))
+        .eq("user_id", current_user["user_id"])
+        .is_("deleted_at", "null")
+        .maybe_single()
+        .execute()
+    )
+    if not prestamo_r.data:
+        raise HTTPException(status_code=404, detail="Prestamo no encontrado.")
+
+    p = prestamo_r.data
+
+    if not p.get("plazo_meses"):
+        return {
+            "tabla": [],
+            "resumen": {
+                "sin_plazo": True,
+                "monto_original": float(p["monto_original"]),
+                "monto_pendiente": float(p["monto_pendiente"]),
+            },
+        }
+
+    pagos_r = (
+        client.table("pagos_prestamo")
+        .select("*")
+        .eq("prestamo_id", str(prestamo_id))
+        .is_("deleted_at", "null")
+        .order("numero_cuota")
+        .execute()
+    )
+    pagos = pagos_r.data or []
+
+    tabla = generar_tabla_amortizacion(
+        monto_original=float(p["monto_original"]),
+        tasa_interes_anual=float(p["tasa_interes"]) if p.get("tasa_interes") else None,
+        plazo_meses=int(p["plazo_meses"]),
+        fecha_inicio=date.fromisoformat(p["fecha_prestamo"][:10]),
+        pagos_registrados=pagos,
+    )
+
+    total_pagado_capital = sum(float(pg.get("monto_capital") or 0) for pg in pagos)
+    total_pagado_intereses = sum(float(pg.get("monto_interes") or 0) for pg in pagos)
+    total_intereses_proyectados = sum(row["interes"] for row in tabla)
+
+    return {
+        "tabla": tabla,
+        "resumen": {
+            "monto_original": float(p["monto_original"]),
+            "monto_pendiente": float(p["monto_pendiente"]),
+            "total_pagado_capital": round(total_pagado_capital, 2),
+            "total_pagado_intereses": round(total_pagado_intereses, 2),
+            "total_intereses_proyectados": round(total_intereses_proyectados, 2),
+            "cuotas_pagadas": len(pagos),
+            "cuotas_totales": int(p["plazo_meses"]),
+        },
+    }
