@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Plus, Pencil, Trash2, RefreshCw, Calendar } from 'lucide-react'
+import { Plus, Pencil, Trash2, RefreshCw, Calendar, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
@@ -142,7 +143,7 @@ export function RecurrentesPage(): JSX.Element {
         </div>
         <button
           onClick={openCrear}
-          className="flex items-center gap-2 bg-finza-blue hover:bg-finza-blue/80 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+          className="flex items-center gap-2 bg-finza-blue hover:bg-finza-blue/80 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:opacity-90 active:scale-[0.97] duration-150"
           aria-label={t('recurrentes.nueva')}
         >
           <Plus size={14} />
@@ -259,14 +260,14 @@ export function RecurrentesPage(): JSX.Element {
                 <div className="flex gap-1">
                   <button
                     onClick={() => openEditar(r)}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)]"
+                    className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)] hover:opacity-80 active:scale-[0.95] transition-all duration-150"
                     aria-label={t('common.edit')}
                   >
                     <Pencil size={13} />
                   </button>
                   <button
                     onClick={() => handleEliminar(r.id)}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--danger)]"
+                    className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--danger)] hover:opacity-80 active:scale-[0.95] transition-all duration-150"
                     aria-label={t('common.delete')}
                   >
                     <Trash2 size={13} />
@@ -279,127 +280,145 @@ export function RecurrentesPage(): JSX.Element {
       </section>
 
       {/* Create / Edit Modal */}
-      {(modal === 'crear' || modal === 'editar') && (
+      {(modal === 'crear' || modal === 'editar') && createPortal(
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-title"
         >
-          <div className="finza-card p-6 w-full max-w-sm space-y-3 overflow-y-auto max-h-[90vh]">
-            <h2 id="modal-title" className="font-bold text-[var(--text-primary)]">
-              {modal === 'crear' ? t('recurrentes.form.createTitle') : t('recurrentes.form.editTitle')}
-            </h2>
-
-            {/* Tipo */}
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1">{t('recurrentes.form.tipo')}</label>
-              <select
-                value={form.tipo}
-                onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value as TipoRecurrente }))}
-                className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-[var(--surface)] text-[var(--text-primary)]"
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={closeModal}
+            aria-hidden="true"
+          />
+          <div className="relative bg-white dark:bg-[#0d1520] dark:border dark:border-white/[0.08] rounded-2xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 id="modal-title" className="font-bold text-[var(--text-primary)]">
+                {modal === 'crear' ? t('recurrentes.form.createTitle') : t('recurrentes.form.editTitle')}
+              </h2>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                aria-label={t('common.close')}
               >
-                {TIPOS.map((tipo) => (
-                  <option key={tipo} value={tipo}>{t(`recurrentes.tipo.${tipo}`)}</option>
-                ))}
-              </select>
+                <X size={18} />
+              </button>
             </div>
 
-            {/* Descripcion */}
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1">{t('recurrentes.form.descripcion')}</label>
-              <input
-                type="text"
-                placeholder={t('recurrentes.form.descripcion')}
-                value={form.descripcion}
-                onChange={(e) => setForm((f) => ({ ...f, descripcion: e.target.value }))}
-                className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-[var(--surface)] text-[var(--text-primary)]"
-              />
-            </div>
-
-            {/* Monto */}
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1">{t('recurrentes.form.monto')}</label>
-              <input
-                type="number"
-                placeholder={t('recurrentes.form.monto')}
-                value={form.monto}
-                onChange={(e) => setForm((f) => ({ ...f, monto: e.target.value }))}
-                className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-[var(--surface)] text-[var(--text-primary)]"
-                min="0"
-                step="0.01"
-              />
-            </div>
-
-            {/* Frecuencia */}
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1">{t('recurrentes.form.frecuencia')}</label>
-              <select
-                value={form.frecuencia}
-                onChange={(e) => setForm((f) => ({ ...f, frecuencia: e.target.value as FrecuenciaRecurrente, dia_del_mes: '' }))}
-                className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-[var(--surface)] text-[var(--text-primary)]"
-              >
-                {FRECUENCIAS.map((f) => (
-                  <option key={f} value={f}>{t(`recurrentes.frecuencia.${f}`)}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Dia del mes — solo si mensual */}
-            {form.frecuencia === 'mensual' && (
+            <div className="space-y-3">
+              {/* Tipo */}
               <div>
-                <label className="block text-xs text-[var(--text-muted)] mb-1">{t('recurrentes.form.diaDelMes')}</label>
+                <label className="block text-xs text-[var(--text-muted)] mb-1">{t('recurrentes.form.tipo')}</label>
+                <select
+                  value={form.tipo}
+                  onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value as TipoRecurrente }))}
+                  className="w-full border border-[var(--border)] rounded-xl px-3 py-2.5 text-sm bg-[var(--surface)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-colors"
+                >
+                  {TIPOS.map((tipo) => (
+                    <option key={tipo} value={tipo}>{t(`recurrentes.tipo.${tipo}`)}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Descripcion */}
+              <div>
+                <label className="block text-xs text-[var(--text-muted)] mb-1">{t('recurrentes.form.descripcion')}</label>
                 <input
-                  type="number"
-                  placeholder="1-31"
-                  value={form.dia_del_mes}
-                  onChange={(e) => setForm((f) => ({ ...f, dia_del_mes: e.target.value }))}
-                  className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-[var(--surface)] text-[var(--text-primary)]"
-                  min="1"
-                  max="31"
+                  type="text"
+                  placeholder={t('recurrentes.form.descripcion')}
+                  value={form.descripcion}
+                  onChange={(e) => setForm((f) => ({ ...f, descripcion: e.target.value }))}
+                  className="w-full border border-[var(--border)] rounded-xl px-3 py-2.5 text-sm bg-[var(--surface)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-colors"
                 />
               </div>
-            )}
 
-            {/* Fecha inicio */}
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1">{t('recurrentes.form.fechaInicio')}</label>
-              <input
-                type="date"
-                value={form.fecha_inicio}
-                onChange={(e) => setForm((f) => ({ ...f, fecha_inicio: e.target.value }))}
-                className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-[var(--surface)] text-[var(--text-primary)]"
-              />
-            </div>
+              {/* Monto */}
+              <div>
+                <label className="block text-xs text-[var(--text-muted)] mb-1">{t('recurrentes.form.monto')}</label>
+                <input
+                  type="number"
+                  placeholder={t('recurrentes.form.monto')}
+                  value={form.monto}
+                  onChange={(e) => setForm((f) => ({ ...f, monto: e.target.value }))}
+                  className="w-full border border-[var(--border)] rounded-xl px-3 py-2.5 text-sm bg-[var(--surface)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-colors"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
 
-            {/* Fecha fin */}
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1">{t('recurrentes.form.fechaFin')}</label>
-              <input
-                type="date"
-                value={form.fecha_fin}
-                onChange={(e) => setForm((f) => ({ ...f, fecha_fin: e.target.value }))}
-                className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-[var(--surface)] text-[var(--text-primary)]"
-              />
-            </div>
+              {/* Frecuencia */}
+              <div>
+                <label className="block text-xs text-[var(--text-muted)] mb-1">{t('recurrentes.form.frecuencia')}</label>
+                <select
+                  value={form.frecuencia}
+                  onChange={(e) => setForm((f) => ({ ...f, frecuencia: e.target.value as FrecuenciaRecurrente, dia_del_mes: '' }))}
+                  className="w-full border border-[var(--border)] rounded-xl px-3 py-2.5 text-sm bg-[var(--surface)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-colors"
+                >
+                  {FRECUENCIAS.map((f) => (
+                    <option key={f} value={f}>{t(`recurrentes.frecuencia.${f}`)}</option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={closeModal}
-                className="flex-1 py-2 rounded-xl border border-[var(--border)] text-sm text-[var(--text-muted)]"
-              >
-                {t('recurrentes.form.cancelar')}
-              </button>
-              <button
-                onClick={modal === 'crear' ? handleCrear : handleActualizar}
-                disabled={crear.isPending || actualizar.isPending}
-                className="flex-1 py-2 rounded-xl bg-[var(--accent)] text-white text-sm font-medium disabled:opacity-50"
-              >
-                {t('recurrentes.form.guardar')}
-              </button>
+              {/* Dia del mes — solo si mensual */}
+              {form.frecuencia === 'mensual' && (
+                <div>
+                  <label className="block text-xs text-[var(--text-muted)] mb-1">{t('recurrentes.form.diaDelMes')}</label>
+                  <input
+                    type="number"
+                    placeholder="1-31"
+                    value={form.dia_del_mes}
+                    onChange={(e) => setForm((f) => ({ ...f, dia_del_mes: e.target.value }))}
+                    className="w-full border border-[var(--border)] rounded-xl px-3 py-2.5 text-sm bg-[var(--surface)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-colors"
+                    min="1"
+                    max="31"
+                  />
+                </div>
+              )}
+
+              {/* Fecha inicio */}
+              <div>
+                <label className="block text-xs text-[var(--text-muted)] mb-1">{t('recurrentes.form.fechaInicio')}</label>
+                <input
+                  type="date"
+                  value={form.fecha_inicio}
+                  onChange={(e) => setForm((f) => ({ ...f, fecha_inicio: e.target.value }))}
+                  className="w-full border border-[var(--border)] rounded-xl px-3 py-2.5 text-sm bg-[var(--surface)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-colors"
+                />
+              </div>
+
+              {/* Fecha fin */}
+              <div>
+                <label className="block text-xs text-[var(--text-muted)] mb-1">{t('recurrentes.form.fechaFin')}</label>
+                <input
+                  type="date"
+                  value={form.fecha_fin}
+                  onChange={(e) => setForm((f) => ({ ...f, fecha_fin: e.target.value }))}
+                  className="w-full border border-[var(--border)] rounded-xl px-3 py-2.5 text-sm bg-[var(--surface)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-colors"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={closeModal}
+                  className="flex-1 py-2.5 rounded-xl border border-[var(--border)] text-sm text-[var(--text-muted)] hover:bg-[var(--surface-raised)] active:scale-[0.98] transition-all duration-150"
+                >
+                  {t('recurrentes.form.cancelar')}
+                </button>
+                <button
+                  onClick={modal === 'crear' ? handleCrear : handleActualizar}
+                  disabled={crear.isPending || actualizar.isPending}
+                  className="flex-1 py-2.5 rounded-xl bg-[var(--accent)] text-white text-sm font-semibold hover:opacity-90 active:scale-[0.98] transition-all duration-150 disabled:opacity-50"
+                >
+                  {t('recurrentes.form.guardar')}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
