@@ -192,15 +192,15 @@ export function Sidebar(): JSX.Element {
             tabIndex={sidebarCollapsed ? 0 : -1}
           >
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-lg dark:bg-gradient-to-br dark:from-[#3d8ef8] dark:to-[#9768ff]"
+              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-lg overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, #5B9BD5, #366092)',
+                background: 'linear-gradient(135deg, #0d2a52, #1a5cad)',
                 boxShadow: sidebarCollapsed
                   ? '0 0 16px rgba(91,155,213,0.35)'
                   : '0 0 16px rgba(91,155,213,0.4)',
               }}
             >
-              <span className="font-bold text-white text-sm">F</span>
+              <img src="/logo.svg" alt="Finza" className="w-6 h-6 object-contain" />
             </div>
             {!sidebarCollapsed && (
               <span

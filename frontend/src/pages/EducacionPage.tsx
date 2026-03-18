@@ -182,7 +182,7 @@ export function EducacionPage(): JSX.Element {
   }
 
   return (
-    <div className="animate-fade-in space-y-6">
+    <div className="animate-fade-in p-4 md:p-6 space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-[var(--text-primary)]">{t('educacion.title')}</h1>

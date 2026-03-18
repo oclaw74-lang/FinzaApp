@@ -23,9 +23,9 @@ interface MetaDetailProps {
 
 function estadoBadgeClasses(estado: EstadoMeta): string {
   const map: Record<EstadoMeta, string> = {
-    activa: 'bg-blue-100 text-finza-blue',
-    completada: 'bg-green-100 text-prosperity-green',
-    cancelada: 'bg-gray-100 text-gray-500',
+    activa: 'bg-[var(--accent-muted)] text-[var(--accent)]',
+    completada: 'bg-[var(--success-muted)] text-[var(--success)]',
+    cancelada: 'bg-[var(--surface-raised)] text-[var(--text-muted)]',
   }
   return map[estado]
 }
@@ -86,12 +86,12 @@ export function MetaDetail({
           onClick={onClose}
           aria-hidden="true"
         />
-        <div className="relative bg-white rounded-card shadow-card-hover w-full max-w-xl p-6 animate-pulse">
-          <div className="h-6 w-48 bg-gray-200 rounded mb-4" />
+        <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card shadow-card-hover w-full max-w-xl p-6 animate-pulse">
+          <div className="h-6 w-48 bg-[var(--surface-raised)] rounded mb-4" />
           <div className="space-y-3">
-            <div className="h-4 w-full bg-gray-200 rounded" />
-            <div className="h-4 w-3/4 bg-gray-200 rounded" />
-            <div className="h-4 w-1/2 bg-gray-200 rounded" />
+            <div className="h-4 w-full bg-[var(--surface-raised)] rounded" />
+            <div className="h-4 w-3/4 bg-[var(--surface-raised)] rounded" />
+            <div className="h-4 w-1/2 bg-[var(--surface-raised)] rounded" />
           </div>
         </div>
       </div>
@@ -106,7 +106,7 @@ export function MetaDetail({
           onClick={onClose}
           aria-hidden="true"
         />
-        <div className="relative bg-white rounded-card shadow-card-hover w-full max-w-xl p-6">
+        <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card shadow-card-hover w-full max-w-xl p-6">
           <p className="text-sm text-gray-500">
             No se pudo cargar el detalle de la meta.
           </p>
@@ -154,11 +154,11 @@ export function MetaDetail({
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="relative bg-white rounded-card shadow-card-hover w-full max-w-xl max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card shadow-card-hover w-full max-w-xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
+        <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
           <div className="min-w-0 flex-1">
-            <h2 className="text-xl font-bold text-gray-900 truncate">
+            <h2 className="text-xl font-bold text-[var(--text-primary)] truncate">
               {displayMeta.icono ? `${displayMeta.icono} ` : ''}
               {displayMeta.nombre}
             </h2>
@@ -176,7 +176,7 @@ export function MetaDetail({
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors ml-3 flex-shrink-0"
+            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors ml-3 flex-shrink-0"
             aria-label="Cerrar detalle"
           >
             <X size={20} />
@@ -188,7 +188,7 @@ export function MetaDetail({
           <div>
             <div className="flex justify-between items-end mb-2">
               <div>
-                <p className="text-xs text-gray-400">Ahorrado</p>
+                <p className="text-xs text-[var(--text-muted)]">Ahorrado</p>
                 <p
                   className="text-3xl font-bold money"
                   style={{ color: colorMeta }}
@@ -197,8 +197,8 @@ export function MetaDetail({
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-gray-400">Objetivo</p>
-                <p className="text-lg font-semibold text-gray-700">
+                <p className="text-xs text-[var(--text-muted)]">Objetivo</p>
+                <p className="text-lg font-semibold text-[var(--text-primary)]">
                   {formatMoney(displayMeta.monto_objetivo)}
                 </p>
               </div>
@@ -208,21 +208,21 @@ export function MetaDetail({
               color={colorMeta}
               aria-label={`${porcentaje}% de la meta ${displayMeta.nombre}`}
             />
-            <p className="text-xs text-gray-400 mt-1">{porcentaje}% completado</p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">{porcentaje}% completado</p>
           </div>
 
           {/* Datos generales */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-xs text-gray-400">Fecha inicio</p>
-              <p className="text-gray-900">
+              <p className="text-xs text-[var(--text-muted)]">Fecha inicio</p>
+              <p className="text-[var(--text-primary)]">
                 {formatDate(displayMeta.fecha_inicio)}
               </p>
             </div>
             {displayMeta.fecha_objetivo && (
               <div>
-                <p className="text-xs text-gray-400">Fecha objetivo</p>
-                <p className="text-gray-900">
+                <p className="text-xs text-[var(--text-muted)]">Fecha objetivo</p>
+                <p className="text-[var(--text-primary)]">
                   {formatDate(displayMeta.fecha_objetivo)}
                 </p>
               </div>
@@ -231,14 +231,14 @@ export function MetaDetail({
 
           {displayMeta.descripcion && (
             <div>
-              <p className="text-xs text-gray-400 mb-1">Descripcion</p>
-              <p className="text-sm text-gray-900">{displayMeta.descripcion}</p>
+              <p className="text-xs text-[var(--text-muted)] mb-1">Descripcion</p>
+              <p className="text-sm text-[var(--text-primary)]">{displayMeta.descripcion}</p>
             </div>
           )}
 
           {/* Lista de contribuciones */}
           <div>
-            <p className="text-sm font-semibold text-gray-700 mb-3">
+            <p className="text-sm font-semibold text-[var(--text-secondary)] mb-3">
               Historial de contribuciones
             </p>
 
@@ -247,7 +247,7 @@ export function MetaDetail({
                 {[1, 2].map((i) => (
                   <div
                     key={i}
-                    className="h-12 bg-gray-100 rounded-lg animate-pulse"
+                    className="h-12 bg-[var(--surface-raised)] rounded-lg animate-pulse"
                   />
                 ))}
               </div>
@@ -255,7 +255,7 @@ export function MetaDetail({
 
             {!isLoadingContribuciones &&
               contribucionesOrdenadas.length === 0 && (
-                <p className="text-xs text-gray-400 text-center py-4">
+                <p className="text-xs text-[var(--text-muted)] text-center py-4">
                   Sin contribuciones aun. Agrega tu primer deposito.
                 </p>
               )}
@@ -266,7 +266,7 @@ export function MetaDetail({
                   {contribucionesOrdenadas.map((contrib) => (
                     <div
                       key={contrib.id}
-                      className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg"
+                      className="flex items-center justify-between py-2 px-3 bg-[var(--surface-raised)] rounded-lg"
                     >
                       <div className="flex items-center gap-2">
                         {contrib.tipo === 'deposito' ? (
@@ -293,20 +293,20 @@ export function MetaDetail({
                             {formatMoney(contrib.monto)}
                           </p>
                           {contrib.notas && (
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-[var(--text-muted)]">
                               {contrib.notas}
                             </p>
                           )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-[var(--text-muted)]">
                           {formatDate(contrib.fecha)}
                         </p>
                         <button
                           type="button"
                           onClick={() => handleDeleteContribucion(contrib.id)}
-                          className="text-gray-300 hover:text-alert-red transition-colors"
+                          className="text-[var(--text-subtle)] hover:text-alert-red transition-colors"
                           aria-label="Eliminar contribucion"
                         >
                           <Trash2 size={13} />
@@ -320,8 +320,8 @@ export function MetaDetail({
 
           {/* Formulario contribucion inline */}
           {showContribucionForm && displayMeta.estado === 'activa' && (
-            <div className="border border-border rounded-lg p-4">
-              <p className="text-sm font-semibold text-gray-700 mb-3">
+            <div className="border border-[var(--border)] bg-[var(--surface-raised)] rounded-lg p-4">
+              <p className="text-sm font-semibold text-[var(--text-secondary)] mb-3">
                 Agregar contribucion
               </p>
               <ContribucionForm

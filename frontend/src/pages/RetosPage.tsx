@@ -218,7 +218,7 @@ export function RetosPage(): JSX.Element {
   }
 
   return (
-    <div className="animate-fade-in space-y-8">
+    <div className="animate-fade-in p-4 md:p-6 space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-[var(--text-primary)]">{t('retos.title')}</h1>

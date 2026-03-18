@@ -37,8 +37,8 @@ export function TransaccionModal({
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="relative bg-white rounded-card shadow-card-hover w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">
+      <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card shadow-card-hover w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
+        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-6">
           {title ?? (tipo === 'ingreso' ? 'Nuevo ingreso' : 'Nuevo egreso')}
         </h2>
         <TransaccionForm

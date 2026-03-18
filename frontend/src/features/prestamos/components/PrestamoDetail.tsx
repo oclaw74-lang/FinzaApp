@@ -72,12 +72,12 @@ export function PrestamoDetail({
     return (
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
-        <div className="relative bg-white rounded-card shadow-card-hover w-full max-w-xl p-6 animate-pulse">
-          <div className="h-6 w-48 bg-gray-200 rounded mb-4" />
+        <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-xl p-6 animate-pulse">
+          <div className="h-6 w-48 bg-[var(--surface-raised)] rounded mb-4" />
           <div className="space-y-3">
-            <div className="h-4 w-full bg-gray-200 rounded" />
-            <div className="h-4 w-3/4 bg-gray-200 rounded" />
-            <div className="h-4 w-1/2 bg-gray-200 rounded" />
+            <div className="h-4 w-full bg-[var(--surface-raised)] rounded" />
+            <div className="h-4 w-3/4 bg-[var(--surface-raised)] rounded" />
+            <div className="h-4 w-1/2 bg-[var(--surface-raised)] rounded" />
           </div>
         </div>
       </div>
@@ -88,8 +88,8 @@ export function PrestamoDetail({
     return (
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
-        <div className="relative bg-white rounded-card shadow-card-hover w-full max-w-xl p-6">
-          <p className="text-sm text-gray-500">No se pudo cargar el detalle del prestamo.</p>
+        <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-xl p-6">
+          <p className="text-sm text-[var(--text-muted)]">No se pudo cargar el detalle del prestamo.</p>
           <Button variant="secondary" size="sm" onClick={onClose} className="mt-4">
             Cerrar
           </Button>
@@ -122,12 +122,12 @@ export function PrestamoDetail({
       aria-label={`Detalle de prestamo con ${displayPrestamo.persona}`}
     >
       <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
-      <div className="relative bg-white rounded-card shadow-card-hover w-full max-w-xl max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
+        <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">{displayPrestamo.persona}</h2>
-            <p className="text-sm text-gray-400">
+            <h2 className="text-xl font-bold text-[var(--text-primary)]">{displayPrestamo.persona}</h2>
+            <p className="text-sm text-[var(--text-muted)]">
               {isTipoDeben ? 'Me deben' : 'Yo debo'} &middot;{' '}
               <span className={cn('font-medium', estadoColor(displayPrestamo.estado))}>
                 {estadoLabel(displayPrestamo.estado)}
@@ -137,7 +137,7 @@ export function PrestamoDetail({
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
             aria-label="Cerrar detalle"
           >
             <X size={20} />
@@ -149,7 +149,7 @@ export function PrestamoDetail({
           <div>
             <div className="flex justify-between items-end mb-2">
               <div>
-                <p className="text-xs text-gray-400">Pendiente</p>
+                <p className="text-xs text-[var(--text-muted)]">Pendiente</p>
                 <p
                   className="text-3xl font-bold money"
                   style={{ color: isTipoDeben ? '#00B050' : '#FF0000' }}
@@ -158,14 +158,14 @@ export function PrestamoDetail({
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-gray-400">Original</p>
-                <p className="text-lg font-semibold text-gray-700">
+                <p className="text-xs text-[var(--text-muted)]">Original</p>
+                <p className="text-lg font-semibold text-[var(--text-primary)]">
                   {formatMoney(displayPrestamo.monto_original, displayPrestamo.moneda)}
                 </p>
               </div>
             </div>
             <div
-              className="w-full h-2 bg-gray-200 rounded-full overflow-hidden"
+              className="w-full h-2 bg-[var(--surface-raised)] rounded-full overflow-hidden"
               role="progressbar"
               aria-valuenow={porcentajePagado}
               aria-valuemin={0}
@@ -180,21 +180,21 @@ export function PrestamoDetail({
                 }}
               />
             </div>
-            <p className="text-xs text-gray-400 mt-1">{porcentajePagado}% pagado</p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">{porcentajePagado}% pagado</p>
           </div>
 
           {/* Datos */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-xs text-gray-400">Fecha prestamo</p>
-              <p className="text-gray-900">{formatDate(displayPrestamo.fecha_prestamo)}</p>
+              <p className="text-xs text-[var(--text-muted)]">Fecha prestamo</p>
+              <p className="text-[var(--text-primary)]">{formatDate(displayPrestamo.fecha_prestamo)}</p>
             </div>
             {displayPrestamo.fecha_vencimiento && (
               <div>
-                <p className="text-xs text-gray-400">Fecha vencimiento</p>
+                <p className="text-xs text-[var(--text-muted)]">Fecha vencimiento</p>
                 <p
                   className={cn(
-                    'text-gray-900',
+                    'text-[var(--text-primary)]',
                     displayPrestamo.estado === 'activo' &&
                       new Date(displayPrestamo.fecha_vencimiento) < new Date() &&
                       'text-alert-red font-medium'
@@ -205,48 +205,84 @@ export function PrestamoDetail({
               </div>
             )}
             <div>
-              <p className="text-xs text-gray-400">Moneda</p>
-              <p className="text-gray-900">{displayPrestamo.moneda}</p>
+              <p className="text-xs text-[var(--text-muted)]">Moneda</p>
+              <p className="text-[var(--text-primary)]">{displayPrestamo.moneda}</p>
             </div>
+            {displayPrestamo.plazo_meses != null && (
+              <div>
+                <p className="text-xs text-[var(--text-muted)]">Plazo</p>
+                <p className="text-[var(--text-primary)]">{displayPrestamo.plazo_meses} meses</p>
+              </div>
+            )}
           </div>
+
+          {/* Detalles financieros — intereses */}
+          {(displayPrestamo.tasa_interes != null || displayPrestamo.cuota_mensual != null) && (
+            <div className="bg-[var(--surface-raised)] rounded-xl p-4 grid grid-cols-2 gap-3">
+              {displayPrestamo.tasa_interes != null && (
+                <div>
+                  <p className="text-xs text-[var(--text-muted)]">Tasa de interés</p>
+                  <p className="text-sm font-semibold text-[var(--warning)]">{displayPrestamo.tasa_interes}% anual</p>
+                </div>
+              )}
+              {displayPrestamo.cuota_mensual != null && (
+                <div>
+                  <p className="text-xs text-[var(--text-muted)]">Cuota mensual</p>
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">{formatMoney(displayPrestamo.cuota_mensual, displayPrestamo.moneda)}</p>
+                </div>
+              )}
+              {displayPrestamo.total_intereses != null && (
+                <div>
+                  <p className="text-xs text-[var(--text-muted)]">Total intereses</p>
+                  <p className="text-sm font-semibold text-[var(--danger)]">{formatMoney(displayPrestamo.total_intereses, displayPrestamo.moneda)}</p>
+                </div>
+              )}
+              {displayPrestamo.proximo_pago != null && (
+                <div>
+                  <p className="text-xs text-[var(--text-muted)]">Próximo pago</p>
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">{formatDate(displayPrestamo.proximo_pago)}</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {displayPrestamo.descripcion && (
             <div>
-              <p className="text-xs text-gray-400 mb-1">Descripcion</p>
-              <p className="text-sm text-gray-900">{displayPrestamo.descripcion}</p>
+              <p className="text-xs text-[var(--text-muted)] mb-1">Descripcion</p>
+              <p className="text-sm text-[var(--text-primary)]">{displayPrestamo.descripcion}</p>
             </div>
           )}
           {displayPrestamo.notas && (
             <div>
-              <p className="text-xs text-gray-400 mb-1">Notas</p>
-              <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{displayPrestamo.notas}</p>
+              <p className="text-xs text-[var(--text-muted)] mb-1">Notas</p>
+              <p className="text-sm text-[var(--text-secondary)] bg-[var(--surface-raised)] rounded-lg p-3">{displayPrestamo.notas}</p>
             </div>
           )}
 
           {/* Historial de pagos */}
           {displayPrestamo.pagos && displayPrestamo.pagos.length > 0 && (
             <div>
-              <p className="text-sm font-semibold text-gray-700 mb-3">Historial de pagos</p>
+              <p className="text-sm font-semibold text-[var(--text-secondary)] mb-3">Historial de pagos</p>
               <div className="space-y-2">
                 {displayPrestamo.pagos.map((pago) => (
                   <div
                     key={pago.id}
-                    className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg"
+                    className="flex items-center justify-between py-2 px-3 bg-[var(--surface-raised)] rounded-lg"
                   >
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-[var(--text-primary)]">
                         {formatMoney(pago.monto, displayPrestamo.moneda)}
                       </p>
                       {pago.notas && (
-                        <p className="text-xs text-gray-400">{pago.notas}</p>
+                        <p className="text-xs text-[var(--text-muted)]">{pago.notas}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <p className="text-xs text-gray-400">{formatDate(pago.fecha)}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{formatDate(pago.fecha)}</p>
                       <button
                         type="button"
                         onClick={() => handleDeletePago(pago.id)}
-                        className="text-gray-300 hover:text-alert-red transition-colors"
+                        className="text-[var(--text-subtle)] hover:text-alert-red transition-colors"
                         aria-label="Eliminar pago"
                       >
                         <Trash2 size={13} />
@@ -260,8 +296,8 @@ export function PrestamoDetail({
 
           {/* Formulario pago inline */}
           {showPagoForm && displayPrestamo.estado !== 'pagado' && (
-            <div className="border border-border rounded-lg p-4">
-              <p className="text-sm font-semibold text-gray-700 mb-3">Registrar pago</p>
+            <div className="border border-[var(--border)] bg-[var(--surface-raised)] rounded-lg p-4">
+              <p className="text-sm font-semibold text-[var(--text-secondary)] mb-3">Registrar pago</p>
               <PagoForm
                 montoPendiente={Number(displayPrestamo.monto_pendiente)}
                 onSubmit={handleRegistrarPago}
