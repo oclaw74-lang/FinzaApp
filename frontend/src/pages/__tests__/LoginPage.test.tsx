@@ -54,13 +54,14 @@ describe('LoginPage', () => {
 
   it('renders correctly in default (unauthenticated) state', () => {
     renderPage()
-    expect(screen.getByText('auth.loginTitle')).toBeInTheDocument()
+    // Title is hardcoded (not a t() key)
+    expect(screen.getByText('Bienvenido de vuelta')).toBeInTheDocument()
   })
 
   it('renders email and password inputs', () => {
     renderPage()
     expect(screen.getByPlaceholderText('tu@email.com')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('...')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('••••••••')).toBeInTheDocument()
   })
 
   it('renders login submit button', () => {
@@ -77,7 +78,7 @@ describe('LoginPage', () => {
 
   it('shows password when toggle button is clicked', () => {
     renderPage()
-    const passwordInput = screen.getByPlaceholderText('...')
+    const passwordInput = screen.getByPlaceholderText('••••••••')
     expect(passwordInput).toHaveAttribute('type', 'password')
 
     const toggleBtn = screen.getByLabelText('Mostrar contrasena')
@@ -102,7 +103,7 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByPlaceholderText('tu@email.com'), {
       target: { value: 'test@example.com' },
     })
-    fireEvent.change(screen.getByPlaceholderText('...'), {
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), {
       target: { value: '123' },
     })
     fireEvent.click(screen.getByRole('button', { name: /auth\.login/i }))
@@ -122,7 +123,7 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByPlaceholderText('tu@email.com'), {
       target: { value: 'user@example.com' },
     })
-    fireEvent.change(screen.getByPlaceholderText('...'), {
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), {
       target: { value: 'password123' },
     })
     fireEvent.click(screen.getByRole('button', { name: /auth\.login/i }))
@@ -145,7 +146,7 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByPlaceholderText('tu@email.com'), {
       target: { value: 'user@example.com' },
     })
-    fireEvent.change(screen.getByPlaceholderText('...'), {
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), {
       target: { value: 'wrongpass' },
     })
     fireEvent.click(screen.getByRole('button', { name: /auth\.login/i }))

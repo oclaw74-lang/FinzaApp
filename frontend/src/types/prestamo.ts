@@ -7,7 +7,40 @@ export interface PagoPrestamo {
   monto: number
   fecha: string
   notas?: string
+  monto_capital?: number | null
+  monto_interes?: number | null
+  numero_cuota?: number | null
   created_at: string
+}
+
+export interface CuotaAmortizacion {
+  numero: number
+  fecha_estimada: string
+  cuota: number
+  capital: number
+  interes: number
+  saldo_restante: number
+  pagado: boolean
+  pago_real?: {
+    monto: number
+    capital: number
+    interes: number
+    fecha: string
+  } | null
+}
+
+export interface TablaAmortizacionResponse {
+  tabla: CuotaAmortizacion[]
+  resumen: {
+    monto_original: number
+    monto_pendiente: number
+    total_pagado_capital: number
+    total_pagado_intereses: number
+    total_intereses_proyectados: number
+    cuotas_pagadas: number
+    cuotas_totales: number
+    sin_plazo?: boolean
+  }
 }
 
 export interface Prestamo {

@@ -76,6 +76,9 @@ class PagoPrestamoResponse(BaseModel):
     notas: str | None
     created_at: datetime
     deleted_at: datetime | None = None
+    monto_capital: Decimal | None = None   # capital portion of this payment
+    monto_interes: Decimal | None = None   # interest portion of this payment
+    numero_cuota: int | None = None        # installment number in amortization schedule
 
     model_config = {"from_attributes": True}
 

@@ -14,6 +14,7 @@ class EgresoCreate(BaseModel):
     metodo_pago: str = "efectivo"
     fecha: date
     notas: str | None = None
+    tarjeta_id: uuid.UUID | None = None  # link to tarjeta when payment method is 'tarjeta'
 
     @field_validator("monto")
     @classmethod
@@ -42,5 +43,7 @@ class EgresoResponse(BaseModel):
     metodo_pago: str
     fecha: date
     notas: str | None
+    tarjeta_id: uuid.UUID | None = None       # populated when metodo_pago == 'tarjeta'
+    pago_prestamo_id: uuid.UUID | None = None  # populated when egreso originates from a loan payment
 
     model_config = {"from_attributes": True}

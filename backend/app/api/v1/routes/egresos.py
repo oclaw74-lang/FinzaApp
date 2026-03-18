@@ -40,12 +40,14 @@ async def create_egreso(
     token: str = Depends(get_raw_token),
     current_user: dict = Depends(get_current_user),
 ) -> dict:
-    payload = data.model_dump()
+    payload = data.model_dump(exclude_none=True)
     payload["categoria_id"] = str(payload["categoria_id"])
     if payload.get("subcategoria_id"):
         payload["subcategoria_id"] = str(payload["subcategoria_id"])
     payload["fecha"] = str(payload["fecha"])
     payload["monto"] = str(payload["monto"])
+    if payload.get("tarjeta_id"):
+        payload["tarjeta_id"] = str(payload["tarjeta_id"])
     return svc.create_egreso(token, current_user["user_id"], payload)
 
 

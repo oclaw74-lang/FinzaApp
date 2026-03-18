@@ -9,6 +9,14 @@ vi.mock('@/hooks/useTarjetas', () => ({
   useUpdateTarjeta: vi.fn(),
   useDeleteTarjeta: vi.fn(),
 }))
+vi.mock('@/hooks/useMovimientosTarjeta', () => ({
+  useMovimientosTarjeta: vi.fn(),
+  useRegistrarMovimiento: vi.fn(),
+  useEliminarMovimiento: vi.fn(),
+}))
+vi.mock('@/hooks/useCategorias', () => ({
+  useCategorias: vi.fn(),
+}))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import {
@@ -17,6 +25,12 @@ import {
   useUpdateTarjeta,
   useDeleteTarjeta,
 } from '@/hooks/useTarjetas'
+import {
+  useMovimientosTarjeta,
+  useRegistrarMovimiento,
+  useEliminarMovimiento,
+} from '@/hooks/useMovimientosTarjeta'
+import { useCategorias } from '@/hooks/useCategorias'
 
 // ─── Mock data ─────────────────────────────────────────────────────────────────
 
@@ -90,6 +104,14 @@ function setupMocks(
   vi.mocked(useCreateTarjeta).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useCreateTarjeta>)
   vi.mocked(useUpdateTarjeta).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useUpdateTarjeta>)
   vi.mocked(useDeleteTarjeta).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useDeleteTarjeta>)
+  vi.mocked(useMovimientosTarjeta).mockReturnValue({
+    data: [],
+    isLoading: false,
+    isError: false,
+  } as ReturnType<typeof useMovimientosTarjeta>)
+  vi.mocked(useRegistrarMovimiento).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useRegistrarMovimiento>)
+  vi.mocked(useEliminarMovimiento).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useEliminarMovimiento>)
+  vi.mocked(useCategorias).mockReturnValue({ data: [], isLoading: false } as ReturnType<typeof useCategorias>)
   return { mutateAsync }
 }
 
@@ -280,5 +302,146 @@ describe('TarjetasPage', () => {
     render(<TarjetasPage />)
     expect(screen.getByText('Credito')).toBeInTheDocument()
     expect(screen.getByText('Debito')).toBeInTheDocument()
+  })
+
+  // ─── Movimientos tests ──────────────────────────────────────────────────────
+
+  it('detail modal shows movimientos section', () => {
+    setupMocks([mockCredito])
+    render(<TarjetasPage />)
+
+    const cardBtn = screen.getByRole('button', { name: /Visa Popular/i })
+    fireEvent.click(cardBtn)
+
+    expect(screen.getByText('Movimientos')).toBeInTheDocument()
+  })
+
+  it('detail modal shows empty state when no movimientos exist', () => {
+    setupMocks([mockCredito])
+    render(<TarjetasPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Visa Popular/i }))
+
+    expect(screen.getByText('Sin movimientos registrados')).toBeInTheDocument()
+  })
+
+  it('detail modal shows movimiento list when data exists', () => {
+    setupMocks([mockCredito])
+    vi.mocked(useMovimientosTarjeta).mockReturnValue({
+      data: [
+        {
+          id: 'm-1',
+          tarjeta_id: 't-1',
+          tipo: 'compra' as const,
+          monto: 1500,
+          descripcion: 'Supermercado',
+          fecha: '2026-03-18',
+          egreso_id: null,
+          notas: null,
+          created_at: '2026-03-18T00:00:00Z',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof useMovimientosTarjeta>)
+
+    render(<TarjetasPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Visa Popular/i }))
+
+    expect(screen.getByText('Supermercado')).toBeInTheDocument()
+  })
+
+  it('detail modal shows loading skeletons while movimientos are loading', () => {
+    setupMocks([mockCredito])
+    vi.mocked(useMovimientosTarjeta).mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+    } as ReturnType<typeof useMovimientosTarjeta>)
+
+    render(<TarjetasPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Visa Popular/i }))
+
+    // Skeletons are rendered while loading
+    expect(screen.queryByText('Sin movimientos registrados')).not.toBeInTheDocument()
+  })
+
+  it('opens movimiento modal when "+ Registrar compra" is clicked', () => {
+    setupMocks([mockCredito])
+    render(<TarjetasPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Visa Popular/i }))
+    fireEvent.click(screen.getByText('+ Registrar compra'))
+
+    expect(screen.getByRole('dialog', { name: /Registrar movimiento/ })).toBeInTheDocument()
+  })
+
+  it('opens movimiento modal when "Registrar pago" is clicked', () => {
+    setupMocks([mockCredito])
+    render(<TarjetasPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Visa Popular/i }))
+    fireEvent.click(screen.getByText('Registrar pago'))
+
+    expect(screen.getByRole('dialog', { name: /Registrar movimiento/ })).toBeInTheDocument()
+  })
+
+  it('movimiento modal shows validation error on empty monto', async () => {
+    setupMocks([mockCredito])
+    render(<TarjetasPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Visa Popular/i }))
+    fireEvent.click(screen.getByText('+ Registrar compra'))
+    fireEvent.click(screen.getAllByText('Registrar').find(b => b.closest('button'))!)
+
+    await waitFor(() => {
+      expect(screen.getByText('Debe ser mayor a 0')).toBeInTheDocument()
+    })
+  })
+
+  it('calls registrar mutation on valid movimiento form submit', async () => {
+    const { mutateAsync } = setupMocks([mockCredito])
+    render(<TarjetasPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Visa Popular/i }))
+    fireEvent.click(screen.getByText('+ Registrar compra'))
+
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '500' } })
+    fireEvent.click(screen.getAllByText('Registrar').find(b => b.closest('button'))!)
+
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalled())
+  })
+
+  it('calls eliminar mutation when deleting a movimiento with confirmation', async () => {
+    const mutateAsync = vi.fn().mockResolvedValue({})
+    setupMocks([mockCredito])
+    vi.mocked(useMovimientosTarjeta).mockReturnValue({
+      data: [
+        {
+          id: 'm-del',
+          tarjeta_id: 't-1',
+          tipo: 'compra' as const,
+          monto: 200,
+          descripcion: 'Compra a eliminar',
+          fecha: '2026-03-18',
+          egreso_id: null,
+          notas: null,
+          created_at: '2026-03-18T00:00:00Z',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof useMovimientosTarjeta>)
+    vi.mocked(useEliminarMovimiento).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useEliminarMovimiento>)
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+    render(<TarjetasPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Visa Popular/i }))
+    fireEvent.click(screen.getByLabelText('Eliminar movimiento'))
+
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith('m-del'))
   })
 })

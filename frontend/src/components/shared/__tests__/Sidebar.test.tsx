@@ -112,8 +112,9 @@ describe('Sidebar', () => {
   it('logo button does not call setSidebarCollapsed when expanded', () => {
     setupMocks({ sidebarCollapsed: false })
     renderSidebar()
-    const fIcon = screen.getByText('F').closest('button')
-    if (fIcon) fireEvent.click(fIcon)
+    // When expanded, logo shows "Finza" text (no "F") and has pointer-events-none
+    const logoText = screen.getByText('Finza').closest('button')
+    if (logoText) fireEvent.click(logoText)
     expect(mockSetSidebarCollapsed).not.toHaveBeenCalled()
   })
 

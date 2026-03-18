@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Pencil, Trash2, Plus } from 'lucide-react'
+import { X, Pencil, Trash2, Plus, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { formatMoney, formatDate, cn } from '@/lib/utils'
 import { PagoForm } from './PagoForm'
 import type { PagoFormData } from './PagoForm'
-import { useDeletePago, useRegistrarPago, usePrestamoDetalle } from '@/hooks/usePrestamos'
+import { useDeletePago, useRegistrarPago, usePrestamoDetalle, useTablaAmortizacion } from '@/hooks/usePrestamos'
 import type { Prestamo, EstadoPrestamo } from '@/types/prestamo'
 import { getApiErrorMessage } from '@/lib/apiError'
 
@@ -50,8 +51,19 @@ export function PrestamoDetail({
   const { data: prestamo, isLoading, isError } = usePrestamoDetalle(prestamoId)
   const registrarPago = useRegistrarPago(prestamoId)
   const deletePago = useDeletePago(prestamoId)
+  const [tablaExpanded, setTablaExpanded] = useState(false)
 
   const displayPrestamo = prestamo ?? prestamoCache
+
+  const hasAmortizacion =
+    displayPrestamo != null &&
+    displayPrestamo.tasa_interes != null &&
+    displayPrestamo.plazo_meses != null
+
+  const {
+    data: amortizacion,
+    isLoading: loadingAmortizacion,
+  } = useTablaAmortizacion(hasAmortizacion ? prestamoId : null)
 
   const handleRegistrarPago = async (data: PagoFormData): Promise<void> => {
     try {
@@ -159,6 +171,17 @@ export function PrestamoDetail({
                 >
                   {formatMoney(displayPrestamo.monto_pendiente, displayPrestamo.moneda)}
                 </p>
+                {hasAmortizacion && displayPrestamo.total_intereses != null && (
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                    Total con intereses:{' '}
+                    <span className="font-medium text-[var(--text-primary)]">
+                      {formatMoney(
+                        displayPrestamo.monto_original + displayPrestamo.total_intereses,
+                        displayPrestamo.moneda
+                      )}
+                    </span>
+                  </p>
+                )}
               </div>
               <div className="text-right">
                 <p className="text-xs text-[var(--text-muted)]">Original</p>
@@ -276,6 +299,13 @@ export function PrestamoDetail({
                       <p className="text-sm font-medium text-[var(--text-primary)]">
                         {formatMoney(pago.monto, displayPrestamo.moneda)}
                       </p>
+                      {pago.monto_capital != null && pago.monto_interes != null && (
+                        <p className="text-xs text-[var(--text-muted)]">
+                          {formatMoney(pago.monto_capital, displayPrestamo.moneda)} capital
+                          {' + '}
+                          {formatMoney(pago.monto_interes, displayPrestamo.moneda)} interes
+                        </p>
+                      )}
                       {pago.notas && (
                         <p className="text-xs text-[var(--text-muted)]">{pago.notas}</p>
                       )}
@@ -307,6 +337,137 @@ export function PrestamoDetail({
                 onCancel={() => setShowPagoForm(false)}
                 isLoading={registrarPago.isPending}
               />
+            </div>
+          )}
+
+          {/* Tabla de amortizacion */}
+          {hasAmortizacion && (
+            <div>
+              <p className="text-sm font-semibold text-[var(--text-secondary)] mb-3">
+                Tabla de amortizacion
+              </p>
+
+              {loadingAmortizacion ? (
+                <div className="space-y-2">
+                  {[1, 2, 3, 4].map((i) => (
+                    <Skeleton key={i} className="h-12 w-full rounded-lg" />
+                  ))}
+                </div>
+              ) : amortizacion ? (
+                <>
+                  {/* Resumen cards */}
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    <div className="bg-[var(--surface-raised)] rounded-xl p-3">
+                      <p className="text-xs text-[var(--text-muted)]">Capital pagado</p>
+                      <p className="text-sm font-bold text-green-500 dark:text-finza-green tabular-nums mt-0.5">
+                        {formatMoney(amortizacion.resumen.total_pagado_capital, displayPrestamo.moneda)}
+                      </p>
+                    </div>
+                    <div className="bg-[var(--surface-raised)] rounded-xl p-3">
+                      <p className="text-xs text-[var(--text-muted)]">Intereses pagados</p>
+                      <p className="text-sm font-bold tabular-nums mt-0.5" style={{ color: 'var(--warning)' }}>
+                        {formatMoney(amortizacion.resumen.total_pagado_intereses, displayPrestamo.moneda)}
+                      </p>
+                    </div>
+                    <div className="bg-[var(--surface-raised)] rounded-xl p-3">
+                      <p className="text-xs text-[var(--text-muted)]">Capital pendiente</p>
+                      <p className="text-sm font-bold text-finza-blue tabular-nums mt-0.5">
+                        {formatMoney(amortizacion.resumen.monto_pendiente, displayPrestamo.moneda)}
+                      </p>
+                    </div>
+                    <div className="bg-[var(--surface-raised)] rounded-xl p-3">
+                      <p className="text-xs text-[var(--text-muted)]">Total intereses proyectados</p>
+                      <p className="text-sm font-bold text-[var(--text-muted)] tabular-nums mt-0.5">
+                        {formatMoney(amortizacion.resumen.total_intereses_proyectados, displayPrestamo.moneda)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-[var(--text-muted)] mb-2">
+                    {amortizacion.resumen.cuotas_pagadas} de {amortizacion.resumen.cuotas_totales} cuotas pagadas
+                  </p>
+
+                  {/* Toggle tabla completa */}
+                  <button
+                    type="button"
+                    onClick={() => setTablaExpanded((v) => !v)}
+                    className="flex items-center gap-2 text-xs font-medium text-finza-blue hover:text-finza-blue/80 transition-colors mb-2"
+                    aria-expanded={tablaExpanded}
+                  >
+                    {tablaExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    {tablaExpanded
+                      ? 'Ocultar tabla'
+                      : `Ver tabla completa (${amortizacion.resumen.cuotas_totales} cuotas)`}
+                  </button>
+
+                  {tablaExpanded && (
+                    <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-[var(--surface-raised)] border-b border-[var(--border)]">
+                            <th className="px-3 py-2 text-left text-[var(--text-muted)] font-semibold">#</th>
+                            <th className="px-3 py-2 text-left text-[var(--text-muted)] font-semibold">Fecha</th>
+                            <th className="px-3 py-2 text-right text-[var(--text-muted)] font-semibold">Cuota</th>
+                            <th className="px-3 py-2 text-right text-[var(--text-muted)] font-semibold">Capital</th>
+                            <th className="px-3 py-2 text-right text-[var(--text-muted)] font-semibold">Interes</th>
+                            <th className="px-3 py-2 text-right text-[var(--text-muted)] font-semibold">Saldo</th>
+                            <th className="px-3 py-2 text-center text-[var(--text-muted)] font-semibold">Estado</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {amortizacion.tabla.map((cuota, idx) => {
+                            const isProxima =
+                              !cuota.pagado &&
+                              (idx === 0 ||
+                                amortizacion.tabla[idx - 1]?.pagado === true)
+                            return (
+                              <tr
+                                key={cuota.numero}
+                                className={cn(
+                                  'border-b border-[var(--border)] last:border-0 transition-colors',
+                                  cuota.pagado
+                                    ? 'bg-green-50/50 dark:bg-green-950/20'
+                                    : isProxima
+                                    ? 'bg-blue-50/50 dark:bg-blue-950/20'
+                                    : 'hover:bg-[var(--surface-raised)]/50'
+                                )}
+                              >
+                                <td className="px-3 py-2 font-medium text-[var(--text-primary)]">
+                                  {cuota.numero}
+                                </td>
+                                <td className="px-3 py-2 text-[var(--text-muted)]">
+                                  {formatDate(cuota.fecha_estimada)}
+                                </td>
+                                <td className="px-3 py-2 text-right tabular-nums text-[var(--text-primary)]">
+                                  {formatMoney(cuota.cuota, displayPrestamo.moneda)}
+                                </td>
+                                <td className="px-3 py-2 text-right tabular-nums text-[var(--text-primary)]">
+                                  {formatMoney(cuota.capital, displayPrestamo.moneda)}
+                                </td>
+                                <td className="px-3 py-2 text-right tabular-nums" style={{ color: 'var(--warning)' }}>
+                                  {formatMoney(cuota.interes, displayPrestamo.moneda)}
+                                </td>
+                                <td className="px-3 py-2 text-right tabular-nums text-[var(--text-muted)]">
+                                  {formatMoney(cuota.saldo_restante, displayPrestamo.moneda)}
+                                </td>
+                                <td className="px-3 py-2 text-center">
+                                  {cuota.pagado ? (
+                                    <CheckCircle2 size={14} className="mx-auto text-green-500 dark:text-finza-green" />
+                                  ) : isProxima ? (
+                                    <span className="inline-block w-2 h-2 rounded-full bg-blue-500" aria-label="Proximo" />
+                                  ) : (
+                                    <span className="inline-block w-2 h-2 rounded-full bg-[var(--border)]" aria-label="Pendiente" />
+                                  )}
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              ) : null}
             </div>
           )}
         </div>

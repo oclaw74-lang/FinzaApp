@@ -1,21 +1,27 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Plus, CreditCard, Info, Pencil, Trash2, X } from 'lucide-react'
+import { Plus, CreditCard, Info, Pencil, Trash2, X, ShoppingCart, CreditCard as PayIcon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn } from '@/lib/utils'
+import { cn, formatMoney, formatDate } from '@/lib/utils'
 import {
   useTarjetas,
   useCreateTarjeta,
   useUpdateTarjeta,
   useDeleteTarjeta,
 } from '@/hooks/useTarjetas'
-import type { Tarjeta, TarjetaCreate, TarjetaUpdate } from '@/types/tarjeta'
+import {
+  useMovimientosTarjeta,
+  useRegistrarMovimiento,
+  useEliminarMovimiento,
+} from '@/hooks/useMovimientosTarjeta'
+import { useCategorias } from '@/hooks/useCategorias'
+import type { Tarjeta, TarjetaCreate, TarjetaUpdate, MovimientoTarjetaCreate } from '@/types/tarjeta'
 
 // ─── Zod schema ────────────────────────────────────────────────────────────────
 
@@ -493,6 +499,169 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
   )
 }
 
+// ─── Movimiento modal ──────────────────────────────────────────────────────────
+
+const MovimientoSchema = z.object({
+  tipo: z.enum(['compra', 'pago']),
+  monto: z.coerce.number({ invalid_type_error: 'Ingresa un monto' }).positive('Debe ser mayor a 0'),
+  descripcion: z.string().optional(),
+  fecha: z.string().min(1, 'La fecha es requerida'),
+  categoria_id: z.string().optional(),
+  notas: z.string().optional(),
+})
+
+type MovimientoFormData = z.infer<typeof MovimientoSchema>
+
+interface MovimientoModalProps {
+  tarjetaId: string
+  tipoInicial: 'compra' | 'pago'
+  onClose: () => void
+}
+
+function MovimientoModal({ tarjetaId, tipoInicial, onClose }: MovimientoModalProps): JSX.Element {
+  const registrar = useRegistrarMovimiento(tarjetaId)
+  const { data: todasCategorias = [] } = useCategorias()
+  const categoriasEgreso = todasCategorias.filter((c) => c.tipo === 'egreso' || c.tipo === 'ambos')
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<MovimientoFormData>({
+    resolver: zodResolver(MovimientoSchema),
+    defaultValues: {
+      tipo: tipoInicial,
+      fecha: new Date().toISOString().split('T')[0],
+    },
+  })
+
+  const tipo = watch('tipo')
+
+  const onSubmit = async (data: MovimientoFormData): Promise<void> => {
+    try {
+      const payload: MovimientoTarjetaCreate = {
+        tipo: data.tipo,
+        monto: data.monto,
+        fecha: data.fecha,
+        descripcion: data.descripcion || undefined,
+        notas: data.notas || undefined,
+        categoria_id: data.tipo === 'compra' ? data.categoria_id : undefined,
+      }
+      await registrar.mutateAsync(payload)
+      toast.success(data.tipo === 'compra' ? 'Compra registrada' : 'Pago registrado')
+      onClose()
+    } catch {
+      toast.error('Error al registrar movimiento')
+    }
+  }
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="mov-modal-title"
+    >
+      <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
+      <div className="relative bg-white dark:bg-[#0d1520] dark:border dark:border-white/[0.08] rounded-2xl shadow-2xl w-full max-w-sm p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 id="mov-modal-title" className="text-base font-semibold text-[var(--text-primary)]">
+            Registrar movimiento
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+            aria-label="Cerrar"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Tipo</label>
+            <select {...register('tipo')} className="finza-input w-full">
+              <option value="compra">Compra</option>
+              <option value="pago">Pago</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Monto</label>
+            <input
+              {...register('monto')}
+              type="number"
+              step="0.01"
+              min="0.01"
+              placeholder="0.00"
+              className="finza-input w-full"
+            />
+            {errors.monto && <p className="text-xs text-red-500 mt-1">{errors.monto.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Fecha</label>
+            <input {...register('fecha')} type="date" className="finza-input w-full" />
+            {errors.fecha && <p className="text-xs text-red-500 mt-1">{errors.fecha.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
+              Descripcion (opcional)
+            </label>
+            <input
+              {...register('descripcion')}
+              type="text"
+              placeholder="Ej: Supermercado, Pago minimo..."
+              className="finza-input w-full"
+            />
+          </div>
+
+          {tipo === 'compra' && (
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
+                Categoria (opcional)
+              </label>
+              <select {...register('categoria_id')} className="finza-input w-full">
+                <option value="">Sin categoria</option>
+                {categoriasEgreso.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
+              Notas (opcional)
+            </label>
+            <textarea
+              {...register('notas')}
+              rows={2}
+              placeholder="Notas adicionales..."
+              className="finza-input w-full resize-none"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={registrar.isPending} className="flex-1">
+              {registrar.isPending ? 'Guardando...' : 'Registrar'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>,
+    document.body
+  )
+}
+
 // ─── Detail modal ──────────────────────────────────────────────────────────────
 
 interface DetailModalProps {
@@ -501,6 +670,8 @@ interface DetailModalProps {
   onEdit: (t: Tarjeta) => void
   onDelete: (id: string) => void
 }
+
+type MovimientoTab = 'todos' | 'compra' | 'pago'
 
 function getNextDayOfMonth(day: number): string {
   const now = new Date()
@@ -513,95 +684,234 @@ function getNextDayOfMonth(day: number): string {
 
 function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): JSX.Element {
   const fmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 })
+  const [movTab, setMovTab] = useState<MovimientoTab>('todos')
+  const [movModalTipo, setMovModalTipo] = useState<'compra' | 'pago' | null>(null)
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Detalle ${tarjeta.banco}`}
-    >
-      <div
-        className="absolute inset-0"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      <div className="relative bg-white dark:bg-[#0d1520] dark:border dark:border-white/[0.08] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">{tarjeta.banco}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-            aria-label="Cerrar"
-          >
-            <X size={18} />
-          </button>
-        </div>
+  const tabFiltro = movTab === 'todos' ? undefined : movTab
+  const { data: movimientos = [], isLoading: loadingMovs } = useMovimientosTarjeta(tarjeta.id, tabFiltro)
+  const eliminarMovimiento = useEliminarMovimiento(tarjeta.id)
 
-        <CardVisual tarjeta={tarjeta} />
+  const handleEliminar = async (movimientoId: string): Promise<void> => {
+    if (!window.confirm('Eliminar este movimiento?')) return
+    try {
+      await eliminarMovimiento.mutateAsync(movimientoId)
+      toast.success('Movimiento eliminado')
+    } catch {
+      toast.error('Error al eliminar movimiento')
+    }
+  }
 
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-[var(--text-muted)]">Tipo</span>
-            <span className="text-[var(--text-primary)] capitalize">{tarjeta.tipo}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[var(--text-muted)]">Red</span>
-            <span className="text-[var(--text-primary)] capitalize">{tarjeta.red}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[var(--text-muted)]">Saldo actual</span>
-            <span className="text-[var(--text-primary)]">{fmt.format(tarjeta.saldo_actual)}</span>
-          </div>
-          {tarjeta.tipo === 'credito' && tarjeta.limite_credito && (
-            <>
-              <div className="flex justify-between">
-                <span className="text-[var(--text-muted)]">Limite</span>
-                <span className="text-[var(--text-primary)]">{fmt.format(tarjeta.limite_credito)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[var(--text-muted)]">Disponible</span>
-                <span className="text-green-500 dark:text-finza-green font-medium">{fmt.format(tarjeta.disponible ?? 0)}</span>
-              </div>
-              <UtilizationBar saldo={tarjeta.saldo_actual} limite={tarjeta.limite_credito} />
-            </>
-          )}
-          {tarjeta.fecha_corte && (
-            <div className="flex justify-between">
-              <span className="text-[var(--text-muted)]">Proximo corte</span>
-              <span className="text-[var(--text-primary)]">{getNextDayOfMonth(tarjeta.fecha_corte)}</span>
+  return (
+    <>
+      {createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Detalle ${tarjeta.banco}`}
+        >
+          <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
+          <div className="relative bg-white dark:bg-[#0d1520] dark:border dark:border-white/[0.08] rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-[var(--border)]">
+              <h2 className="text-base font-semibold text-[var(--text-primary)]">{tarjeta.banco}</h2>
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                aria-label="Cerrar"
+              >
+                <X size={18} />
+              </button>
             </div>
-          )}
-          {tarjeta.fecha_pago && (
-            <div className="flex justify-between">
-              <span className="text-[var(--text-muted)]">Proximo pago</span>
-              <span className="text-[var(--text-primary)]">{getNextDayOfMonth(tarjeta.fecha_pago)}</span>
-            </div>
-          )}
-        </div>
 
-        <div className="flex gap-3 pt-2">
-          <Button
-            variant="outline"
-            className="flex-1 gap-2"
-            onClick={() => { onClose(); onEdit(tarjeta) }}
-          >
-            <Pencil size={14} />
-            Editar
-          </Button>
-          <Button
-            variant="destructive"
-            className="flex-1 gap-2"
-            onClick={() => onDelete(tarjeta.id)}
-          >
-            <Trash2 size={14} />
-            Eliminar
-          </Button>
-        </div>
-      </div>
-    </div>,
-    document.body
+            <div className="p-5 space-y-5">
+              <CardVisual tarjeta={tarjeta} />
+
+              {/* Resumen financiero */}
+              <div className="space-y-2 text-sm">
+                {tarjeta.tipo === 'credito' ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-[var(--surface-raised)] rounded-xl p-3 text-center">
+                      <p className="text-xs text-[var(--text-muted)] mb-1">Deuda</p>
+                      <p className="text-sm font-bold text-red-500 dark:text-finza-red tabular-nums">
+                        {fmt.format(tarjeta.saldo_actual)}
+                      </p>
+                    </div>
+                    <div className="bg-[var(--surface-raised)] rounded-xl p-3 text-center">
+                      <p className="text-xs text-[var(--text-muted)] mb-1">Disponible</p>
+                      <p className="text-sm font-bold text-green-500 dark:text-finza-green tabular-nums">
+                        {fmt.format(tarjeta.disponible ?? 0)}
+                      </p>
+                    </div>
+                    <div className="bg-[var(--surface-raised)] rounded-xl p-3 text-center">
+                      <p className="text-xs text-[var(--text-muted)] mb-1">Limite</p>
+                      <p className="text-sm font-bold text-[var(--text-primary)] tabular-nums">
+                        {fmt.format(tarjeta.limite_credito ?? 0)}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-[var(--surface-raised)] rounded-xl p-3">
+                    <p className="text-xs text-[var(--text-muted)] mb-1">Saldo disponible</p>
+                    <p className="text-lg font-bold text-[var(--text-primary)] tabular-nums">
+                      {fmt.format(tarjeta.saldo_actual)}
+                    </p>
+                  </div>
+                )}
+
+                {tarjeta.tipo === 'credito' && tarjeta.limite_credito && (
+                  <UtilizationBar saldo={tarjeta.saldo_actual} limite={tarjeta.limite_credito} />
+                )}
+
+                <div className="flex gap-3 pt-1 text-xs text-[var(--text-muted)]">
+                  {tarjeta.fecha_corte && (
+                    <span>Corte: dia {tarjeta.fecha_corte} ({getNextDayOfMonth(tarjeta.fecha_corte)})</span>
+                  )}
+                  {tarjeta.fecha_pago && (
+                    <span>Pago: dia {tarjeta.fecha_pago} ({getNextDayOfMonth(tarjeta.fecha_pago)})</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Botones de accion rapida */}
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="flex-1 gap-1"
+                  onClick={() => setMovModalTipo('compra')}
+                >
+                  <ShoppingCart size={14} />
+                  + Registrar compra
+                </Button>
+                <Button
+                  size="sm"
+                  variant="success"
+                  className="flex-1 gap-1"
+                  onClick={() => setMovModalTipo('pago')}
+                >
+                  <PayIcon size={14} />
+                  Registrar pago
+                </Button>
+              </div>
+
+              {/* Historial de movimientos */}
+              <div>
+                <p className="text-sm font-semibold text-[var(--text-secondary)] mb-3">Movimientos</p>
+
+                {/* Tabs */}
+                <div className="flex gap-1 mb-3 bg-[var(--surface-raised)] rounded-lg p-1" role="tablist">
+                  {(['todos', 'compra', 'pago'] as MovimientoTab[]).map((tab) => (
+                    <button
+                      key={tab}
+                      type="button"
+                      role="tab"
+                      aria-selected={movTab === tab}
+                      onClick={() => setMovTab(tab)}
+                      className={cn(
+                        'flex-1 py-1.5 px-2 rounded-md text-xs font-medium transition-colors',
+                        movTab === tab
+                          ? 'bg-white dark:bg-[#1a2535] text-[var(--text-primary)] shadow-sm'
+                          : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                      )}
+                    >
+                      {tab === 'todos' ? 'Todos' : tab === 'compra' ? 'Compras' : 'Pagos'}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Lista */}
+                {loadingMovs ? (
+                  <div className="space-y-2">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-12 w-full rounded-lg" />
+                    ))}
+                  </div>
+                ) : movimientos.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-xs text-[var(--text-muted)]">Sin movimientos registrados</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {movimientos.map((mov) => (
+                      <div
+                        key={mov.id}
+                        className="flex items-center justify-between py-2 px-3 bg-[var(--surface-raised)] rounded-lg"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-base" aria-hidden="true">
+                            {mov.tipo === 'compra' ? '🛒' : '💳'}
+                          </span>
+                          <div>
+                            <p className="text-xs font-medium text-[var(--text-primary)] leading-tight">
+                              {mov.descripcion ?? (mov.tipo === 'compra' ? 'Compra' : 'Pago')}
+                            </p>
+                            <p className="text-[10px] text-[var(--text-muted)]">
+                              {formatDate(mov.fecha)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={cn(
+                              'text-sm font-bold tabular-nums',
+                              mov.tipo === 'compra'
+                                ? 'text-red-500 dark:text-finza-red'
+                                : 'text-green-500 dark:text-finza-green'
+                            )}
+                          >
+                            {mov.tipo === 'compra' ? '-' : '+'}
+                            {formatMoney(mov.monto)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleEliminar(mov.id)}
+                            className="text-[var(--text-subtle)] hover:text-red-500 transition-colors"
+                            aria-label="Eliminar movimiento"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Acciones */}
+              <div className="flex gap-3 pt-1">
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2"
+                  onClick={() => { onClose(); onEdit(tarjeta) }}
+                >
+                  <Pencil size={14} />
+                  Editar
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="flex-1 gap-2"
+                  onClick={() => onDelete(tarjeta.id)}
+                >
+                  <Trash2 size={14} />
+                  Eliminar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {movModalTipo && (
+        <MovimientoModal
+          tarjetaId={tarjeta.id}
+          tipoInicial={movModalTipo}
+          onClose={() => setMovModalTipo(null)}
+        />
+      )}
+    </>
   )
 }
 

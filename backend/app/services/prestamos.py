@@ -1,3 +1,4 @@
+import math
 from calendar import monthrange
 from datetime import date, datetime, timezone
 from decimal import Decimal
@@ -307,15 +308,18 @@ def registrar_pago(
 
     # Auto-create egreso to reflect the payment in the user's balance
     try:
+        # Extract pago_id from RPC result for traceability
+        pago_id = result.data.get("pago_id") if isinstance(result.data, dict) else None
+
         prestamo_r = (
             client.table("prestamos")
-            .select("nombre")
+            .select("persona")
             .eq("id", prestamo_id)
             .maybe_single()
             .execute()
         )
-        prestamo_nombre = (
-            prestamo_r.data["nombre"]
+        prestamo_persona = (
+            prestamo_r.data["persona"]
             if (prestamo_r and prestamo_r.data)
             else "prestamo"
         )
@@ -334,13 +338,15 @@ def registrar_pago(
             "user_id": user_id,
             "monto": str(data.monto),
             "moneda": "DOP",
-            "descripcion": f"Pago: {prestamo_nombre}",
+            "descripcion": f"Pago prestamo: {prestamo_persona}",
             "metodo_pago": "transferencia",
             "fecha": str(data.fecha),
             "categoria_id": cat_id,
         }
         if data.notas:
             egreso_payload["notas"] = data.notas
+        if pago_id:
+            egreso_payload["pago_prestamo_id"] = str(pago_id)
 
         client.table("egresos").insert(egreso_payload).execute()
     except Exception:
@@ -414,6 +420,84 @@ def delete_pago(
     except APIError as e:
         _handle_api_error(e)
     return {}
+
+
+def generar_tabla_amortizacion(
+    monto_original: float,
+    tasa_interes_anual: float | None,
+    plazo_meses: int,
+    fecha_inicio: date,
+    pagos_registrados: list[dict],
+) -> list[dict]:
+    """
+    Generate French amortization schedule.
+
+    pagos_registrados: list of payment records with numero_cuota,
+                       monto_capital, monto_interes, monto, fecha.
+    Returns one row per installment with projected vs. actual data.
+    """
+    if not plazo_meses or plazo_meses <= 0:
+        return []
+
+    tasa_mensual = (tasa_interes_anual or 0) / 100.0 / 12.0
+    saldo = float(monto_original)
+
+    if tasa_mensual > 0:
+        cuota = saldo * (tasa_mensual * math.pow(1 + tasa_mensual, plazo_meses)) / (
+            math.pow(1 + tasa_mensual, plazo_meses) - 1
+        )
+    else:
+        cuota = saldo / plazo_meses
+
+    pagos_por_cuota: dict[int, dict] = {
+        p["numero_cuota"]: p
+        for p in pagos_registrados
+        if p.get("numero_cuota") is not None
+    }
+
+    tabla: list[dict] = []
+
+    for i in range(1, plazo_meses + 1):
+        # Compute estimated payment date: fecha_inicio + i months (manual, no dateutil)
+        year = fecha_inicio.year
+        month = fecha_inicio.month + i
+        while month > 12:
+            month -= 12
+            year += 1
+        max_day = monthrange(year, month)[1]
+        dia = min(fecha_inicio.day, max_day)
+        fecha_estimada = date(year, month, dia)
+
+        interes = round(saldo * tasa_mensual, 2)
+        capital = round(cuota - interes, 2)
+
+        # Clamp last installment to remaining balance
+        if capital > saldo or i == plazo_meses:
+            capital = round(saldo, 2)
+            cuota_real = capital + interes
+        else:
+            cuota_real = round(cuota, 2)
+
+        saldo = max(round(saldo - capital, 2), 0)
+
+        pago_real = pagos_por_cuota.get(i)
+        tabla.append({
+            "numero": i,
+            "fecha_estimada": str(fecha_estimada),
+            "cuota": cuota_real,
+            "capital": capital,
+            "interes": interes,
+            "saldo_restante": saldo,
+            "pagado": pago_real is not None,
+            "pago_real": {
+                "monto": float(pago_real.get("monto", 0)),
+                "capital": float(pago_real.get("monto_capital") or 0),
+                "interes": float(pago_real.get("monto_interes") or 0),
+                "fecha": pago_real.get("fecha"),
+            } if pago_real else None,
+        })
+
+    return tabla
 
 
 def get_resumen(user_jwt: str, user_id: str) -> dict:

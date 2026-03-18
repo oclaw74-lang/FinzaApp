@@ -17,6 +17,7 @@ import type {
   PrestamoResumen,
   TipoPrestamo,
   EstadoPrestamo,
+  TablaAmortizacionResponse,
 } from '@/types/prestamo'
 
 interface PrestamosFilters {
@@ -116,6 +117,18 @@ export function useRegistrarPago(prestamoId: string) {
       queryClient.invalidateQueries({ queryKey: ['egresos'] })
       DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
+  })
+}
+
+export function useTablaAmortizacion(prestamoId: string | null) {
+  return useQuery<TablaAmortizacionResponse>({
+    queryKey: ['amortizacion', prestamoId],
+    queryFn: async () => {
+      const res = await apiClient.get<TablaAmortizacionResponse>(`/prestamos/${prestamoId}/amortizacion`)
+      return res.data
+    },
+    enabled: !!prestamoId,
+    staleTime: 30_000,
   })
 }
 
