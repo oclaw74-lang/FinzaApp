@@ -43,7 +43,7 @@ const QUICK_ACTIONS: QuickAction[] = [
 ]
 
 const NAV_ITEMS = [
-  { to: '/', icon: <BarChart3 size={22} />, label: 'Dashboard', end: true },
+  { to: '/dashboard', icon: <BarChart3 size={22} />, label: 'Dashboard', end: true },
   { to: '/ingresos', icon: <TrendingUp size={22} />, label: 'Ingresos', end: false },
   { to: '/egresos', icon: <TrendingDown size={22} />, label: 'Egresos', end: false },
   { to: '/metas', icon: <PiggyBank size={22} />, label: 'Metas', end: false },

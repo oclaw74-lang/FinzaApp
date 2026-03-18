@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { I18nextProvider } from 'react-i18next'
 import { Toaster } from 'sonner'
@@ -7,6 +7,7 @@ import i18n from './i18n'
 import { useAuthStore } from '@/store/authStore'
 import { ProtectedRoute } from '@/components/shared/ProtectedRoute'
 import { Layout } from '@/components/shared/Layout'
+import { LandingPage } from '@/pages/LandingPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { RegisterPage } from '@/pages/RegisterPage'
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage'
@@ -37,6 +38,30 @@ const queryClient = new QueryClient({
   },
 })
 
+function RootRoute(): JSX.Element {
+  const { session, isLoading } = useAuthStore()
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#04080f]">
+        <div className="flex flex-col items-center gap-4">
+          <svg className="animate-spin h-8 w-8 text-finza-blue" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <p className="text-sm text-white/40">Cargando Finza...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (session) {
+    return <Navigate to="/dashboard" replace />
+  }
+
+  return <LandingPage />
+}
+
 export function App(): JSX.Element {
   const { initialize } = useAuthStore()
 
@@ -63,13 +88,14 @@ export function App(): JSX.Element {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <Routes>
+            <Route path="/" element={<RootRoute />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
-                <Route path="/" element={<DashboardPage />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/ingresos" element={<IngresosPage />} />
                 <Route path="/egresos" element={<EgresosPage />} />
                 <Route path="/prestamos" element={<PrestamosPage />} />

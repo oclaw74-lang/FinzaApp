@@ -91,7 +91,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps): JSX.Ele
     } finally {
       setIsSubmitting(false)
       onComplete()
-      navigate('/')
+      navigate('/dashboard')
     }
   }
 

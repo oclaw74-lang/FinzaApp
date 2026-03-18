@@ -42,7 +42,7 @@ const navGroups: NavGroup[] = [
     sectionKey: 'principal',
     label: 'PRINCIPAL',
     items: [
-      { to: '/', icon: LayoutDashboard, labelKey: 'nav.dashboard' },
+      { to: '/dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard' },
       { to: '/ingresos', icon: TrendingUp, labelKey: 'nav.ingresos' },
       { to: '/egresos', icon: TrendingDown, labelKey: 'nav.egresos' },
       { to: '/presupuestos', icon: PieChart, labelKey: 'nav.presupuestos' },
@@ -191,11 +191,13 @@ export function Sidebar(): JSX.Element {
             aria-label={sidebarCollapsed ? 'Expandir sidebar' : undefined}
             tabIndex={sidebarCollapsed ? 0 : -1}
           >
-            <img
-              src="/logo-icon-dark.png"
-              alt="Finza"
-              className="w-9 h-9 rounded-xl shrink-0 object-cover"
-            />
+            <div className="w-9 h-9 rounded-xl shrink-0 overflow-hidden">
+              <img
+                src="/logo-icon-dark.png"
+                alt="Finza"
+                className="w-full h-full object-cover scale-[1.08]"
+              />
+            </div>
             {!sidebarCollapsed && (
               <span
                 className="font-bold text-lg tracking-tight truncate"

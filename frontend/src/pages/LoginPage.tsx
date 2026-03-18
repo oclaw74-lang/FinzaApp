@@ -51,8 +51,11 @@ function BrandPanel(): JSX.Element {
       />
 
       {/* Logo */}
-      <div className="relative z-10">
-        <img src="/logo-full.png" alt="Finza" className="h-12 object-contain mb-6" />
+      <div className="relative z-10 flex items-center gap-3 mb-6">
+        <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0">
+          <img src="/logo-icon-dark.png" alt="Finza" className="w-full h-full object-cover scale-[1.08]" />
+        </div>
+        <span className="text-2xl font-bold text-white tracking-tight">Finza</span>
       </div>
 
       {/* Content */}
@@ -121,7 +124,10 @@ function LoginFormCard({
     <div className="w-full max-w-md space-y-6">
       {/* Mobile logo */}
       <div className="lg:hidden flex items-center gap-2 mb-2">
-        <img src="/logo-full.png" alt="Finza" className="h-9 object-contain" />
+        <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0">
+          <img src="/logo-icon-dark.png" alt="Finza" className="w-full h-full object-cover scale-[1.08]" />
+        </div>
+        <span className="text-xl font-bold text-[var(--text-primary)] tracking-tight">Finza</span>
       </div>
 
       {/* Glass card form */}
@@ -277,11 +283,11 @@ export function LoginPage(): JSX.Element {
     if (authData.session) {
       setSession(authData.session)
     }
-    navigate('/')
+    navigate('/dashboard')
   }
 
   if (!isLoading && session) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   return (
