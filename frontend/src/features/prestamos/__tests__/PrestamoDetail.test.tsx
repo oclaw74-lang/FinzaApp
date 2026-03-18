@@ -119,7 +119,8 @@ describe('PrestamoDetail', () => {
     setupMocks()
     render(<PrestamoDetail {...defaultProps} />)
     expect(screen.getByText('Juan Banco')).toBeInTheDocument()
-    expect(screen.getByText('Yo debo')).toBeInTheDocument()
+    // "Yo debo" is inline with "· activo" in same <p>, use partial match
+    expect(screen.getByText(/Yo debo/)).toBeInTheDocument()
   })
 
   it('shows loading state while fetching', () => {
@@ -254,7 +255,7 @@ describe('PrestamoDetail', () => {
     setupMocks(prestamoConPagos, mockAmortizacion)
     render(<PrestamoDetail {...defaultProps} />)
 
-    expect(screen.getByText(/capital/)).toBeInTheDocument()
-    expect(screen.getByText(/interes/)).toBeInTheDocument()
+    expect(screen.getByText(/capital/i)).toBeInTheDocument()
+    expect(screen.getByText(/interes/i)).toBeInTheDocument()
   })
 })
