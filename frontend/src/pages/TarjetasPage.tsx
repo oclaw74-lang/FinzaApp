@@ -85,18 +85,23 @@ interface CardVisualProps {
 }
 
 function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
-  const formattedBalance = new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    maximumFractionDigits: 0,
-  }).format(tarjeta.saldo_actual)
+  const fmt = (v: number) =>
+    new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 }).format(v)
+
+  const isCredit = tarjeta.tipo === 'credito'
+  const disponible = isCredit
+    ? (tarjeta.limite_credito ?? 0) - tarjeta.saldo_actual
+    : tarjeta.saldo_actual
+  const pct = tarjeta.limite_credito
+    ? Math.min(100, (tarjeta.saldo_actual / tarjeta.limite_credito) * 100)
+    : 0
 
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        'relative w-full text-white overflow-hidden',
+        'relative w-full text-white overflow-hidden text-left',
         'transition-all duration-250 ease-out',
         'hover:-translate-y-1 hover:scale-[1.01] hover:shadow-[0_20px_60px_rgba(0,0,0,0.5)]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50',
@@ -104,14 +109,17 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
       )}
       style={{
         background: getCardGradient(tarjeta.red, tarjeta.tipo, tarjeta.color),
-        minHeight: 180,
+        minHeight: 220,
         borderRadius: '22px',
-        padding: '28px',
+        padding: '24px 28px 20px',
         border: '1px solid rgba(255,255,255,0.1)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
       }}
       aria-label={`Tarjeta ${tarjeta.banco}`}
     >
-      {/* Glare overlay (replicates ::before from mockup) */}
+      {/* Glare overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -121,76 +129,102 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
         aria-hidden="true"
       />
 
-      {/* Chip SVG */}
-      <div className="absolute top-7 left-7">
-        <svg width="40" height="30" viewBox="0 0 40 30" aria-hidden="true">
+      {/* Row 1: Chip (izq) + Tipo & Red (der) */}
+      <div className="flex items-start justify-between">
+        <svg width="38" height="28" viewBox="0 0 40 30" aria-hidden="true">
           <rect x="2" y="2" width="36" height="26" rx="4" fill="#d4a017" stroke="#b8860b" strokeWidth="0.5" />
           <rect x="2" y="11" width="36" height="8" fill="#b8860b" opacity="0.7" />
           <rect x="15" y="2" width="10" height="26" fill="#b8860b" opacity="0.7" />
           <rect x="8" y="2" width="2" height="26" fill="#b8860b" opacity="0.4" />
           <rect x="30" y="2" width="2" height="26" fill="#b8860b" opacity="0.4" />
         </svg>
+        <div className="text-right">
+          <p className="font-semibold" style={{ fontSize: '11px', opacity: 0.9, letterSpacing: '0.05em' }}>
+            {isCredit ? 'Crédito' : 'Débito'}
+          </p>
+          <p className="uppercase tracking-widest" style={{ fontSize: '10px', opacity: 0.45, marginTop: '2px' }}>
+            {tarjeta.red}
+          </p>
+        </div>
       </div>
 
-      {/* Bank name + tipo badge */}
-      <div className="absolute top-7 right-7 text-right">
-        <p
-          className="font-semibold tracking-widest uppercase"
-          style={{ fontSize: '10px', opacity: 0.55 }}
-        >
-          {tarjeta.banco}
+      {/* Row 2: Número */}
+      <p
+        className="font-mono text-white/90"
+        style={{ fontSize: '15px', fontWeight: 600, letterSpacing: '0.2em', marginTop: '4px' }}
+      >
+        •••• •••• •••• {tarjeta.ultimos_digitos}
+      </p>
+
+      {/* Row 3: Banco */}
+      <p className="uppercase tracking-widest text-white/50" style={{ fontSize: '10px' }}>
+        {tarjeta.banco}
+      </p>
+
+      {/* Row 4: Disponible */}
+      <div>
+        <p className="uppercase text-white/45" style={{ fontSize: '10px', letterSpacing: '0.08em', marginBottom: '2px' }}>
+          {isCredit ? 'Disponible' : 'Saldo'}
         </p>
-        {!tarjeta.activa && (
-          <span className="text-xs bg-white/20 rounded px-1.5 py-0.5 mt-1 inline-block">Inactiva</span>
+        <p
+          className="font-bold tabular-nums"
+          style={{
+            fontSize: '24px',
+            letterSpacing: '-0.03em',
+            color: isCredit ? '#00dfa2' : '#e8f0ff',
+          }}
+        >
+          {fmt(disponible)}
+        </p>
+        {isCredit && tarjeta.limite_credito && (
+          <p className="text-white/35" style={{ fontSize: '10px', marginTop: '2px' }}>
+            Disponible de {fmt(tarjeta.limite_credito)}
+          </p>
         )}
       </div>
 
-      {/* Card number */}
-      <div
-        className="absolute font-mono text-white/90"
-        style={{
-          bottom: '56px',
-          left: '28px',
-          fontSize: '16px',
-          fontWeight: 600,
-          letterSpacing: '0.2em',
-        }}
-      >
-        •••• •••• •••• {tarjeta.ultimos_digitos}
+      {/* Row 5: Campos Titular / Corte / Saldo */}
+      <div className="flex gap-4 mt-auto">
+        {tarjeta.titular && (
+          <div>
+            <p className="text-white/35 uppercase" style={{ fontSize: '9px', letterSpacing: '0.06em' }}>Titular</p>
+            <p className="text-white/75 font-medium truncate max-w-[100px]" style={{ fontSize: '11px' }}>{tarjeta.titular}</p>
+          </div>
+        )}
+        {tarjeta.fecha_corte && (
+          <div>
+            <p className="text-white/35 uppercase" style={{ fontSize: '9px', letterSpacing: '0.06em' }}>Corte</p>
+            <p className="text-white/75 font-medium" style={{ fontSize: '11px' }}>Día {tarjeta.fecha_corte}</p>
+          </div>
+        )}
+        {isCredit && (
+          <div>
+            <p className="text-white/35 uppercase" style={{ fontSize: '9px', letterSpacing: '0.06em' }}>Saldo</p>
+            <p className="font-medium tabular-nums" style={{ fontSize: '11px', color: '#ff8080' }}>{fmt(tarjeta.saldo_actual)}</p>
+          </div>
+        )}
       </div>
 
-      {/* Footer */}
-      <div
-        className="absolute flex items-end justify-between"
-        style={{ bottom: '28px', left: '28px', right: '28px' }}
-      >
-        <div>
-          <p
-            className="uppercase text-white/50"
-            style={{ fontSize: '10px', letterSpacing: '0.08em', marginBottom: '2px' }}
-          >
-            Saldo
-          </p>
-          <p
-            className="text-white font-bold tabular-nums"
-            style={{ fontSize: '26px', letterSpacing: '-0.03em' }}
-          >
-            {formattedBalance}
-          </p>
+      {/* Row 6: Progress bar de utilización (credit only) */}
+      {isCredit && tarjeta.limite_credito && (
+        <div style={{ marginTop: '4px' }}>
+          <div style={{ height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>
+            <div
+              style={{
+                height: '100%',
+                width: `${pct}%`,
+                borderRadius: '2px',
+                background: pct > 70 ? '#ff4060' : pct > 40 ? '#ffb340' : '#00dfa2',
+                transition: 'width 0.3s ease',
+              }}
+            />
+          </div>
+          <div className="flex justify-between text-white/30 mt-1" style={{ fontSize: '9px' }}>
+            <span>{pct.toFixed(0)}% utilizado</span>
+            <span>{fmt(tarjeta.saldo_actual)} usado</span>
+          </div>
         </div>
-        <span
-          className="font-semibold"
-          style={{
-            fontSize: '10px',
-            padding: '4px 10px',
-            borderRadius: '20px',
-            background: tarjeta.tipo === 'debito' ? 'rgba(0,223,162,0.2)' : 'rgba(61,142,248,0.2)',
-            color: tarjeta.tipo === 'debito' ? 'rgba(150,255,220,0.9)' : 'rgba(200,220,255,0.9)',
-          }}
-        >
-          {tarjeta.tipo === 'credito' ? 'Crédito' : 'Débito'}
-        </span>
-      </div>
+      )}
     </button>
   )
 }
@@ -694,7 +728,7 @@ export function TarjetasPage(): JSX.Element {
   )
 
   return (
-    <div className="animate-fade-in p-6 md:p-8 space-y-6">
+    <div className="animate-fade-in p-4 md:p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

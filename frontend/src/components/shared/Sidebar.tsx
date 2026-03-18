@@ -11,6 +11,8 @@ import {
   Shield,
   Bell,
   Settings,
+  Trophy,
+  BookOpen,
   X,
   ChevronLeft,
   ChevronRight,
@@ -62,6 +64,8 @@ const navGroups: NavGroup[] = [
     label: 'ANALISIS',
     items: [
       { to: '/notificaciones', icon: Bell, labelKey: 'nav.notificaciones' },
+      { to: '/retos', icon: Trophy, labelKey: 'nav.retos' },
+      { to: '/educacion', icon: BookOpen, labelKey: 'nav.educacion' },
       { to: '/configuracion', icon: Settings, labelKey: 'nav.configuracion' },
     ],
   },

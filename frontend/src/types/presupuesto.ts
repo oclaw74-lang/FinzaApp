@@ -14,6 +14,7 @@ export interface PresupuestoCreate {
   mes: number
   year: number
   monto_limite: number
+  aplicar_todos_los_meses?: boolean
 }
 
 export interface PresupuestoUpdate {

@@ -104,7 +104,7 @@ export function IngresosPage(): JSX.Element {
   }
 
   return (
-    <div className="animate-fade-in p-6 md:p-8 space-y-6">
+    <div className="animate-fade-in p-4 md:p-6 space-y-6">
       {/* Stats chips */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-5">
         <div className="card-glass p-5 flex items-center gap-3">

@@ -69,7 +69,7 @@ export function Layout(): JSX.Element {
       >
         <Header />
         <StatsBar />
-        <main className="flex-1 p-6 pb-20 md:pb-6">
+        <main className="flex-1 pb-20 md:pb-0">
           <div className="animate-fade-in">
             <Outlet />
           </div>

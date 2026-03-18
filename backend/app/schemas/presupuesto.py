@@ -9,6 +9,7 @@ class PresupuestoCreate(BaseModel):
     mes: int = Field(..., ge=1, le=12)
     year: int = Field(..., ge=2000)
     monto_limite: float = Field(..., gt=0)
+    aplicar_todos_los_meses: bool = False
 
 
 class PresupuestoUpdate(BaseModel):

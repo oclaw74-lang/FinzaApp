@@ -173,14 +173,14 @@ describe('Sidebar', () => {
     expect(screen.queryByText('Suscripciones')).not.toBeInTheDocument()
   })
 
-  it('does not render Retos in nav', () => {
+  it('renders Retos in nav', () => {
     renderSidebar()
-    expect(screen.queryByText('Retos')).not.toBeInTheDocument()
+    expect(screen.getByText('Retos')).toBeInTheDocument()
   })
 
-  it('does not render Educacion in nav', () => {
+  it('renders Educacion in nav', () => {
     renderSidebar()
-    expect(screen.queryByText('Educacion')).not.toBeInTheDocument()
+    expect(screen.getByText('Educacion')).toBeInTheDocument()
   })
 
   it('does not render Reportes in nav', () => {

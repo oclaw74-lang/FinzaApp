@@ -122,7 +122,10 @@ export function StatsBar(): JSX.Element {
         WebkitBackdropFilter: 'blur(16px)',
       }}
     >
-      <div className="flex items-center gap-1 flex-1 overflow-x-auto scrollbar-none">
+      <div
+        className="flex items-center gap-1 flex-1 overflow-x-auto min-w-0"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
         <StatItem
           label="Balance"
           value={formatCurrency(balance)}

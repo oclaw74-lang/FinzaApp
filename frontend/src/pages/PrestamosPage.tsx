@@ -17,9 +17,7 @@ import {
   useDeletePrestamo,
 } from '@/hooks/usePrestamos'
 import type { PrestamoFormData } from '@/features/prestamos/components/PrestamoForm'
-import type { Prestamo, TipoPrestamo } from '@/types/prestamo'
-
-type TabActiva = TipoPrestamo
+import type { Prestamo } from '@/types/prestamo'
 
 function SkeletonRow(): JSX.Element {
   return (
@@ -42,16 +40,12 @@ function SkeletonRow(): JSX.Element {
   )
 }
 
-function EmptyState({ tipo }: { tipo: TipoPrestamo }): JSX.Element {
+function EmptyState(): JSX.Element {
   const { t } = useTranslation()
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <HandCoins size={40} className="text-[var(--text-muted)] opacity-40 mb-3" aria-hidden="true" />
-      <p className="text-sm font-medium text-[var(--text-primary)]">
-        {tipo === 'me_deben'
-          ? 'No hay prestamos donde te deban'
-          : 'No hay prestamos donde debas'}
-      </p>
+      <p className="text-sm font-medium text-[var(--text-primary)]">No hay prestamos registrados</p>
       <p className="text-xs text-[var(--text-muted)] mt-1">
         {t('prestamos.noPrestamosDesc')}
       </p>
@@ -61,13 +55,12 @@ function EmptyState({ tipo }: { tipo: TipoPrestamo }): JSX.Element {
 
 export function PrestamosPage(): JSX.Element {
   const { t } = useTranslation()
-  const [tabActiva, setTabActiva] = useState<TabActiva>('me_deben')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [prestamoSeleccionado, setPrestamoSeleccionado] = useState<Prestamo | null>(null)
   const [prestamoEditando, setPrestamoEditando] = useState<Prestamo | null>(null)
   const [detailId, setDetailId] = useState<string | null>(null)
 
-  const { data: prestamos = [], isLoading, isError } = usePrestamos({ tipo: tabActiva })
+  const { data: prestamos = [], isLoading, isError } = usePrestamos()
   const createPrestamo = useCreatePrestamo()
   const updatePrestamo = useUpdatePrestamo()
   const deletePrestamo = useDeletePrestamo()
@@ -145,13 +138,8 @@ export function PrestamosPage(): JSX.Element {
     setPrestamoSeleccionado(null)
   }
 
-  const tabs: { value: TabActiva; label: string }[] = [
-    { value: 'me_deben', label: 'Me deben' },
-    { value: 'yo_debo', label: 'Yo debo' },
-  ]
-
   return (
-    <div className="animate-fade-in p-6 md:p-8 space-y-6">
+    <div className="animate-fade-in p-4 md:p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -170,33 +158,7 @@ export function PrestamosPage(): JSX.Element {
         <PrestamoResumenCards />
       </div>
 
-      {/* Tabs selector */}
-      <div className="flex gap-1 bg-white/[0.04] rounded-xl p-1 w-fit">
-        {tabs.map((tab) => (
-          <button
-            key={tab.value}
-            type="button"
-            role="tab"
-            aria-selected={tabActiva === tab.value}
-            onClick={() => setTabActiva(tab.value)}
-            className={cn(
-              'px-4 py-2 text-sm font-medium transition-all rounded-lg',
-              tabActiva === tab.value
-                ? 'bg-[#3d8ef8] text-white shadow'
-                : 'text-[#657a9e] hover:text-[#e8f0ff]'
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Label seccion */}
-      <p className="text-[11px] font-semibold uppercase tracking-widest text-[#657a9e]">
-        {tabActiva === 'me_deben' ? 'Creditos activos — me deben' : 'Creditos activos — yo debo'}
-      </p>
-
-      {/* Lista */}
+      {/* Lista unificada */}
       <div>
         {/* Error state */}
         {isError && (
@@ -216,21 +178,27 @@ export function PrestamosPage(): JSX.Element {
 
         {/* Empty state */}
         {!isLoading && !isError && prestamosOrdenados.length === 0 && (
-          <EmptyState tipo={tabActiva} />
+          <EmptyState />
         )}
 
-        {/* Items */}
-        {!isLoading && !isError && prestamosOrdenados.length > 0 && (
-          <span className="sr-only">
-            Lista de prestamos — {tabActiva === 'me_deben' ? 'Me deben' : 'Yo debo'}
-          </span>
-        )}
+        {/* Items con badge de tipo */}
         {!isLoading && prestamosOrdenados.map((prestamo) => (
-          <PrestamoRow
-            key={prestamo.id}
-            prestamo={prestamo}
-            onClick={handleOpenDetail}
-          />
+          <div key={prestamo.id} className="relative">
+            <span
+              className={cn(
+                'absolute top-3 right-3 z-10 text-[10px] font-semibold px-2 py-0.5 rounded-full',
+                prestamo.tipo === 'me_deben'
+                  ? 'bg-[rgba(0,223,162,0.15)] text-[#00dfa2]'
+                  : 'bg-[rgba(255,64,96,0.15)] text-[#ff4060]'
+              )}
+            >
+              {prestamo.tipo === 'me_deben' ? 'Me deben' : 'Yo debo'}
+            </span>
+            <PrestamoRow
+              prestamo={prestamo}
+              onClick={handleOpenDetail}
+            />
+          </div>
         ))}
       </div>
 
