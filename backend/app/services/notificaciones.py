@@ -282,7 +282,7 @@ def generar_notificaciones(user_jwt: str, user_id: str) -> dict:
                     f"Pendiente: ${monto:.0f}."
                 )
             else:
-                tipo_n = "advertencia"
+                tipo_n = "informativa"
                 titulo = f"Próximo pago: {desc}"
                 mensaje = (
                     f"El préstamo '{desc}' tiene un pago en {dias} día(s). "
@@ -348,7 +348,7 @@ def generar_notificaciones(user_jwt: str, user_id: str) -> dict:
             titulo = f"Cobro hoy: {nombre}"
             mensaje = f"Se cobra hoy ${monto:.0f} por {nombre}."
         else:
-            tipo_n = "advertencia"
+            tipo_n = "informativa"
             titulo = f"Próximo cobro: {nombre}"
             mensaje = f"{nombre} se cobra en {dias} día(s). Monto: ${monto:.0f}."
 
@@ -399,11 +399,356 @@ def generar_notificaciones(user_jwt: str, user_id: str) -> dict:
                 titulo = f"Pago hoy: {desc}"
                 mensaje = f"Tienes un pago recurrente hoy: {desc} por ${monto:.0f}."
             else:
-                tipo_n = "advertencia"
+                tipo_n = "informativa"
                 titulo = f"Pago próximo: {desc}"
                 mensaje = f"{desc} vence en {dias} día(s). Monto: ${monto:.0f}."
             if _crear_notificacion(client, user_id, tipo_n, cat_key, titulo, mensaje):
                 generadas += 1
+
+    # --- Trigger 7: Meta sin contribución en ≥30 días ---
+    try:
+        metas_activas_r = (
+            client.table("metas_ahorro")
+            .select("id,nombre,monto_actual,monto_objetivo,created_at")
+            .eq("user_id", user_id)
+            .eq("estado", "activa")
+            .execute()
+        )
+        for meta in (metas_activas_r.data or []):
+            try:
+                ultima_contrib_r = (
+                    client.table("contribuciones_meta")
+                    .select("fecha")
+                    .eq("meta_id", meta["id"])
+                    .order("fecha", desc=True)
+                    .limit(1)
+                    .execute()
+                )
+                ultimas = ultima_contrib_r.data or []
+                if ultimas:
+                    ultima_fecha = date.fromisoformat(ultimas[0]["fecha"][:10])
+                    dias = (today - ultima_fecha).days
+                    sin_contribucion = dias >= 30
+                else:
+                    created = date.fromisoformat(meta["created_at"][:10])
+                    dias = (today - created).days
+                    sin_contribucion = dias >= 30
+                if sin_contribucion:
+                    if _crear_notificacion(
+                        client,
+                        user_id,
+                        "urgente",
+                        f"meta_sin_contribucion_{meta['id']}",
+                        f"Tu meta '{meta['nombre']}' necesita atención",
+                        f"Llevas {dias} días sin contribuir a tu meta '{meta['nombre']}'. ¡Un pequeño aporte hoy marca la diferencia!",
+                    ):
+                        generadas += 1
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    # --- Trigger 8: Meta próxima a vencer (≤15 días) ---
+    try:
+        metas_vencer_r = (
+            client.table("metas_ahorro")
+            .select("id,nombre,monto_actual,monto_objetivo,fecha_objetivo")
+            .eq("user_id", user_id)
+            .eq("estado", "activa")
+            .not_.is_("fecha_objetivo", "null")
+            .execute()
+        )
+        for meta in (metas_vencer_r.data or []):
+            try:
+                if not meta.get("fecha_objetivo"):
+                    continue
+                fecha_obj = date.fromisoformat(meta["fecha_objetivo"][:10])
+                dias_restantes = (fecha_obj - today).days
+                if dias_restantes < 0 or dias_restantes > 15:
+                    continue
+                monto_obj = float(meta["monto_objetivo"])
+                monto_act = float(meta["monto_actual"])
+                pct = round((monto_act / monto_obj) * 100) if monto_obj > 0 else 0
+                if pct >= 90:
+                    continue
+                tipo_n = "urgente" if dias_restantes <= 7 else "informativa"
+                fecha_str = fecha_obj.strftime("%d/%m/%Y")
+                if _crear_notificacion(
+                    client,
+                    user_id,
+                    tipo_n,
+                    f"meta_por_vencer_{meta['id']}",
+                    f"Tu meta '{meta['nombre']}' vence pronto",
+                    f"Tu meta '{meta['nombre']}' vence el {fecha_str} y llevas el {pct}% completado. ¡Aún puedes lograrlo!",
+                ):
+                    generadas += 1
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    # --- Trigger 9: Préstamo vencido ---
+    try:
+        prestamos_vencidos_r = (
+            client.table("prestamos")
+            .select("id,persona,monto_pendiente,fecha_vencimiento")
+            .eq("user_id", user_id)
+            .eq("estado", "activo")
+            .eq("tipo", "yo_debo")
+            .execute()
+        )
+        for prestamo in (prestamos_vencidos_r.data or []):
+            try:
+                if not prestamo.get("fecha_vencimiento"):
+                    continue
+                fecha_venc = date.fromisoformat(prestamo["fecha_vencimiento"][:10])
+                if fecha_venc >= today:
+                    continue
+                monto_pendiente = float(prestamo.get("monto_pendiente", 0))
+                fecha_str = fecha_venc.strftime("%d/%m/%Y")
+                if _crear_notificacion(
+                    client,
+                    user_id,
+                    "urgente",
+                    f"prestamo_vencido_{prestamo['id']}",
+                    f"Préstamo vencido con {prestamo['persona']}",
+                    f"Tu préstamo con {prestamo['persona']} venció el {fecha_str}. Monto pendiente: ${monto_pendiente:,.0f}",
+                ):
+                    generadas += 1
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    # --- Trigger 10: Fondo de emergencia crítico (<50%) ---
+    try:
+        fondo_r = (
+            client.table("fondo_emergencia")
+            .select("monto_actual,meta_meses")
+            .eq("user_id", user_id)
+            .limit(1)
+            .execute()
+        )
+        fondos = fondo_r.data or []
+        if fondos:
+            fondo = fondos[0]
+            # Calcular promedio de egresos de los últimos 3 meses
+            meses_calc = []
+            for i in range(3):
+                m = today.month - i
+                y = today.year
+                if m <= 0:
+                    m += 12
+                    y -= 1
+                meses_calc.append((y, m))
+            total_egresos_3m = 0.0
+            for y_m, m_m in meses_calc:
+                fi, ff = f"{y_m}-{m_m:02d}-01", f"{y_m}-{m_m:02d}-{monthrange(y_m, m_m)[1]:02d}"
+                eg_r = (
+                    client.table("egresos")
+                    .select("monto")
+                    .eq("user_id", user_id)
+                    .gte("fecha", fi)
+                    .lte("fecha", ff)
+                    .execute()
+                )
+                total_egresos_3m += sum(float(e["monto"]) for e in (eg_r.data or []))
+            promedio_mensual = total_egresos_3m / 3
+            meta_calculada = fondo["meta_meses"] * promedio_mensual
+            if promedio_mensual > 0 and meta_calculada > 0:
+                pct = round((float(fondo["monto_actual"]) / meta_calculada) * 100)
+                if pct < 50:
+                    if _crear_notificacion(
+                        client,
+                        user_id,
+                        "urgente",
+                        "fondo_emergencia_critico",
+                        "Tu fondo de emergencia está en riesgo",
+                        f"Tu fondo de emergencia tiene solo el {pct}% de lo recomendado (${meta_calculada:,.0f} para {fondo['meta_meses']} meses). Ante cualquier imprevisto, estarías vulnerable.",
+                    ):
+                        generadas += 1
+    except Exception:
+        pass
+
+    # --- Trigger 11: Gastos impulsivos detectados este mes ---
+    try:
+        mes_actual = today.month
+        year_actual = today.year
+        dias_mes = monthrange(year_actual, mes_actual)[1]
+        fi_mes = f"{year_actual}-{mes_actual:02d}-01"
+        ff_mes = f"{year_actual}-{mes_actual:02d}-{dias_mes:02d}"
+        impulso_r = (
+            client.table("egresos")
+            .select("monto")
+            .eq("user_id", user_id)
+            .gte("fecha", fi_mes)
+            .lte("fecha", ff_mes)
+            .eq("is_impulso", True)
+            .execute()
+        )
+        impulsos = impulso_r.data or []
+        count_impulsos = len(impulsos)
+        if count_impulsos >= 2:
+            total_impulso = sum(float(e["monto"]) for e in impulsos)
+            if _crear_notificacion(
+                client,
+                user_id,
+                "informativa",
+                f"gastos_impulso_{mes_actual}_{year_actual}",
+                "Detectamos gastos impulsivos este mes",
+                f"Este mes tienes {count_impulsos} gastos potencialmente impulsivos por un total de ${total_impulso:,.0f}. Revísalos en tus egresos para mejorar tu control financiero.",
+            ):
+                generadas += 1
+    except Exception:
+        pass
+
+    # --- Trigger 12: Presupuesto excedido (>100%) ---
+    try:
+        presupuestos_exc_r = (
+            client.table("presupuestos")
+            .select("monto_limite,categoria_id")
+            .eq("user_id", user_id)
+            .eq("mes", today.month)
+            .eq("year", today.year)
+            .execute()
+        )
+        for p in (presupuestos_exc_r.data or []):
+            try:
+                limite = float(p["monto_limite"])
+                if limite <= 0:
+                    continue
+                cat_id = str(p["categoria_id"])
+                gasto = gasto_por_cat.get(cat_id, 0.0)
+                porcentaje = (gasto / limite) * 100
+                if porcentaje > 100:
+                    exceso = gasto - limite
+                    pct = int(porcentaje)
+                    nombre_cat = cat_nombres.get(cat_id, "tu categoría")
+                    if _crear_notificacion(
+                        client,
+                        user_id,
+                        "urgente",
+                        f"presupuesto_excedido_{cat_id}",
+                        f"¡Presupuesto de {nombre_cat} excedido!",
+                        f"Ya gastaste el {pct}% de tu presupuesto de {nombre_cat}. Llevas ${exceso:,.0f} sobre el límite este mes.",
+                    ):
+                        generadas += 1
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    # --- Trigger 13: Score financiero crítico (<40) ---
+    try:
+        from app.services.score import get_score  # noqa: F811
+
+        score_result_critico = get_score(user_jwt, user_id)
+        if score_result_critico["score"] < 40:
+            if _crear_notificacion(
+                client,
+                user_id,
+                "urgente",
+                "score_critico",
+                "Tu salud financiera necesita atención urgente",
+                f"Tu score financiero es {score_result_critico['score']}/100 (estado crítico). Revisa tus presupuestos, reduce gastos y apórtale a tu fondo de emergencia para mejorar.",
+            ):
+                generadas += 1
+    except Exception:
+        pass
+
+    # --- Trigger 14: Educación pendiente (sin completar lecciones en ≥7 días) ---
+    try:
+        total_lecciones_r = (
+            client.table("lecciones")
+            .select("id", count="exact")
+            .execute()
+        )
+        total_lecciones = total_lecciones_r.count or 0
+        ultima_leccion_r = (
+            client.table("user_lecciones")
+            .select("completada_en")
+            .eq("user_id", user_id)
+            .eq("completada", True)
+            .order("completada_en", desc=True)
+            .limit(1)
+            .execute()
+        )
+        completadas_r = (
+            client.table("user_lecciones")
+            .select("id", count="exact")
+            .eq("user_id", user_id)
+            .eq("completada", True)
+            .execute()
+        )
+        lecciones_completadas = completadas_r.count or 0
+        if total_lecciones > 0 and lecciones_completadas < total_lecciones:
+            ultimas_lec = ultima_leccion_r.data or []
+            debe_notificar = False
+            if not ultimas_lec:
+                debe_notificar = True
+            else:
+                ultima_completada_str = ultimas_lec[0].get("completada_en", "")
+                if ultima_completada_str:
+                    ultima_completada = datetime.fromisoformat(
+                        ultima_completada_str.replace("Z", "+00:00")
+                    )
+                    dias_sin_leccion = (
+                        datetime.now(timezone.utc) - ultima_completada
+                    ).days
+                    debe_notificar = dias_sin_leccion >= 7
+                else:
+                    debe_notificar = True
+            if debe_notificar:
+                if _crear_notificacion(
+                    client,
+                    user_id,
+                    "informativa",
+                    "educacion_pendiente",
+                    "¿Cuándo fue tu última lección financiera?",
+                    "Tienes lecciones de educación financiera pendientes en Finza. Solo 3 minutos al día pueden transformar tu relación con el dinero.",
+                ):
+                    generadas += 1
+    except Exception:
+        pass
+
+    # --- Trigger 15: Balance negativo (egresos > ingresos este mes) ---
+    try:
+        mes_actual = today.month
+        year_actual = today.year
+        dias_mes = monthrange(year_actual, mes_actual)[1]
+        fi_mes = f"{year_actual}-{mes_actual:02d}-01"
+        ff_mes = f"{year_actual}-{mes_actual:02d}-{dias_mes:02d}"
+        ingresos_mes_r = (
+            client.table("ingresos")
+            .select("monto")
+            .eq("user_id", user_id)
+            .gte("fecha", fi_mes)
+            .lte("fecha", ff_mes)
+            .execute()
+        )
+        egresos_mes_r = (
+            client.table("egresos")
+            .select("monto")
+            .eq("user_id", user_id)
+            .gte("fecha", fi_mes)
+            .lte("fecha", ff_mes)
+            .execute()
+        )
+        total_ingresos_mes = sum(float(i["monto"]) for i in (ingresos_mes_r.data or []))
+        total_egresos_mes = sum(float(e["monto"]) for e in (egresos_mes_r.data or []))
+        if total_egresos_mes > total_ingresos_mes and total_ingresos_mes > 0:
+            diferencia = total_egresos_mes - total_ingresos_mes
+            if _crear_notificacion(
+                client,
+                user_id,
+                "urgente",
+                f"balance_negativo_{mes_actual}_{year_actual}",
+                "Estás gastando más de lo que ganas este mes",
+                f"Este mes tus gastos (${total_egresos_mes:,.0f}) superan tus ingresos (${total_ingresos_mes:,.0f}) por ${diferencia:,.0f}. Revisa tus presupuestos.",
+            ):
+                generadas += 1
+    except Exception:
+        pass
 
     return {
         "generadas": generadas,
