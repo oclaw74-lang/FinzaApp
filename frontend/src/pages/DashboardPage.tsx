@@ -1,10 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  TrendingUp,
-  TrendingDown,
-  Target,
-  PiggyBank,
   AlertCircle,
   CreditCard,
   CalendarClock,
@@ -12,7 +8,6 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDashboardV2 } from '@/hooks/useDashboardV2'
 import { useAuthStore } from '@/store/authStore'
-import { KpiCard } from '@/features/dashboard/components/v2/KpiCard'
 import { MetaProgressItem } from '@/features/dashboard/components/v2/MetaProgressItem'
 import { BudgetProgressBar } from '@/features/presupuestos/components/BudgetProgressBar'
 import { ChartFlujoMensual } from '@/features/dashboard/components/ChartFlujoMensual'
@@ -51,24 +46,16 @@ function getInitialPeriod(): { mes: number; year: number } {
   return { mes: now.getMonth() + 1, year: now.getFullYear() }
 }
 
-function buildYearOptions(currentYear: number): number[] {
-  return [currentYear - 2, currentYear - 1, currentYear, currentYear + 1, currentYear + 2]
-}
-
 const MESES_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
 export function DashboardPage(): JSX.Element {
   const { t } = useTranslation()
-  const now = new Date()
-  const currentYear = now.getFullYear()
   const { user } = useAuthStore()
 
   const [mes, setMes] = useState<number>(getInitialPeriod().mes)
   const [year, setYear] = useState<number>(getInitialPeriod().year)
 
   const { data, isLoading, isError, error } = useDashboardV2({ mes, year })
-
-  const yearOptions = buildYearOptions(currentYear)
 
   const ingresos = data?.resumen_financiero.ingresos_mes ?? 0
   const egresos = data?.resumen_financiero.egresos_mes ?? 0
@@ -107,8 +94,8 @@ export function DashboardPage(): JSX.Element {
 
         {/* Period selectors */}
         <div className="flex flex-wrap items-center gap-2 shrink-0">
-          {/* Month buttons */}
-          <div className="flex items-center gap-1 bg-white/10 rounded-xl p-1 flex-wrap">
+          {/* Month pills */}
+          <div className="flex items-center gap-1 bg-white/[0.05] rounded-xl p-1 flex-wrap">
             {MESES_SHORT.map((m, i) => (
               <button
                 key={i}
@@ -117,32 +104,33 @@ export function DashboardPage(): JSX.Element {
                 className={cn(
                   'px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all',
                   mes === i + 1
-                    ? 'bg-white text-indigo-600 shadow'
-                    : 'text-white/60 hover:text-white'
+                    ? 'bg-[#3d8ef8] text-white shadow'
+                    : 'text-[#657a9e] hover:text-[#e8f0ff]'
                 )}
               >
                 {m}
               </button>
             ))}
           </div>
-          {/* Year selector */}
-          <div>
-            <label htmlFor="year-selector" className="sr-only">
-              Ano
-            </label>
-            <select
-              id="year-selector"
-              aria-label="Ano"
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
-              className="bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30"
+          {/* Year nav glass */}
+          <div className="flex items-center gap-1 card-glass rounded-xl px-2 py-1">
+            <button
+              type="button"
+              onClick={() => setYear((y) => y - 1)}
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-[#657a9e] hover:text-[#e8f0ff] hover:bg-white/[0.06] transition-all text-sm font-bold"
+              aria-label="Ano anterior"
             >
-              {yearOptions.map((y) => (
-                <option key={y} value={y} className="text-gray-900">
-                  {y}
-                </option>
-              ))}
-            </select>
+              ←
+            </button>
+            <span className="text-sm font-semibold text-[#e8f0ff] min-w-[40px] text-center tabular-nums">{year}</span>
+            <button
+              type="button"
+              onClick={() => setYear((y) => y + 1)}
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-[#657a9e] hover:text-[#e8f0ff] hover:bg-white/[0.06] transition-all text-sm font-bold"
+              aria-label="Ano siguiente"
+            >
+              →
+            </button>
           </div>
         </div>
       </div>
@@ -151,51 +139,87 @@ export function DashboardPage(): JSX.Element {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {isLoading ? (
           <>
-            <Skeleton className="h-32 rounded-xl" />
-            <Skeleton className="h-32 rounded-xl" />
-            <Skeleton className="h-32 rounded-xl" />
-            <Skeleton className="h-32 rounded-xl" />
+            <Skeleton className="h-[120px] rounded-[20px]" />
+            <Skeleton className="h-[120px] rounded-[20px]" />
+            <Skeleton className="h-[120px] rounded-[20px]" />
+            <Skeleton className="h-[120px] rounded-[20px]" />
           </>
         ) : (
           <>
-            <KpiCard
-              title={t('dashboard.income')}
-              value={formatMoney(ingresos)}
-              variationPct={data?.resumen_financiero.variacion_ingresos_pct ?? 0}
-              icon={<TrendingUp size={18} style={{ color: 'var(--success)' }} className="dark:text-finza-green" />}
-              iconBg="var(--success-muted)"
-              valueColorClass="text-[var(--success)] dark:text-finza-green"
-              subtitle={t('dashboard.vsLastMonth')}
-              className="border-l-4 border-[#00B050] dark:bg-finza-blue/10 card-glass"
-            />
-            <KpiCard
-              title={t('dashboard.expenses')}
-              value={formatMoney(egresos)}
-              variationPct={data?.resumen_financiero.variacion_egresos_pct ?? 0}
-              icon={<TrendingDown size={18} style={{ color: 'var(--danger)' }} className="dark:text-finza-red" />}
-              iconBg="var(--danger-muted)"
-              valueColorClass="text-[var(--danger)] dark:text-finza-red"
-              subtitle={t('dashboard.vsLastMonth')}
-              className="border-l-4 border-[#FF0000] dark:bg-finza-red/10 card-glass"
-            />
-            <KpiCard
-              title="Metas activas"
-              value={String(data?.metas_activas.length ?? 0)}
-              icon={<Target size={18} style={{ color: 'var(--accent)' }} className="dark:text-finza-purple" />}
-              iconBg="var(--accent-muted)"
-              valueColorClass="text-[var(--accent)] dark:text-finza-purple"
-              subtitle="En progreso"
-              className="card-glass"
-            />
-            <KpiCard
-              title={t('dashboard.savingsRate')}
-              value={`${tasaAhorro.toFixed(1)}%`}
-              icon={<PiggyBank size={18} style={{ color: 'var(--warning)' }} className="dark:text-finza-yellow" />}
-              iconBg="var(--warning-muted)"
-              valueColorClass="text-[var(--warning)] dark:text-finza-yellow"
-              subtitle="Del total de ingresos"
-              className="dark:bg-finza-yellow/10 card-glass"
-            />
+            {/* Ingresos */}
+            <div className="card-glass rounded-[20px] p-5 flex flex-col gap-2">
+              <div className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center text-lg"
+                style={{ background: 'rgba(0,223,162,0.10)' }}>
+                📥
+              </div>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-[#657a9e]">{t('dashboard.income')}</p>
+              <p className="text-[26px] font-bold text-[#00dfa2] leading-none tabular-nums"
+                style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.04em' }}>
+                {formatMoney(ingresos)}
+              </p>
+              {(() => {
+                const pct = data?.resumen_financiero.variacion_ingresos_pct ?? 0
+                const isPos = pct >= 0
+                return (
+                  <p className={cn('text-xs font-medium', isPos ? 'text-[#00dfa2]' : 'text-[#ff4060]')}>
+                    {isPos ? '+' : ''}{pct.toFixed(1)}% {t('dashboard.vsLastMonth')}
+                  </p>
+                )
+              })()}
+            </div>
+
+            {/* Egresos */}
+            <div className="card-glass rounded-[20px] p-5 flex flex-col gap-2">
+              <div className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center text-lg"
+                style={{ background: 'rgba(255,64,96,0.10)' }}>
+                📤
+              </div>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-[#657a9e]">{t('dashboard.expenses')}</p>
+              <p className="text-[26px] font-bold text-[#ff4060] leading-none tabular-nums"
+                style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.04em' }}>
+                {formatMoney(egresos)}
+              </p>
+              {(() => {
+                const pct = data?.resumen_financiero.variacion_egresos_pct ?? 0
+                const isNeg = pct >= 0
+                return (
+                  <p className={cn('text-xs font-medium', isNeg ? 'text-[#ff4060]' : 'text-[#00dfa2]')}>
+                    {pct >= 0 ? '+' : ''}{pct.toFixed(1)}% {t('dashboard.vsLastMonth')}
+                  </p>
+                )
+              })()}
+            </div>
+
+            {/* Metas activas */}
+            <div className="card-glass rounded-[20px] p-5 flex flex-col gap-2">
+              <div className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center text-lg"
+                style={{ background: 'rgba(151,104,255,0.10)' }}>
+                🎯
+              </div>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-[#657a9e]">Metas activas</p>
+              <p className="text-[26px] font-bold text-[#9768ff] leading-none tabular-nums"
+                style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.04em' }}>
+                {String(data?.metas_activas.length ?? 0)}
+              </p>
+              <p className="text-xs font-medium text-[#657a9e]">En progreso</p>
+            </div>
+
+            {/* Tasa de ahorro */}
+            <div className="card-glass rounded-[20px] p-5 flex flex-col gap-2">
+              <div className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center text-lg"
+                style={{ background: 'rgba(255,179,64,0.10)' }}>
+                💼
+              </div>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-[#657a9e]">{t('dashboard.savingsRate')}</p>
+              <p className={cn(
+                'text-[26px] font-bold leading-none tabular-nums',
+                tasaAhorro > 0 ? 'text-[#00dfa2]' : 'text-[#ff4060]'
+              )}
+                style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.04em' }}>
+                {tasaAhorro.toFixed(1)}%
+              </p>
+              <p className="text-xs font-medium text-[#657a9e]">Del total de ingresos</p>
+            </div>
           </>
         )}
       </div>

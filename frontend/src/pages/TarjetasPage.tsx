@@ -613,7 +613,7 @@ export function TarjetasPage(): JSX.Element {
   const renderCardSection = (list: Tarjeta[], title: string): JSX.Element => (
     <div className="mb-6">
       <h3 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">{title}</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="flex flex-col gap-4 max-w-[520px] mx-auto">
         {list.map((tarjeta) => (
           <div key={tarjeta.id} className="relative group">
             <CardVisual tarjeta={tarjeta} onClick={() => setTarjetaDetalle(tarjeta)} />
