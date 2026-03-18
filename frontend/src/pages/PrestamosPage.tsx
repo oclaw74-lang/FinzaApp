@@ -170,65 +170,68 @@ export function PrestamosPage(): JSX.Element {
         <PrestamoResumenCards />
       </div>
 
-      {/* Tabs + lista */}
-      <div className="card-glass p-0 overflow-hidden">
-        {/* Tabs */}
-        <div className="flex gap-1 border-b border-border px-4 pt-4">
-          {tabs.map((tab) => (
-            <button
-              key={tab.value}
-              type="button"
-              role="tab"
-              aria-selected={tabActiva === tab.value}
-              onClick={() => setTabActiva(tab.value)}
-              className={cn(
-                'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
-                tabActiva === tab.value
-                  ? 'border-finza-blue text-finza-blue'
-                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+      {/* Tabs selector */}
+      <div className="flex gap-1 bg-white/[0.04] rounded-xl p-1 w-fit">
+        {tabs.map((tab) => (
+          <button
+            key={tab.value}
+            type="button"
+            role="tab"
+            aria-selected={tabActiva === tab.value}
+            onClick={() => setTabActiva(tab.value)}
+            className={cn(
+              'px-4 py-2 text-sm font-medium transition-all rounded-lg',
+              tabActiva === tab.value
+                ? 'bg-[#3d8ef8] text-white shadow'
+                : 'text-[#657a9e] hover:text-[#e8f0ff]'
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-        <div className="p-0">
-          {/* Error state */}
-          {isError && (
-            <p className="text-sm text-[var(--text-muted)] text-center py-4 px-4">
-              El servidor no esta disponible. La lista se mostrara cuando el backend responda.
-            </p>
-          )}
+      {/* Label seccion */}
+      <p className="text-[11px] font-semibold uppercase tracking-widest text-[#657a9e]">
+        {tabActiva === 'me_deben' ? 'Creditos activos — me deben' : 'Creditos activos — yo debo'}
+      </p>
 
-          {/* Loading */}
-          {isLoading && !isError && (
-            <div aria-label="Cargando prestamos">
-              <SkeletonRow />
-              <SkeletonRow />
-              <SkeletonRow />
-            </div>
-          )}
+      {/* Lista */}
+      <div>
+        {/* Error state */}
+        {isError && (
+          <p className="text-sm text-[#657a9e] text-center py-4">
+            El servidor no esta disponible. La lista se mostrara cuando el backend responda.
+          </p>
+        )}
 
-          {/* Empty state */}
-          {!isLoading && !isError && prestamosOrdenados.length === 0 && (
-            <EmptyState tipo={tabActiva} />
-          )}
+        {/* Loading */}
+        {isLoading && !isError && (
+          <div aria-label="Cargando prestamos" className="space-y-3">
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
+          </div>
+        )}
 
-          {/* Lista */}
-          {!isLoading && !isError && prestamosOrdenados.length > 0 && (
-            <span className="sr-only">
-              Lista de prestamos — {tabActiva === 'me_deben' ? 'Me deben' : 'Yo debo'}
-            </span>
-          )}
-          {!isLoading && prestamosOrdenados.map((prestamo) => (
-            <PrestamoRow
-              key={prestamo.id}
-              prestamo={prestamo}
-              onClick={handleOpenDetail}
-            />
-          ))}
-        </div>
+        {/* Empty state */}
+        {!isLoading && !isError && prestamosOrdenados.length === 0 && (
+          <EmptyState tipo={tabActiva} />
+        )}
+
+        {/* Items */}
+        {!isLoading && !isError && prestamosOrdenados.length > 0 && (
+          <span className="sr-only">
+            Lista de prestamos — {tabActiva === 'me_deben' ? 'Me deben' : 'Yo debo'}
+          </span>
+        )}
+        {!isLoading && prestamosOrdenados.map((prestamo) => (
+          <PrestamoRow
+            key={prestamo.id}
+            prestamo={prestamo}
+            onClick={handleOpenDetail}
+          />
+        ))}
       </div>
 
       {/* Modal crear */}

@@ -85,7 +85,7 @@ export function StatsBar(): JSX.Element {
   const navigate = useNavigate()
 
   const barClass = cn(
-    'statsbar-glass hidden md:flex items-center h-11 px-4 sticky top-16 z-40',
+    'statsbar-glass hidden md:flex items-center h-11 px-4 sticky top-0 z-40',
     'border-b border-[var(--border)]',
     'dark:border-white/[0.06]',
     'bg-[rgba(255,255,255,0.85)] dark:bg-[rgba(4,8,15,0.85)]'

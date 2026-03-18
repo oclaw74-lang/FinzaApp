@@ -343,26 +343,32 @@ export function ConfiguracionPage(): JSX.Element {
   const userName = metadata.full_name ?? user?.email?.split('@')[0] ?? 'Usuario'
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 p-6 md:p-8">
-      <h1 className="page-title-premium dark:text-[#e8f0ff]">{t('settings.title')}</h1>
+    <div className="p-6 md:p-8">
+      <h1 className="page-title-premium dark:text-[#e8f0ff] mb-6">{t('settings.title')}</h1>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-surface border border-border rounded-xl p-1">
-        {tabs.map(({ id, label }) => (
-          <button
-            key={id}
-            onClick={() => setActiveTab(id)}
-            className={cn(
-              'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-150',
-              activeTab === id
-                ? 'bg-finza-blue text-white shadow-sm'
-                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-surface-raised'
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      {/* Two-column layout: nav left + content right */}
+      <div className="flex flex-col lg:grid lg:grid-cols-[200px_1fr] gap-6 items-start">
+
+        {/* Left nav */}
+        <nav className="card-glass rounded-[20px] p-2 flex flex-col gap-0.5 w-full lg:sticky lg:top-4">
+          {tabs.map(({ id, label }) => (
+            <button
+              key={id}
+              onClick={() => setActiveTab(id)}
+              className={cn(
+                'w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
+                activeTab === id
+                  ? 'bg-[#3d8ef8] text-white'
+                  : 'text-[#657a9e] hover:text-[#e8f0ff] hover:bg-white/[0.04]'
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+
+        {/* Right content */}
+        <div className="flex-1 min-w-0 space-y-6">
 
       {/* Tab: Profile */}
       {activeTab === 'profile' && (
@@ -673,6 +679,9 @@ export function ConfiguracionPage(): JSX.Element {
           </div>
         </>
       )}
+
+        </div>{/* end right content */}
+      </div>{/* end grid */}
     </div>
   )
 }

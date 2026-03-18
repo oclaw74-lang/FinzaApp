@@ -357,6 +357,18 @@ export function PresupuestosPage(): JSX.Element {
                   onClick={handleOpenEdit}
                 />
               ))}
+            {/* Placeholder "+" nuevo presupuesto al final del grid */}
+            {!isLoading && estadoList.length > 0 && (
+              <button
+                type="button"
+                onClick={handleOpenCreate}
+                className="border-2 border-dashed border-white/[0.1] rounded-[20px] flex flex-col items-center justify-center gap-2 text-[#657a9e] cursor-pointer min-h-[160px] hover:border-[#3d8ef8] hover:text-[#3d8ef8] hover:bg-[rgba(61,142,248,0.04)] transition-all"
+                aria-label="Nuevo presupuesto"
+              >
+                <span className="text-3xl leading-none">+</span>
+                <span className="text-sm font-medium">Nuevo presupuesto</span>
+              </button>
+            )}
           </div>
 
           {/* Seccion: Sin presupuesto */}
