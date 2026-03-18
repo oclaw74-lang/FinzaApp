@@ -27,7 +27,7 @@ const preprocessNumber = (v: unknown) => {
 
 const TarjetaSchema = z
   .object({
-    nombre: z.string().min(1, 'Requerido').max(100),
+    banco: z.string().min(1, 'Requerido').max(100),
     tipo: z.enum(['credito', 'debito']),
     red: z.enum(['visa', 'mastercard', 'amex', 'discover', 'otro']),
     ultimos_digitos: z
@@ -100,7 +100,7 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
         !tarjeta.activa && 'opacity-60'
       )}
       style={{ background: getCardGradient(tarjeta.red, tarjeta.color), minHeight: 180 }}
-      aria-label={`Tarjeta ${tarjeta.nombre}`}
+      aria-label={`Tarjeta ${tarjeta.banco}`}
     >
       {/* Chip SVG */}
       <div className="absolute top-5 left-5">
@@ -115,7 +115,7 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
 
       {/* Bank name */}
       <div className="absolute top-5 right-5 text-right">
-        <p className="text-xs font-semibold tracking-wide text-white/80 uppercase">{tarjeta.nombre}</p>
+        <p className="text-xs font-semibold tracking-wide text-white/80 uppercase">{tarjeta.banco}</p>
         {!tarjeta.activa && (
           <span className="text-xs bg-white/20 rounded px-1.5 py-0.5 mt-1 inline-block">Inactiva</span>
         )}
@@ -209,7 +209,7 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
     resolver: zodResolver(TarjetaSchema),
     defaultValues: tarjeta
       ? {
-          nombre: tarjeta.nombre,
+          banco: tarjeta.banco,
           tipo: tarjeta.tipo,
           red: tarjeta.red,
           ultimos_digitos: tarjeta.ultimos_digitos,
@@ -260,15 +260,15 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-          {/* Nombre */}
+          {/* Banco */}
           <div>
-            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Nombre</label>
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Banco / Nombre</label>
             <input
-              {...register('nombre')}
-              placeholder="Visa Banco Popular"
+              {...register('banco')}
+              placeholder="Banco Popular, BHD, etc."
               className="finza-input w-full"
             />
-            {errors.nombre && <p className="text-xs text-red-500 mt-1">{errors.nombre.message}</p>}
+            {errors.banco && <p className="text-xs text-red-500 mt-1">{errors.banco.message}</p>}
           </div>
 
           {/* Tipo / Red */}
@@ -428,7 +428,7 @@ function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): 
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-label={`Detalle ${tarjeta.nombre}`}
+      aria-label={`Detalle ${tarjeta.banco}`}
     >
       <div
         className="absolute inset-0"
@@ -437,7 +437,7 @@ function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): 
       />
       <div className="relative bg-white dark:bg-[#0d1520] dark:border dark:border-white/[0.08] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">{tarjeta.nombre}</h2>
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">{tarjeta.banco}</h2>
           <button
             type="button"
             onClick={onClose}

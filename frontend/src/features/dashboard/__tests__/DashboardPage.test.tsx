@@ -142,7 +142,7 @@ describe('DashboardPage', () => {
 
   it('renders year selector', () => {
     render(<DashboardPage />)
-    expect(screen.getByLabelText('Ano')).toBeInTheDocument()
+    expect(screen.getByLabelText('Ano anterior')).toBeInTheDocument()
   })
 
   it('shows loading skeleton state with 4 KPI cards', () => {
@@ -249,15 +249,17 @@ describe('DashboardPage', () => {
     // Month is now selected via pill buttons in the greeting header
     const junButton = screen.getByRole('button', { name: 'Jun' })
     fireEvent.click(junButton)
-    // Clicked button should have the active styling (bg-white class)
-    expect(junButton).toHaveClass('bg-white')
+    // Clicked button should have the active styling
+    expect(junButton).toHaveClass('bg-[#3d8ef8]')
   })
 
   it('changes year when selector changes', () => {
     render(<DashboardPage />)
-    const yearSelect = screen.getByLabelText('Ano')
-    fireEvent.change(yearSelect, { target: { value: '2025' } })
-    expect((yearSelect as HTMLSelectElement).value).toBe('2025')
+    const currentYear = new Date().getFullYear()
+    expect(screen.getByText(String(currentYear))).toBeInTheDocument()
+    const nextYearBtn = screen.getByLabelText('Ano siguiente')
+    fireEvent.click(nextYearBtn)
+    expect(screen.getByText(String(currentYear + 1))).toBeInTheDocument()
   })
 
   it('does not show error alert when isError is false', () => {

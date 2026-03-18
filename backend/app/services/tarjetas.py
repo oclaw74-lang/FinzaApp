@@ -55,11 +55,17 @@ def get_tarjeta(user_jwt: str, user_id: str, tarjeta_id: str) -> dict | None:
     return None
 
 
-def create_tarjeta(user_jwt: str, user_id: str, data: TarjetaCreate) -> dict:
+def create_tarjeta(
+    user_jwt: str, user_id: str, data: TarjetaCreate, user_email: str | None = None
+) -> dict:
     """Insert a new tarjeta and return the created record."""
     client = get_user_client(user_jwt)
     payload = data.model_dump(exclude_none=True)
     payload["user_id"] = user_id
+
+    # Auto-fill titular with user email (or a generic default) if not provided
+    if "titular" not in payload or not payload.get("titular"):
+        payload["titular"] = user_email or "Titular"
 
     # Serialize numeric fields as strings for PostgREST
     if "saldo_actual" in payload:

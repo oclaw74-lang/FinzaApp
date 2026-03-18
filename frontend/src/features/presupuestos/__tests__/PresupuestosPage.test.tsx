@@ -147,12 +147,12 @@ describe('PresupuestosPage', () => {
   it('renders page content', () => {
     render(<PresupuestosPage />)
     // Title is now rendered by the shared Header component (not duplicated in page body)
-    expect(screen.getByRole('button', { name: /nuevo/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^nuevo$/i })).toBeInTheDocument()
   })
 
   it('renders Nuevo button', () => {
     render(<PresupuestosPage />)
-    expect(screen.getByRole('button', { name: /nuevo/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^nuevo$/i })).toBeInTheDocument()
   })
 
   it('renders mes and year selectors', () => {
@@ -202,7 +202,7 @@ describe('PresupuestosPage', () => {
 
   it('opens create modal when Nuevo button is clicked', () => {
     render(<PresupuestosPage />)
-    fireEvent.click(screen.getByRole('button', { name: /nuevo/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^nuevo$/i }))
     expect(screen.getByRole('dialog', { name: /nuevo presupuesto/i })).toBeInTheDocument()
   })
 
