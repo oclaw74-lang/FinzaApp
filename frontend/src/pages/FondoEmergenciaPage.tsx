@@ -15,45 +15,6 @@ import {
 
 type ModalMode = 'crear' | 'depositar' | 'retirar' | null
 
-function ProgressBar({ porcentaje }: { porcentaje: number }) {
-  const color =
-    porcentaje >= 100
-      ? 'var(--success)'
-      : porcentaje >= 33
-      ? '#FFC000'
-      : 'var(--danger)'
-
-  const hitos = [
-    { pct: 33.3, label: '1 mes' },
-    { pct: 100, label: '3 meses' },
-    { pct: 200, label: '6 meses' },
-  ]
-
-  const barPct = Math.min(porcentaje, 100)
-
-  return (
-    <div className="mb-6">
-      <div className="relative h-4 bg-surface-raised rounded-full overflow-visible mb-6">
-        <div
-          className="h-4 rounded-full transition-all duration-500"
-          style={{ width: `${barPct}%`, backgroundColor: color }}
-        />
-        {hitos.map((h) => (
-          <div
-            key={h.pct}
-            className="absolute top-0 h-4 w-0.5 bg-[var(--border)] z-10"
-            style={{ left: `${Math.min(h.pct, 100)}%` }}
-          >
-            <span className="absolute top-6 left-1/2 -translate-x-1/2 text-[10px] text-[var(--text-muted)] whitespace-nowrap">
-              {h.label}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 export function FondoEmergenciaPage(): JSX.Element {
   const { t } = useTranslation()
   const { data: fondo, isLoading } = useFondoEmergencia()
@@ -144,37 +105,71 @@ export function FondoEmergenciaPage(): JSX.Element {
         </div>
       ) : (
         <>
-          {/* KPI Cards */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <div className="card-glass p-5 dark:border-finza-cyan/20">
-              <p className="kpi-label dark:text-finza-t2">{t('fondoEmergencia.montoActual')}</p>
-              <p className="kpi-value dark:text-finza-cyan mt-2 money">{formatCurrency(fondo.monto_actual)}</p>
+          {/* Hero Card */}
+          <div
+            className="relative rounded-[20px] p-8 overflow-hidden mb-4"
+            style={{
+              background: 'linear-gradient(135deg, rgba(0,223,162,0.1), rgba(61,142,248,0.05))',
+              border: '1px solid rgba(0,223,162,0.2)',
+            }}
+          >
+            {/* Decorative blob */}
+            <div
+              className="absolute -top-10 -right-10 w-48 h-48 rounded-full pointer-events-none"
+              style={{ background: 'radial-gradient(circle, rgba(0,223,162,0.15), transparent 70%)' }}
+            />
+
+            {/* Label */}
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[#00dfa2] mb-1">
+              {t('fondoEmergencia.montoActual')}
+            </p>
+
+            {/* Monto */}
+            <p className="text-[42px] font-extrabold tabular-nums text-[var(--text-primary)] leading-none mb-2">
+              {formatCurrency(fondo.monto_actual)}
+            </p>
+
+            {/* Subtitle */}
+            <p className="text-sm text-[#657a9e] mb-5">
+              Cobertura para ~{fondo.meta_meses} {fondo.meta_meses === 1 ? 'mes' : 'meses'} de gastos
+            </p>
+
+            {/* Progress bar */}
+            <div className="h-2 rounded-full bg-white/10 overflow-hidden mb-2">
+              <div
+                className="h-2 rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.min(fondo.porcentaje, 100)}%`,
+                  background: 'linear-gradient(90deg, #00dfa2, #00dfff)',
+                }}
+              />
             </div>
-            <div className="card-glass p-5 dark:border-finza-cyan/20">
-              <p className="kpi-label dark:text-finza-t2">{t('fondoEmergencia.metaCalculada')}</p>
-              <p className="kpi-value dark:text-[#e8f0ff] mt-2 money">
-                {fondo.meta_calculada ? formatCurrency(fondo.meta_calculada) : '—'}
-              </p>
+
+            {/* Meta row */}
+            <div className="flex justify-between text-xs text-[#657a9e]">
+              <span>{fondo.porcentaje.toFixed(1)}% de la meta</span>
+              {fondo.meta_calculada && fondo.meta_calculada > fondo.monto_actual && (
+                <span>Faltan {formatCurrency(fondo.meta_calculada - fondo.monto_actual)}</span>
+              )}
             </div>
-            <div className="card-glass p-5">
-              <p className="kpi-label dark:text-finza-t2">{t('fondoEmergencia.porcentaje')}</p>
-              <p className={cn('kpi-value mt-2', fondo.porcentaje >= 100 ? 'text-[var(--success)] dark:text-finza-green' : 'dark:text-finza-cyan')}>
-                {fondo.porcentaje.toFixed(1)}%
-              </p>
-            </div>
+          </div>
+
+          {/* Info cards 2 col */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="card-glass p-5">
               <p className="kpi-label dark:text-finza-t2">{t('fondoEmergencia.sugerenciaMensual')}</p>
-              <p className="kpi-value dark:text-finza-yellow mt-2 money">
+              <p className="text-xl font-bold tabular-nums mt-2" style={{ color: '#ffb340' }}>
                 {fondo.meta_calculada
                   ? formatCurrency(Math.max(0, (fondo.meta_calculada - fondo.monto_actual) / 12))
                   : '—'}
               </p>
             </div>
-          </div>
-
-          {/* Progress bar */}
-          <div className="card-glass p-5 mb-4 dark:border-finza-cyan/20">
-            <ProgressBar porcentaje={fondo.porcentaje} />
+            <div className="card-glass p-5">
+              <p className="kpi-label dark:text-finza-t2">{t('fondoEmergencia.metaCalculada')}</p>
+              <p className="text-xl font-bold tabular-nums mt-2" style={{ color: '#3d8ef8' }}>
+                {fondo.meta_calculada ? formatCurrency(fondo.meta_calculada) : '—'}
+              </p>
+            </div>
           </div>
 
           {/* Meta selector */}
@@ -202,14 +197,15 @@ export function FondoEmergenciaPage(): JSX.Element {
           <div className="flex gap-3">
             <button
               onClick={() => setModal('depositar')}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[var(--success)] text-white font-medium text-sm"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium text-sm text-white"
+              style={{ background: 'linear-gradient(135deg, #00dfa2, #00b87a)' }}
             >
               <ArrowUpCircle size={16} />
               {t('fondoEmergencia.depositar')}
             </button>
             <button
               onClick={() => setModal('retirar')}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-surface-raised text-[var(--text-primary)] font-medium text-sm border border-[var(--border)]"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-transparent text-[var(--text-primary)] font-medium text-sm border border-[var(--border)]"
             >
               <ArrowDownCircle size={16} />
               {t('fondoEmergencia.retirar')}

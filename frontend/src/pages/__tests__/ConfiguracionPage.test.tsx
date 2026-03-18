@@ -119,10 +119,10 @@ describe('ConfiguracionPage', () => {
     expect(screen.getByText('settings.darkMode')).toBeInTheDocument()
   })
 
-  it('clicking dark mode card calls setTheme with dark', () => {
+  it('clicking dark mode toggle calls setTheme with dark', () => {
     renderPage()
     fireEvent.click(screen.getByText('settings.appearance'))
-    fireEvent.click(screen.getByText('settings.darkMode'))
+    fireEvent.click(screen.getByLabelText('Toggle modo oscuro'))
     expect(mockSetTheme).toHaveBeenCalledWith('dark')
   })
 
