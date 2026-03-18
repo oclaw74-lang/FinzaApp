@@ -362,11 +362,14 @@ export function PresupuestosPage(): JSX.Element {
               <button
                 type="button"
                 onClick={handleOpenCreate}
-                className="border-2 border-dashed border-white/[0.1] rounded-[20px] flex flex-col items-center justify-center gap-2 text-[#657a9e] cursor-pointer min-h-[160px] hover:border-[#3d8ef8] hover:text-[#3d8ef8] hover:bg-[rgba(61,142,248,0.04)] transition-all"
+                className="border-2 border-dashed border-[#1f2e45] rounded-[20px] min-h-[140px] w-full
+                           flex flex-col items-center justify-center gap-2 text-[#657a9e]
+                           hover:border-[#3d8ef8] hover:text-[#3d8ef8] hover:bg-[rgba(61,142,248,0.04)]
+                           transition-all duration-200 cursor-pointer"
                 aria-label="Nuevo presupuesto"
               >
-                <span className="text-3xl leading-none">+</span>
-                <span className="text-sm font-medium">Nuevo presupuesto</span>
+                <span className="text-[28px] leading-none">+</span>
+                <span className="text-[13px] font-medium">Nuevo presupuesto</span>
               </button>
             )}
           </div>
