@@ -78,7 +78,8 @@ describe('Sidebar', () => {
     expect(screen.queryByText('Finza')).not.toBeInTheDocument()
   })
 
-  it('shows desktop toggle button at all times', () => {
+  it('shows toggle button when expanded', () => {
+    setupMocks({ sidebarCollapsed: false })
     renderSidebar()
     const toggleBtn = screen.getByTitle('Colapsar sidebar')
     expect(toggleBtn).toBeInTheDocument()
@@ -92,20 +93,18 @@ describe('Sidebar', () => {
     expect(mockSetSidebarCollapsed).toHaveBeenCalledWith(true)
   })
 
-  it('toggle button expands sidebar when collapsed', () => {
+  it('does not show toggle button when collapsed', () => {
     setupMocks({ sidebarCollapsed: true })
     renderSidebar()
-    const toggleBtn = screen.getByTitle('Expandir sidebar')
-    fireEvent.click(toggleBtn)
-    expect(mockSetSidebarCollapsed).toHaveBeenCalledWith(false)
+    expect(screen.queryByTitle('Expandir sidebar')).not.toBeInTheDocument()
+    expect(screen.queryByTitle('Colapsar sidebar')).not.toBeInTheDocument()
   })
 
   it('logo button expands sidebar when collapsed', () => {
     setupMocks({ sidebarCollapsed: true })
     renderSidebar()
-    // When collapsed there are two "Expandir sidebar" buttons: logo (type=button) and toggle
-    const logoBtns = screen.getAllByLabelText('Expandir sidebar')
-    const logoBtn = logoBtns.find((el) => el.getAttribute('type') === 'button') as HTMLElement
+    // When collapsed only the logo button expands the sidebar
+    const logoBtn = screen.getByLabelText('Expandir sidebar')
     fireEvent.click(logoBtn)
     expect(mockSetSidebarCollapsed).toHaveBeenCalledWith(false)
   })

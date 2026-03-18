@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { Plus, CreditCard, Info, Pencil, Trash2, X } from 'lucide-react'
 import { useForm } from 'react-hook-form'
@@ -231,14 +232,19 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
 
   if (!isOpen) return null
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className="finza-card w-full max-w-md max-h-[90vh] overflow-y-auto p-6">
+      <div
+        className="absolute inset-0"
+        onClick={handleClose}
+        aria-hidden="true"
+      />
+      <div className="relative bg-white dark:bg-[#0d1520] dark:border dark:border-white/[0.08] rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 id="modal-title" className="text-base font-semibold text-[var(--text-primary)]">
             {tarjeta ? 'Editar tarjeta' : 'Nueva tarjeta'}
@@ -391,7 +397,8 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -416,14 +423,19 @@ function getNextDayOfMonth(day: number): string {
 function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): JSX.Element {
   const fmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 })
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-label={`Detalle ${tarjeta.nombre}`}
     >
-      <div className="finza-card w-full max-w-sm p-6 space-y-4">
+      <div
+        className="absolute inset-0"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div className="relative bg-white dark:bg-[#0d1520] dark:border dark:border-white/[0.08] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-[var(--text-primary)]">{tarjeta.nombre}</h2>
           <button
@@ -497,7 +509,8 @@ function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): 
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -516,7 +529,7 @@ function EmptyState(): JSX.Element {
 // ─── Skeleton ──────────────────────────────────────────────────────────────────
 
 function CardSkeleton(): JSX.Element {
-  return <Skeleton className="w-full rounded-2xl" style={{ height: 180 }} />
+  return <Skeleton className="w-full rounded-2xl h-[180px]" />
 }
 
 // ─── Main page ─────────────────────────────────────────────────────────────────

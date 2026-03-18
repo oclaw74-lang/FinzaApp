@@ -68,7 +68,7 @@ export function Layout(): JSX.Element {
         )}
       >
         <Header />
-        <StatsBar onCommandPaletteOpen={() => setCommandPaletteOpen(true)} />
+        <StatsBar />
         <main className="flex-1 p-6 pb-20 md:pb-6">
           <div className="animate-fade-in">
             <Outlet />

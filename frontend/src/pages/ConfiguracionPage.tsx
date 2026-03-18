@@ -3,19 +3,29 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Sun, Moon, Camera, DollarSign, Clock } from 'lucide-react'
+import { Sun, Moon, Camera, DollarSign, Clock, Tag, Trash2, Plus } from 'lucide-react'
+import * as Icons from 'lucide-react'
+import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
+import {
+  useCategorias,
+  useCreateCategoria,
+  useDeleteCategoria,
+} from '@/hooks/useCategorias'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
 import { useThemeStore } from '@/store/themeStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar } from '@/components/ui/avatar'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/i18n'
+import type { CategoriaResponse } from '@/types/transacciones'
 
-type Tab = 'profile' | 'appearance' | 'language' | 'security' | 'finances'
+type Tab = 'profile' | 'appearance' | 'language' | 'security' | 'finances' | 'categorias'
 
 const profileSchema = z.object({
   fullName: z.string().min(2, 'Nombre requerido'),
@@ -37,11 +47,205 @@ const passwordSchema = z
 type ProfileForm = z.infer<typeof profileSchema>
 type PasswordForm = z.infer<typeof passwordSchema>
 
+// ─── CategoriasTab ─────────────────────────────────────────────────────────────
+
+interface CategoriasTabProps {
+  navigate: ReturnType<typeof useNavigate>
+}
+
+function getCategoryIcon(icono: string | null): React.FC<{ size?: number; className?: string }> {
+  if (!icono) return Tag as React.FC<{ size?: number; className?: string }>
+  const IconComp = (Icons as Record<string, unknown>)[icono]
+  if (typeof IconComp === 'function') {
+    return IconComp as React.FC<{ size?: number; className?: string }>
+  }
+  return Tag as React.FC<{ size?: number; className?: string }>
+}
+
+function getTipoBadge(tipo: CategoriaResponse['tipo']): JSX.Element {
+  const styles: Record<CategoriaResponse['tipo'], string> = {
+    ingreso: 'bg-emerald-500/20 text-emerald-400',
+    egreso: 'bg-red-500/20 text-red-400',
+    ambos: 'bg-blue-500/20 text-blue-400',
+  }
+  const labels: Record<CategoriaResponse['tipo'], string> = {
+    ingreso: 'Ingreso',
+    egreso: 'Egreso',
+    ambos: 'Ambos',
+  }
+  return (
+    <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full', styles[tipo])}>
+      {labels[tipo]}
+    </span>
+  )
+}
+
+interface NuevaCategoriaFormProps {
+  onDone: () => void
+}
+
+function NuevaCategoriaForm({ onDone }: NuevaCategoriaFormProps): JSX.Element {
+  const [nombre, setNombre] = useState('')
+  const [tipo, setTipo] = useState<'ingreso' | 'egreso' | 'ambos'>('egreso')
+  const createCategoria = useCreateCategoria()
+
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault()
+    if (!nombre.trim()) return
+    try {
+      await createCategoria.mutateAsync({ nombre: nombre.trim(), tipo })
+      toast.success('Categoria creada')
+      setNombre('')
+      onDone()
+    } catch {
+      toast.error('Error al crear la categoria')
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="card-glass rounded-xl p-4 space-y-3 border border-white/[0.12]">
+      <p className="text-xs font-semibold text-white/50 uppercase tracking-widest">Nueva categoria</p>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          placeholder="Nombre de la categoria"
+          className="finza-input flex-1 text-sm"
+          autoFocus
+        />
+        <select
+          value={tipo}
+          onChange={(e) => setTipo(e.target.value as typeof tipo)}
+          className="finza-input text-sm"
+        >
+          <option value="egreso">Egreso</option>
+          <option value="ingreso">Ingreso</option>
+          <option value="ambos">Ambos</option>
+        </select>
+      </div>
+      <div className="flex gap-2">
+        <Button type="submit" size="md" isLoading={createCategoria.isPending} className="flex-1">
+          Guardar
+        </Button>
+        <Button type="button" size="md" variant="secondary" onClick={onDone} className="flex-1">
+          Cancelar
+        </Button>
+      </div>
+    </form>
+  )
+}
+
+function CategoriasTab({ navigate }: CategoriasTabProps): JSX.Element {
+  const { data: categorias = [], isLoading, isError } = useCategorias()
+  const deleteCategoria = useDeleteCategoria()
+  const [showForm, setShowForm] = useState(false)
+
+  const handleDelete = async (cat: CategoriaResponse): Promise<void> => {
+    if (cat.es_sistema) {
+      toast.error('No se pueden eliminar categorias del sistema')
+      return
+    }
+    if (window.confirm(`Eliminar categoria "${cat.nombre}"?`)) {
+      try {
+        await deleteCategoria.mutateAsync(cat.id)
+        toast.success('Categoria eliminada')
+      } catch {
+        toast.error('Error al eliminar la categoria')
+      }
+    }
+  }
+
+  return (
+    <div className="card-glass p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-[var(--text-primary)]">Gestiona tus categorias</p>
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">
+            Categorias del sistema no pueden eliminarse
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={() => navigate('/categorias')}
+          >
+            Ver todas
+          </Button>
+          <Button
+            variant="default"
+            size="md"
+            onClick={() => setShowForm(true)}
+          >
+            <Plus size={14} />
+            Nueva
+          </Button>
+        </div>
+      </div>
+
+      {showForm && (
+        <NuevaCategoriaForm onDone={() => setShowForm(false)} />
+      )}
+
+      {isLoading && (
+        <div className="space-y-2">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-12 rounded-xl" />
+          ))}
+        </div>
+      )}
+
+      {isError && (
+        <p className="text-sm text-[var(--text-muted)] text-center py-4">
+          No se pudieron cargar las categorias.
+        </p>
+      )}
+
+      {!isLoading && !isError && (
+        <div className="space-y-1.5">
+          {categorias.map((cat) => {
+            const IconComp = getCategoryIcon(cat.icono)
+            return (
+              <div
+                key={cat.id}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl dark:hover:bg-white/[0.04] transition-colors"
+              >
+                <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center flex-shrink-0">
+                  <IconComp size={15} className="text-white/50" />
+                </div>
+                <span className="flex-1 text-sm text-[var(--text-primary)] truncate">{cat.nombre}</span>
+                {getTipoBadge(cat.tipo)}
+                {cat.es_sistema && (
+                  <span className="text-[10px] text-white/20 px-1.5 py-0.5 rounded bg-white/[0.04]">
+                    Sistema
+                  </span>
+                )}
+                {!cat.es_sistema && (
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(cat)}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors flex-shrink-0"
+                    aria-label={`Eliminar ${cat.nombre}`}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function ConfiguracionPage(): JSX.Element {
   const { t } = useTranslation()
   const { user } = useAuthStore()
   const { theme, setTheme, language, setLanguage } = useThemeStore()
   const [activeTab, setActiveTab] = useState<Tab>('profile')
+  const navigate = useNavigate()
   const { data: profile } = useProfile()
   const updateProfile = useUpdateProfile()
   const [salarioValue, setSalarioValue] = useState('')
@@ -133,6 +337,7 @@ export function ConfiguracionPage(): JSX.Element {
     { id: 'appearance', label: t('settings.appearance') },
     { id: 'language', label: t('settings.language') },
     { id: 'security', label: t('settings.security') },
+    { id: 'categorias', label: 'Categorias' },
   ]
 
   const userName = metadata.full_name ?? user?.email?.split('@')[0] ?? 'Usuario'
@@ -400,6 +605,11 @@ export function ConfiguracionPage(): JSX.Element {
             {t('settings.changePassword')}
           </Button>
         </div>
+      )}
+
+      {/* Tab: Categorias */}
+      {activeTab === 'categorias' && (
+        <CategoriasTab navigate={navigate} />
       )}
 
       {/* Password Modal */}

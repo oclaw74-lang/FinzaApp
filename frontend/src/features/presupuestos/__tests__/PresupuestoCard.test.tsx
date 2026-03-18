@@ -43,7 +43,7 @@ describe('PresupuestoCard', () => {
     render(<PresupuestoCard estado={mockEstadoNormal} onClick={vi.fn()} />)
     const progressBar = screen.getByRole('progressbar')
     expect(progressBar).toHaveAttribute('aria-valuenow', '70')
-    expect(screen.getByText('70% usado')).toBeInTheDocument()
+    expect(screen.getByText('70% utilizado')).toBeInTheDocument()
   })
 
   it('does not show alert badge when alerta is false', () => {
@@ -81,9 +81,11 @@ describe('PresupuestoCard', () => {
     expect(Number(progressBar.style.width.replace('%', ''))).toBeLessThanOrEqual(100)
   })
 
-  it('shows gastado and limite labels', () => {
+  it('shows gastado amount and limite reference', () => {
     render(<PresupuestoCard estado={mockEstadoNormal} onClick={vi.fn()} />)
-    expect(screen.getByText('Gastado')).toBeInTheDocument()
-    expect(screen.getByText('Limite')).toBeInTheDocument()
+    // New design shows amounts directly without "Gastado"/"Limite" labels
+    // gasto_actual 350 → shows RD$350.00; monto_limite 500 → shows "de RD$500.00"
+    expect(screen.getByText(/350/)).toBeInTheDocument()
+    expect(screen.getByText(/500/)).toBeInTheDocument()
   })
 })
