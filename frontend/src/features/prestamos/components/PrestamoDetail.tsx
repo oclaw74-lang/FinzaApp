@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { X, Pencil, Trash2, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
@@ -69,7 +70,7 @@ export function PrestamoDetail({
   }
 
   if (isLoading && !displayPrestamo) {
-    return (
+    return createPortal(
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
         <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-xl p-6 animate-pulse">
@@ -80,12 +81,13 @@ export function PrestamoDetail({
             <div className="h-4 w-1/2 bg-[var(--surface-raised)] rounded" />
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     )
   }
 
   if (isError && !displayPrestamo) {
-    return (
+    return createPortal(
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
         <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-xl p-6">
@@ -94,7 +96,8 @@ export function PrestamoDetail({
             Cerrar
           </Button>
         </div>
-      </div>
+      </div>,
+      document.body
     )
   }
 
@@ -114,7 +117,7 @@ export function PrestamoDetail({
 
   const isTipoDeben = displayPrestamo.tipo === 'me_deben'
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       role="dialog"
@@ -340,6 +343,7 @@ export function PrestamoDetail({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

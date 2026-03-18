@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { X, Pencil, Trash2, Plus, ArrowDown, ArrowUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatMoney, formatDate, cn } from '@/lib/utils'
@@ -79,7 +80,7 @@ export function MetaDetail({
   }
 
   if (isLoading && !displayMeta) {
-    return (
+    return createPortal(
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
         <div
           className="absolute inset-0 bg-black/50"
@@ -94,12 +95,13 @@ export function MetaDetail({
             <div className="h-4 w-1/2 bg-[var(--surface-raised)] rounded" />
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     )
   }
 
   if (isError && !displayMeta) {
-    return (
+    return createPortal(
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
         <div
           className="absolute inset-0 bg-black/50"
@@ -119,7 +121,8 @@ export function MetaDetail({
             Cerrar
           </Button>
         </div>
-      </div>
+      </div>,
+      document.body
     )
   }
 
@@ -142,7 +145,7 @@ export function MetaDetail({
     (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
   )
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       role="dialog"
@@ -366,6 +369,7 @@ export function MetaDetail({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

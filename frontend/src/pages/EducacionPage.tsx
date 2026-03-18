@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { BookOpen, CheckCircle2, Clock, X } from 'lucide-react'
 import { toast } from 'sonner'
@@ -30,7 +31,7 @@ interface LeccionModalProps {
 function LeccionModal({ leccion, onClose, onCompletar, isLoading }: LeccionModalProps): JSX.Element {
   const { t } = useTranslation()
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60"
       role="dialog"
@@ -104,7 +105,8 @@ function LeccionModal({ leccion, onClose, onCompletar, isLoading }: LeccionModal
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
