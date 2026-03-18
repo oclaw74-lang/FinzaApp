@@ -1260,8 +1260,8 @@ export function LandingPage(): JSX.Element {
               <div
                 className="hero-devices flex-shrink-0 relative"
                 style={{
-                  width: 420,
-                  height: 420,
+                  width: 580,
+                  height: 520,
                   animation: 'fadeInRight 0.9s ease 0.3s both',
                 }}
                 aria-hidden="true"
@@ -1269,7 +1269,7 @@ export function LandingPage(): JSX.Element {
                 {/* Tablet */}
                 <div
                   className="device-tablet absolute"
-                  style={{ width: 300, height: 220, top: 30, left: 0, padding: 16, transform: 'rotate(-4deg)' }}
+                  style={{ width: 390, height: 295, top: 30, left: 0, padding: 20, transform: 'rotate(-4deg)' }}
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <img src="/logo.svg" alt="" className="w-5 h-5" />
@@ -1296,7 +1296,7 @@ export function LandingPage(): JSX.Element {
                     ))}
                   </div>
                   {/* Mini bar chart */}
-                  <div className="flex items-end gap-1.5" style={{ height: 48 }}>
+                  <div className="flex items-end gap-1.5" style={{ height: 68 }}>
                     {[35, 60, 45, 80, 55, 70, 90].map((h, i) => (
                       <div
                         key={i}
@@ -1316,14 +1316,14 @@ export function LandingPage(): JSX.Element {
                 {/* Phone with aura glow */}
                 <div
                   className="device-phone absolute"
-                  style={{ width: 160, height: 270, top: 60, right: 0, padding: 14, transform: 'rotate(3deg)' }}
+                  style={{ width: 210, height: 360, top: 80, right: 0, padding: 18, transform: 'rotate(3deg)' }}
                 >
                   {/* Blue pulsing aura */}
                   <div className="phone-aura" />
 
                   {/* Score ring on phone */}
                   <div className="flex justify-center mb-3">
-                    <ScoreRingAnimated score={statsVisible ? scoreCount || 74 : 74} size={110} />
+                    <ScoreRingAnimated score={statsVisible ? scoreCount || 74 : 74} size={148} />
                   </div>
                   {/* Score bars */}
                   {[
@@ -1354,8 +1354,8 @@ export function LandingPage(): JSX.Element {
                 <div
                   className="absolute rounded-full pointer-events-none"
                   style={{
-                    width: 350,
-                    height: 350,
+                    width: 480,
+                    height: 480,
                     top: '50%',
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
