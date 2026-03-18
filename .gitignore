@@ -1,2 +1,8 @@
 .envrc
 .claude/settings.local.json
+
+# Environment files with secrets — never commit
+.env
+.env.production
+.env.local
+.env.*.local
