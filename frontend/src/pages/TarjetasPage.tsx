@@ -64,14 +64,17 @@ type TarjetaFormData = z.infer<typeof TarjetaSchema>
 
 // ─── Card visual component ─────────────────────────────────────────────────────
 
-function getCardGradient(red: Tarjeta['red'], color: string | null): string {
+function getCardGradient(red: Tarjeta['red'], tipo: Tarjeta['tipo'], color: string | null): string {
   if (color) return `linear-gradient(135deg, ${color}dd, ${color}88)`
+  if (tipo === 'debito') {
+    return 'linear-gradient(135deg, #0e5239 0%, #072b1f 50%, #041610 100%)'
+  }
   const gradients: Record<Tarjeta['red'], string> = {
-    visa: 'linear-gradient(135deg, #1a1f71, #2563eb)',
-    mastercard: 'linear-gradient(135deg, #eb4d1c, #f59e0b)',
-    amex: 'linear-gradient(135deg, #0a6640, #16a34a)',
-    discover: 'linear-gradient(135deg, #ea580c, #f97316)',
-    otro: 'linear-gradient(135deg, #6d28d9, #a78bfa)',
+    visa: 'linear-gradient(135deg, #1a3a6b 0%, #0d1e40 50%, #0a1628 100%)',
+    mastercard: 'linear-gradient(135deg, #3d1278 0%, #1e0a40 50%, #0f0620 100%)',
+    amex: 'linear-gradient(135deg, #0e5239 0%, #072b1f 50%, #041610 100%)',
+    discover: 'linear-gradient(135deg, #4a1a00 0%, #2a0e00 50%, #160700 100%)',
+    otro: 'linear-gradient(135deg, #3d1278 0%, #1e0a40 50%, #0f0620 100%)',
   }
   return gradients[red]
 }
@@ -93,17 +96,33 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
       type="button"
       onClick={onClick}
       className={cn(
-        'relative w-full rounded-2xl p-5 text-white overflow-hidden',
-        'transition-transform duration-200 ease-out',
-        'hover:-translate-y-1 hover:scale-[1.01]',
+        'relative w-full text-white overflow-hidden',
+        'transition-all duration-250 ease-out',
+        'hover:-translate-y-1 hover:scale-[1.01] hover:shadow-[0_20px_60px_rgba(0,0,0,0.5)]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50',
         !tarjeta.activa && 'opacity-60'
       )}
-      style={{ background: getCardGradient(tarjeta.red, tarjeta.color), minHeight: 180 }}
+      style={{
+        background: getCardGradient(tarjeta.red, tarjeta.tipo, tarjeta.color),
+        minHeight: 180,
+        borderRadius: '22px',
+        padding: '28px',
+        border: '1px solid rgba(255,255,255,0.1)',
+      }}
       aria-label={`Tarjeta ${tarjeta.banco}`}
     >
+      {/* Glare overlay (replicates ::before from mockup) */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse 70% 60% at 20% 30%, rgba(255,255,255,0.14), transparent 60%)',
+          borderRadius: '22px',
+        }}
+        aria-hidden="true"
+      />
+
       {/* Chip SVG */}
-      <div className="absolute top-5 left-5">
+      <div className="absolute top-7 left-7">
         <svg width="40" height="30" viewBox="0 0 40 30" aria-hidden="true">
           <rect x="2" y="2" width="36" height="26" rx="4" fill="#d4a017" stroke="#b8860b" strokeWidth="0.5" />
           <rect x="2" y="11" width="36" height="8" fill="#b8860b" opacity="0.7" />
@@ -113,26 +132,64 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
         </svg>
       </div>
 
-      {/* Bank name */}
-      <div className="absolute top-5 right-5 text-right">
-        <p className="text-xs font-semibold tracking-wide text-white/80 uppercase">{tarjeta.banco}</p>
+      {/* Bank name + tipo badge */}
+      <div className="absolute top-7 right-7 text-right">
+        <p
+          className="font-semibold tracking-widest uppercase"
+          style={{ fontSize: '10px', opacity: 0.55 }}
+        >
+          {tarjeta.banco}
+        </p>
         {!tarjeta.activa && (
           <span className="text-xs bg-white/20 rounded px-1.5 py-0.5 mt-1 inline-block">Inactiva</span>
         )}
       </div>
 
       {/* Card number */}
-      <div className="absolute bottom-14 left-5 text-base font-mono tracking-widest text-white/90">
+      <div
+        className="absolute font-mono text-white/90"
+        style={{
+          bottom: '56px',
+          left: '28px',
+          fontSize: '16px',
+          fontWeight: 600,
+          letterSpacing: '0.2em',
+        }}
+      >
         •••• •••• •••• {tarjeta.ultimos_digitos}
       </div>
 
       {/* Footer */}
-      <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between">
+      <div
+        className="absolute flex items-end justify-between"
+        style={{ bottom: '28px', left: '28px', right: '28px' }}
+      >
         <div>
-          <p className="text-xs text-white/60 uppercase tracking-wider">Saldo</p>
-          <p className="text-lg font-bold text-white">{formattedBalance}</p>
+          <p
+            className="uppercase text-white/50"
+            style={{ fontSize: '10px', letterSpacing: '0.08em', marginBottom: '2px' }}
+          >
+            Saldo
+          </p>
+          <p
+            className="text-white font-bold tabular-nums"
+            style={{ fontSize: '26px', letterSpacing: '-0.03em' }}
+          >
+            {formattedBalance}
+          </p>
         </div>
-        <p className="text-sm font-bold text-white/80 uppercase tracking-widest">{tarjeta.red}</p>
+        <span
+          className="font-semibold"
+          style={{
+            fontSize: '10px',
+            padding: '4px 10px',
+            borderRadius: '20px',
+            background: tarjeta.tipo === 'debito' ? 'rgba(0,223,162,0.2)' : 'rgba(61,142,248,0.2)',
+            color: tarjeta.tipo === 'debito' ? 'rgba(150,255,220,0.9)' : 'rgba(200,220,255,0.9)',
+          }}
+        >
+          {tarjeta.tipo === 'credito' ? 'Crédito' : 'Débito'}
+        </span>
       </div>
     </button>
   )

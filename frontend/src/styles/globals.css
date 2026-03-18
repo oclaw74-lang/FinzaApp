@@ -39,8 +39,8 @@
     --surface: #080f1e;
     --surface-raised: #0d1829;
     --surface-overlay: rgba(8,15,30,0.85);
-    --border: #1f2e45;
-    --border-strong: #1f2e45;
+    --border: rgba(255,255,255,0.06);
+    --border-strong: rgba(255,255,255,0.10);
     --text-primary: #e8f0ff;
     --text-secondary: #c8d8f0;
     --text-muted: #657a9e;
@@ -188,7 +188,7 @@ html.dark .blob {
   filter: blur(120px);
   pointer-events: none;
   z-index: 0;
-  opacity: 0.15;
+  opacity: 0.18;
   animation: blobdrift 18s ease-in-out infinite alternate;
 }
 html.dark .blob-1 { width: 500px; height: 500px; background: #3d8ef8; top: -200px; left: -100px; animation-delay: 0s; }
@@ -206,8 +206,8 @@ html.dark body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 0;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.10) 1px, transparent 1px);
+  z-index: 1;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.13) 1px, transparent 1px);
   background-size: 28px 28px;
   mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
   -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
@@ -379,11 +379,11 @@ html.dark body::after {
     box-shadow: 0 4px 30px rgba(0,0,0,0.3);
   }
   .dark .card-glass {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(8, 15, 30, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 12px;
+    border-radius: 14px;
   }
 
   /* ===== KPI typography — premium ===== */
