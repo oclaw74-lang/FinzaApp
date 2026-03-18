@@ -201,18 +201,6 @@ html.dark .blob-3 { width: 350px; height: 350px; background: #00dfff; bottom: -1
   100% { transform: translate(40px, 30px) scale(1.1); }
 }
 
-/* ========== Dot grid — dark only ========== */
-html.dark body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.13) 1px, transparent 1px);
-  background-size: 28px 28px;
-  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
-}
 
 /* ========== Film grain — dark only ========== */
 html.dark body::after {
