@@ -60,10 +60,8 @@ export function ResetPasswordPage(): JSX.Element {
         {/* Logo */}
         <div className="text-center">
           <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-9 h-9 bg-[#0f2544] rounded-xl flex items-center justify-center">
-              <div className="w-5 h-5 bg-golden-flow rounded-md flex items-center justify-center">
-                <span className="font-bold text-[#0f2544] text-xs">F</span>
-              </div>
+            <div className="w-9 h-9 shrink-0 flex items-center justify-center">
+              <img src="/logo.svg" alt="Finza" className="w-full h-full" />
             </div>
             <span className="font-bold text-xl text-[var(--text-primary)]">Finza</span>
           </div>
