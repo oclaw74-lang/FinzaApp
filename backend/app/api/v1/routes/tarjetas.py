@@ -46,6 +46,7 @@ async def create_tarjeta(
         user_jwt=token,
         user_id=current_user["user_id"],
         data=data,
+        user_email=current_user.get("email"),
     )
 
 

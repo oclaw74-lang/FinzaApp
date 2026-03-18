@@ -111,7 +111,7 @@ def test_tarjeta_create_invalid_tipo():
 
 
 def test_tarjeta_create_invalid_red():
-    """red must be one of visa, mastercard, amex, otra."""
+    """red must be one of visa, mastercard, amex, discover, otro."""
     from pydantic import ValidationError
 
     from app.schemas.tarjeta import TarjetaCreate
@@ -122,7 +122,7 @@ def test_tarjeta_create_invalid_red():
             titular="Test",
             ultimos_digitos="1234",
             tipo="debito",
-            red="discover",  # invalid
+            red="unknown_red",  # invalid
         )
 
 

@@ -4,7 +4,8 @@ export type RedTarjeta = 'visa' | 'mastercard' | 'amex' | 'discover' | 'otro'
 export interface Tarjeta {
   id: string
   user_id: string
-  nombre: string
+  banco: string
+  titular: string | null
   tipo: TipoTarjeta
   red: RedTarjeta
   ultimos_digitos: string
@@ -20,7 +21,8 @@ export interface Tarjeta {
 }
 
 export interface TarjetaCreate {
-  nombre: string
+  banco: string
+  titular?: string | null
   tipo: TipoTarjeta
   red: RedTarjeta
   ultimos_digitos: string
@@ -33,7 +35,8 @@ export interface TarjetaCreate {
 }
 
 export interface TarjetaUpdate {
-  nombre?: string
+  banco?: string
+  titular?: string | null
   tipo?: TipoTarjeta
   red?: RedTarjeta
   ultimos_digitos?: string
