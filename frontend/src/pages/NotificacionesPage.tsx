@@ -14,38 +14,47 @@ import { toast } from 'sonner'
 import { useEffect } from 'react'
 import { getApiErrorMessage } from '@/lib/apiError'
 
-const TIPO_CONFIG: Record<
+const DOT_COLOR: Record<string, string> = {
+  urgente: '#ff4060',
+  logro: '#00dfa2',
+  informativa: '#3d8ef8',
+  advertencia: '#ffb340',
+}
+
+const SECTION_CONFIG: Record<
   string,
-  { color: string; bgColor: string; darkColorClass: string; icon: typeof AlertTriangle; label: string }
+  { icon: typeof AlertTriangle; label: string; textColor: string }
 > = {
   urgente: {
-    color: 'var(--danger)',
-    bgColor: 'var(--danger)',
-    darkColorClass: 'dark:text-finza-red',
     icon: AlertTriangle,
     label: 'notificaciones.urgente',
+    textColor: 'var(--danger)',
   },
   informativa: {
-    color: 'var(--accent)',
-    bgColor: 'var(--accent)',
-    darkColorClass: 'dark:text-finza-blue',
     icon: Info,
     label: 'notificaciones.informativa',
+    textColor: 'var(--accent)',
   },
   logro: {
-    color: 'var(--success)',
-    bgColor: 'var(--success)',
-    darkColorClass: 'dark:text-finza-green',
     icon: Trophy,
     label: 'notificaciones.logro',
+    textColor: 'var(--success)',
   },
   advertencia: {
-    color: '#E65100',
-    bgColor: '#E65100',
-    darkColorClass: 'dark:text-finza-yellow',
     icon: Bell,
     label: 'notificaciones.advertencia',
+    textColor: '#E65100',
   },
+}
+
+function formatTimeAgo(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('es-MX', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 function NotificacionItem({
@@ -58,76 +67,52 @@ function NotificacionItem({
   onEliminar: (id: string) => void
 }): JSX.Element {
   const { t } = useTranslation()
-  const config = TIPO_CONFIG[notificacion.tipo] ?? TIPO_CONFIG.informativa
-  const Icon = config.icon
-
-  const dateStr = new Date(notificacion.created_at).toLocaleDateString('es-MX', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const dotColor = DOT_COLOR[notificacion.tipo] ?? '#3d8ef8'
+  const timeAgo = formatTimeAgo(notificacion.created_at)
 
   return (
     <div
       className={cn(
-        'card-glass p-4 flex items-start gap-3 transition-opacity dark:hover:bg-white/[0.03]',
+        'flex items-start gap-3 p-[14px] rounded-xl border border-[rgba(255,255,255,0.06)]',
+        'bg-[rgba(8,15,30,0.4)] hover:bg-[rgba(8,15,30,0.7)] hover:border-[rgba(255,255,255,0.1)]',
+        'transition-all duration-150 cursor-pointer mb-2',
         notificacion.leida && 'opacity-60'
       )}
     >
-      {/* Tipo icon */}
+      {/* Dot 8px */}
       <div
-        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-        style={{ backgroundColor: `${config.bgColor}22` }}
-      >
-        <Icon size={16} style={{ color: config.color }} />
-      </div>
+        className="w-2 h-2 rounded-full flex-shrink-0 mt-[3px]"
+        style={{ backgroundColor: dotColor }}
+      />
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p
-              className={cn(
-                'text-sm font-semibold',
-                notificacion.leida
-                  ? 'text-[var(--text-muted)]'
-                  : 'text-[var(--text-primary)]'
-              )}
-            >
-              {notificacion.titulo}
-            </p>
-            <p className="text-xs text-[var(--text-muted)] mt-0.5">{notificacion.mensaje}</p>
-            <p className="text-[10px] text-[var(--text-muted)] mt-1.5">{dateStr}</p>
-          </div>
-
-          {/* Tipo badge */}
-          <span
-            className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full"
-            style={{ color: config.color, backgroundColor: `${config.bgColor}22` }}
-          >
-            {t(config.label)}
-          </span>
-        </div>
+        <p className="text-[13px] font-semibold text-[var(--text-primary)] mb-[2px]">
+          {notificacion.titulo}
+        </p>
+        <p className="text-[12px] text-[#657a9e] leading-[1.5]">
+          {notificacion.mensaje}
+        </p>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-1 shrink-0">
+      {/* Timestamp + actions */}
+      <div className="flex items-start gap-1 flex-shrink-0">
+        <span className="text-[11px] text-[#657a9e]">{timeAgo}</span>
         {!notificacion.leida && (
           <button
-            onClick={() => onLeer(notificacion.id)}
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--success)] hover:bg-surface-raised transition-colors"
+            onClick={(e) => { e.stopPropagation(); onLeer(notificacion.id) }}
+            className="w-6 h-6 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--success)] hover:bg-surface-raised transition-colors"
             title={t('notificaciones.markRead')}
           >
-            <CheckCheck size={14} />
+            <CheckCheck size={12} />
           </button>
         )}
         <button
-          onClick={() => onEliminar(notificacion.id)}
-          className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-surface-raised transition-colors"
+          onClick={(e) => { e.stopPropagation(); onEliminar(notificacion.id) }}
+          className="w-6 h-6 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-surface-raised transition-colors"
           title={t('common.delete')}
         >
-          <Trash2 size={14} />
+          <Trash2 size={12} />
         </button>
       </div>
     </div>
@@ -230,11 +215,14 @@ export function NotificacionesPage(): JSX.Element {
       {/* Urgentes */}
       {urgentes.length > 0 && (
         <section className="mb-5">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--danger)] mb-3 flex items-center gap-1.5">
+          <h2
+            className="text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5"
+            style={{ color: SECTION_CONFIG.urgente.textColor }}
+          >
             <AlertTriangle size={12} />
-            {t('notificaciones.urgente')}
+            {t(SECTION_CONFIG.urgente.label)}
           </h2>
-          <div className="space-y-2">
+          <div>
             {urgentes.map((n) => (
               <NotificacionItem
                 key={n.id}
@@ -250,11 +238,14 @@ export function NotificacionesPage(): JSX.Element {
       {/* Advertencias */}
       {advertencias.length > 0 && (
         <section className="mb-5">
-          <h2 className="text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5" style={{ color: '#E65100' }}>
+          <h2
+            className="text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5"
+            style={{ color: SECTION_CONFIG.advertencia.textColor }}
+          >
             <Bell size={12} />
-            {t('notificaciones.advertencia')}
+            {t(SECTION_CONFIG.advertencia.label)}
           </h2>
-          <div className="space-y-2">
+          <div>
             {advertencias.map((n) => (
               <NotificacionItem
                 key={n.id}
@@ -270,11 +261,14 @@ export function NotificacionesPage(): JSX.Element {
       {/* Logros */}
       {logros.length > 0 && (
         <section className="mb-5">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--success)] mb-3 flex items-center gap-1.5">
+          <h2
+            className="text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5"
+            style={{ color: SECTION_CONFIG.logro.textColor }}
+          >
             <Trophy size={12} />
-            {t('notificaciones.logro')}
+            {t(SECTION_CONFIG.logro.label)}
           </h2>
-          <div className="space-y-2">
+          <div>
             {logros.map((n) => (
               <NotificacionItem
                 key={n.id}
@@ -290,11 +284,14 @@ export function NotificacionesPage(): JSX.Element {
       {/* Informativas */}
       {informativas.length > 0 && (
         <section className="mb-5">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)] mb-3 flex items-center gap-1.5">
+          <h2
+            className="text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5"
+            style={{ color: SECTION_CONFIG.informativa.textColor }}
+          >
             <Info size={12} />
-            {t('notificaciones.informativa')}
+            {t(SECTION_CONFIG.informativa.label)}
           </h2>
-          <div className="space-y-2">
+          <div>
             {informativas.map((n) => (
               <NotificacionItem
                 key={n.id}

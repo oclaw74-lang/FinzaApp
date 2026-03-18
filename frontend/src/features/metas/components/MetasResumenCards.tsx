@@ -44,7 +44,7 @@ export function MetasResumenCards(): JSX.Element {
       )}
 
       {/* Total ahorrado */}
-      <div className="finza-card border-l-4 border-prosperity-green">
+      <div className="finza-card border border-[rgba(255,255,255,0.06)]">
         <p className="text-sm font-medium text-[var(--text-muted)] mb-1">
           Total ahorrado
         </p>
@@ -58,7 +58,7 @@ export function MetasResumenCards(): JSX.Element {
       </div>
 
       {/* Metas activas */}
-      <div className="finza-card border-l-4 border-finza-blue">
+      <div className="finza-card border border-[rgba(255,255,255,0.06)]">
         <p className="text-sm font-medium text-[var(--text-muted)] mb-1">Metas activas</p>
         <p
           className="text-2xl font-bold text-finza-blue"
@@ -73,7 +73,7 @@ export function MetasResumenCards(): JSX.Element {
       </div>
 
       {/* Cumplimiento promedio */}
-      <div className="finza-card border-l-4 border-golden-flow">
+      <div className="finza-card border border-[rgba(255,255,255,0.06)]">
         <p className="text-sm font-medium text-[var(--text-muted)] mb-1">
           Cumplimiento promedio
         </p>

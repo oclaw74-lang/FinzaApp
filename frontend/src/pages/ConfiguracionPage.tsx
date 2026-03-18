@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Sun, Moon, Camera, DollarSign, Clock, Tag, Trash2, Plus } from 'lucide-react'
+import { Camera, DollarSign, Clock, Tag, Trash2, Plus } from 'lucide-react'
 import * as Icons from 'lucide-react'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -461,55 +461,56 @@ export function ConfiguracionPage(): JSX.Element {
 
       {/* Tab: Appearance */}
       {activeTab === 'appearance' && (
-        <div className="card-glass p-6 space-y-4">
-          <p className="text-sm text-[var(--text-muted)]">{t('settings.currentTheme')}</p>
-          <div className="grid grid-cols-2 gap-4">
-            {/* Light mode card */}
+        <div
+          className="rounded-[20px] border border-[rgba(255,255,255,0.06)] bg-[rgba(8,15,30,0.6)] overflow-hidden"
+        >
+          {/* Row: Modo oscuro */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[rgba(255,255,255,0.06)]">
+            <div>
+              <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
+                {t('settings.darkMode')}
+              </h4>
+              <p className="text-[12px] text-[#657a9e]">{t('settings.currentTheme')}</p>
+            </div>
             <button
-              onClick={() => setTheme('light')}
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className={cn(
-                'p-4 rounded-xl border-2 transition-all duration-200 text-left space-y-2',
-                theme === 'light'
-                  ? 'border-finza-blue bg-finza-blue/5'
-                  : 'border-border hover:border-finza-blue/40'
+                'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
+                theme === 'dark' ? 'bg-[#3d8ef8]' : 'bg-[#1f2e45]'
               )}
+              aria-label="Toggle modo oscuro"
             >
-              <div className="w-full h-16 bg-[#f0f4f8] rounded-lg flex items-center justify-center border border-[#e2e8f0]">
-                <div className="w-8 h-8 bg-white rounded-md shadow-sm" />
-              </div>
-              <div className="flex items-center gap-2">
-                <Sun size={14} className="text-golden-flow" />
-                <span className="text-sm font-medium text-[var(--text-primary)]">
-                  {t('settings.lightMode')}
-                </span>
-              </div>
-              {theme === 'light' && (
-                <div className="w-2 h-2 rounded-full bg-finza-blue ml-auto" />
-              )}
+              <span
+                className={cn(
+                  'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200',
+                  theme === 'dark' ? 'left-[21px]' : 'left-[3px]'
+                )}
+              />
             </button>
+          </div>
 
-            {/* Dark mode card */}
+          {/* Row: Modo claro */}
+          <div className="flex items-center justify-between px-5 py-4">
+            <div>
+              <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
+                {t('settings.lightMode')}
+              </h4>
+              <p className="text-[12px] text-[#657a9e]">Interfaz con fondo claro</p>
+            </div>
             <button
-              onClick={() => setTheme('dark')}
+              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
               className={cn(
-                'p-4 rounded-xl border-2 transition-all duration-200 text-left space-y-2',
-                theme === 'dark'
-                  ? 'border-finza-blue bg-finza-blue/5'
-                  : 'border-border hover:border-finza-blue/40'
+                'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
+                theme === 'light' ? 'bg-[#3d8ef8]' : 'bg-[#1f2e45]'
               )}
+              aria-label="Toggle modo claro"
             >
-              <div className="w-full h-16 bg-[#0f172a] rounded-lg flex items-center justify-center border border-[#334155]">
-                <div className="w-8 h-8 bg-[#1e293b] rounded-md shadow-sm" />
-              </div>
-              <div className="flex items-center gap-2">
-                <Moon size={14} className="text-finza-blue-light" />
-                <span className="text-sm font-medium text-[var(--text-primary)]">
-                  {t('settings.darkMode')}
-                </span>
-              </div>
-              {theme === 'dark' && (
-                <div className="w-2 h-2 rounded-full bg-finza-blue ml-auto" />
-              )}
+              <span
+                className={cn(
+                  'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200',
+                  theme === 'light' ? 'left-[21px]' : 'left-[3px]'
+                )}
+              />
             </button>
           </div>
         </div>
