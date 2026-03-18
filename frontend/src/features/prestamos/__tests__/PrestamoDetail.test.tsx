@@ -255,7 +255,8 @@ describe('PrestamoDetail', () => {
     setupMocks(prestamoConPagos, mockAmortizacion)
     render(<PrestamoDetail {...defaultProps} />)
 
-    expect(screen.getByText(/capital/i)).toBeInTheDocument()
-    expect(screen.getByText(/interes/i)).toBeInTheDocument()
+    // "capital" and "interes" appear inline in pago row AND in amortizacion section
+    expect(screen.getAllByText(/capital/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/interes/i).length).toBeGreaterThan(0)
   })
 })
