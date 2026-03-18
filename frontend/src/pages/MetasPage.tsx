@@ -134,13 +134,13 @@ export function MetasPage(): JSX.Element {
   return (
     <div className="animate-fade-in p-4 md:p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+        <div className="min-w-0">
           <h1 className="page-title-premium dark:text-[#e8f0ff]">{t('nav.metas')}</h1>
           <p className="text-sm text-[var(--text-muted)] mt-1">Gestiona tus objetivos financieros</p>
         </div>
         <Button onClick={() => setIsModalOpen(true)} variant="default" size="md"
-          className="dark:bg-finza-blue dark:hover:bg-finza-blue/80">
+          className="dark:bg-finza-blue dark:hover:bg-finza-blue/80 shrink-0">
           <Plus size={16} />
           {t('metas.newMeta')}
         </Button>

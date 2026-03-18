@@ -1,4 +1,5 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   TrendingUp,
@@ -15,7 +16,6 @@ import {
   BookOpen,
   X,
   ChevronLeft,
-  ChevronRight,
   LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -144,6 +144,14 @@ export function Sidebar(): JSX.Element {
   const { user, signOut } = useAuthStore()
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Close sidebar on navigation on mobile (< 1024px)
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false)
+    }
+  }, [location.pathname, setSidebarOpen])
 
   const handleSignOut = async () => {
     await signOut()

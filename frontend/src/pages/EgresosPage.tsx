@@ -169,48 +169,53 @@ export function EgresosPage(): JSX.Element {
       {/* Table card */}
       <div className="finza-card dark:bg-[rgba(8,15,30,0.6)] dark:backdrop-blur-xl dark:border-white/[0.06] p-0 overflow-hidden">
         {/* Filters bar */}
-        <div className="flex flex-wrap items-center gap-3 p-4 border-b border-[var(--border)]">
-          <div>
-            <label htmlFor="egresos-mes" className="sr-only">{t('common.month')}</label>
-            <select
-              id="egresos-mes"
-              aria-label={t('common.month')}
-              className="finza-input text-sm w-auto"
-              value={mes}
-              onChange={(e) => setMes(Number(e.target.value))}
-            >
-              <option value={0}>Todos los meses</option>
-              {MESES.map((nombre, idx) => (
-                <option key={idx + 1} value={idx + 1}>{nombre}</option>
-              ))}
-            </select>
+        <div className="p-3 sm:p-4 border-b border-[var(--border)] space-y-2 sm:space-y-0">
+          {/* Top row: selects + button */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div>
+              <label htmlFor="egresos-mes" className="sr-only">{t('common.month')}</label>
+              <select
+                id="egresos-mes"
+                aria-label={t('common.month')}
+                className="finza-input text-sm w-auto"
+                value={mes}
+                onChange={(e) => setMes(Number(e.target.value))}
+              >
+                <option value={0}>Todos los meses</option>
+                {MESES.map((nombre, idx) => (
+                  <option key={idx + 1} value={idx + 1}>{nombre}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="egresos-year" className="sr-only">{t('common.year')}</label>
+              <select
+                id="egresos-year"
+                aria-label={t('common.year')}
+                className="finza-input text-sm w-auto"
+                value={year}
+                onChange={(e) => setYear(Number(e.target.value))}
+              >
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+            <Button onClick={() => setIsModalOpen(true)} variant="default" size="md" className="ml-auto shrink-0">
+              <Plus size={16} />
+              <span className="hidden xs:inline">{t('egresos.newEgreso')}</span>
+              <span className="xs:hidden">Nuevo</span>
+            </Button>
           </div>
-          <div>
-            <label htmlFor="egresos-year" className="sr-only">{t('common.year')}</label>
-            <select
-              id="egresos-year"
-              aria-label={t('common.year')}
-              className="finza-input text-sm w-auto"
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
-            >
-              {yearOptions.map((y) => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
-          </div>
+          {/* Second row: search always full width */}
           <input
             type="text"
             placeholder={t('common.search')}
-            className="finza-input text-sm flex-1 min-w-[200px]"
+            className="finza-input text-sm w-full"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             aria-label={t('common.search')}
           />
-          <Button onClick={() => setIsModalOpen(true)} variant="default" size="md" className="ml-auto">
-            <Plus size={16} />
-            {t('egresos.newEgreso')}
-          </Button>
         </div>
 
         {/* Table / States */}
@@ -231,7 +236,8 @@ export function EgresosPage(): JSX.Element {
             </Button>
           </div>
         ) : (
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[320px]">
             <thead>
               <tr className="border-b border-[var(--border)] bg-[var(--surface-raised)]">
                 <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
@@ -299,7 +305,7 @@ export function EgresosPage(): JSX.Element {
                       {formatDate(item.fecha)}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <button
                           type="button"
                           onClick={() => handleEdit(item)}
@@ -329,6 +335,7 @@ export function EgresosPage(): JSX.Element {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

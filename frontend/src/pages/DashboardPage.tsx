@@ -82,38 +82,19 @@ export function DashboardPage(): JSX.Element {
       )}
 
       {/* Greeting header */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-[var(--text-primary)] dark:text-white mb-1" data-testid="dashboard-greeting">
-            {getGreeting()}, {firstName}
-          </h1>
-          <p className="text-[var(--text-muted)] dark:text-white/50 text-sm">
-            {getWeekContext()} · {getFinancialContext(data)}
-          </p>
-        </div>
-
-        {/* Period selectors */}
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          {/* Month pills */}
-          <div className="flex items-center gap-1 bg-[var(--surface-raised)] dark:bg-white/[0.05] rounded-xl p-1 flex-wrap">
-            {MESES_SHORT.map((m, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setMes(i + 1)}
-                className={cn(
-                  'px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all',
-                  mes === i + 1
-                    ? 'bg-[#3d8ef8] text-white shadow'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-                )}
-              >
-                {m}
-              </button>
-            ))}
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] dark:text-white mb-1 leading-tight" data-testid="dashboard-greeting">
+              {getGreeting()}, {firstName}
+            </h1>
+            <p className="text-[var(--text-muted)] dark:text-white/50 text-sm">
+              {getWeekContext()} · {getFinancialContext(data)}
+            </p>
           </div>
-          {/* Year nav glass */}
-          <div className="flex items-center gap-1 card-glass rounded-xl px-2 py-1">
+
+          {/* Year nav — always visible, compact */}
+          <div className="flex items-center gap-1 card-glass rounded-xl px-2 py-1 self-start">
             <button
               type="button"
               onClick={() => setYear((y) => y - 1)}
@@ -133,10 +114,31 @@ export function DashboardPage(): JSX.Element {
             </button>
           </div>
         </div>
+
+        {/* Month pills — scrollable row on mobile */}
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="flex items-center gap-1 bg-[var(--surface-raised)] dark:bg-white/[0.05] rounded-xl p-1 w-max sm:w-auto sm:flex-wrap">
+            {MESES_SHORT.map((m, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setMes(i + 1)}
+                className={cn(
+                  'px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap',
+                  mes === i + 1
+                    ? 'bg-[#3d8ef8] text-white shadow'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                )}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {isLoading ? (
           <>
             <Skeleton className="h-[120px] rounded-[20px]" />
@@ -147,13 +149,13 @@ export function DashboardPage(): JSX.Element {
         ) : (
           <>
             {/* Ingresos */}
-            <div className="card-glass rounded-[20px] p-5 flex flex-col gap-2">
-              <div className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center text-lg"
+            <div className="card-glass rounded-[20px] p-3 sm:p-5 flex flex-col gap-1.5 sm:gap-2">
+              <div className="w-8 h-8 sm:w-[38px] sm:h-[38px] rounded-[10px] flex items-center justify-center text-base sm:text-lg"
                 style={{ background: 'rgba(0,223,162,0.10)' }}>
                 📥
               </div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-[#657a9e]">{t('dashboard.income')}</p>
-              <p className="text-[26px] font-bold text-[#00dfa2] leading-none tabular-nums"
+              <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-[#657a9e]">{t('dashboard.income')}</p>
+              <p className="text-lg sm:text-[26px] font-bold text-[#00dfa2] leading-none tabular-nums truncate"
                 style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.04em' }}>
                 {formatMoney(ingresos)}
               </p>
@@ -161,7 +163,7 @@ export function DashboardPage(): JSX.Element {
                 const pct = data?.resumen_financiero.variacion_ingresos_pct ?? 0
                 const isPos = pct >= 0
                 return (
-                  <p className={cn('text-xs font-medium', isPos ? 'text-[#00dfa2]' : 'text-[#ff4060]')}>
+                  <p className={cn('text-[10px] sm:text-xs font-medium', isPos ? 'text-[#00dfa2]' : 'text-[#ff4060]')}>
                     {isPos ? '+' : ''}{pct.toFixed(1)}% {t('dashboard.vsLastMonth')}
                   </p>
                 )
@@ -169,13 +171,13 @@ export function DashboardPage(): JSX.Element {
             </div>
 
             {/* Egresos */}
-            <div className="card-glass rounded-[20px] p-5 flex flex-col gap-2">
-              <div className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center text-lg"
+            <div className="card-glass rounded-[20px] p-3 sm:p-5 flex flex-col gap-1.5 sm:gap-2">
+              <div className="w-8 h-8 sm:w-[38px] sm:h-[38px] rounded-[10px] flex items-center justify-center text-base sm:text-lg"
                 style={{ background: 'rgba(255,64,96,0.10)' }}>
                 📤
               </div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-[#657a9e]">{t('dashboard.expenses')}</p>
-              <p className="text-[26px] font-bold text-[#ff4060] leading-none tabular-nums"
+              <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-[#657a9e]">{t('dashboard.expenses')}</p>
+              <p className="text-lg sm:text-[26px] font-bold text-[#ff4060] leading-none tabular-nums truncate"
                 style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.04em' }}>
                 {formatMoney(egresos)}
               </p>
@@ -183,7 +185,7 @@ export function DashboardPage(): JSX.Element {
                 const pct = data?.resumen_financiero.variacion_egresos_pct ?? 0
                 const isNeg = pct >= 0
                 return (
-                  <p className={cn('text-xs font-medium', isNeg ? 'text-[#ff4060]' : 'text-[#00dfa2]')}>
+                  <p className={cn('text-[10px] sm:text-xs font-medium', isNeg ? 'text-[#ff4060]' : 'text-[#00dfa2]')}>
                     {pct >= 0 ? '+' : ''}{pct.toFixed(1)}% {t('dashboard.vsLastMonth')}
                   </p>
                 )
@@ -191,34 +193,34 @@ export function DashboardPage(): JSX.Element {
             </div>
 
             {/* Metas activas */}
-            <div className="card-glass rounded-[20px] p-5 flex flex-col gap-2">
-              <div className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center text-lg"
+            <div className="card-glass rounded-[20px] p-3 sm:p-5 flex flex-col gap-1.5 sm:gap-2">
+              <div className="w-8 h-8 sm:w-[38px] sm:h-[38px] rounded-[10px] flex items-center justify-center text-base sm:text-lg"
                 style={{ background: 'rgba(151,104,255,0.10)' }}>
                 🎯
               </div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-[#657a9e]">Metas activas</p>
-              <p className="text-[26px] font-bold text-[#9768ff] leading-none tabular-nums"
+              <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-[#657a9e]">Metas activas</p>
+              <p className="text-lg sm:text-[26px] font-bold text-[#9768ff] leading-none tabular-nums"
                 style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.04em' }}>
                 {String(data?.metas_activas.length ?? 0)}
               </p>
-              <p className="text-xs font-medium text-[#657a9e]">En progreso</p>
+              <p className="text-[10px] sm:text-xs font-medium text-[#657a9e]">En progreso</p>
             </div>
 
             {/* Tasa de ahorro */}
-            <div className="card-glass rounded-[20px] p-5 flex flex-col gap-2">
-              <div className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center text-lg"
+            <div className="card-glass rounded-[20px] p-3 sm:p-5 flex flex-col gap-1.5 sm:gap-2">
+              <div className="w-8 h-8 sm:w-[38px] sm:h-[38px] rounded-[10px] flex items-center justify-center text-base sm:text-lg"
                 style={{ background: 'rgba(255,179,64,0.10)' }}>
                 💼
               </div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-[#657a9e]">{t('dashboard.savingsRate')}</p>
+              <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-[#657a9e]">{t('dashboard.savingsRate')}</p>
               <p className={cn(
-                'text-[26px] font-bold leading-none tabular-nums',
+                'text-lg sm:text-[26px] font-bold leading-none tabular-nums',
                 tasaAhorro > 0 ? 'text-[#00dfa2]' : 'text-[#ff4060]'
               )}
                 style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.04em' }}>
                 {tasaAhorro.toFixed(1)}%
               </p>
-              <p className="text-xs font-medium text-[#657a9e]">Del total de ingresos</p>
+              <p className="text-[10px] sm:text-xs font-medium text-[#657a9e]">Del total de ingresos</p>
             </div>
           </>
         )}

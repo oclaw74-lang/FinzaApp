@@ -239,14 +239,14 @@ export function PresupuestosPage(): JSX.Element {
   return (
     <div className="animate-fade-in p-4 md:p-6 space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+        <div className="min-w-0">
           <h1 className="page-title-premium dark:text-[#e8f0ff]">{t('nav.presupuestos')}</h1>
           <p className="text-[var(--text-muted)] text-sm mt-1">
             Controla tus limites de gasto por categoria
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <Button
             onClick={handleOpenSugerencias}
             variant="secondary"
@@ -254,7 +254,7 @@ export function PresupuestosPage(): JSX.Element {
             aria-label={t('presupuestos.sugerir')}
           >
             <Sparkles size={16} />
-            {t('presupuestos.sugerir')}
+            <span className="hidden sm:inline">{t('presupuestos.sugerir')}</span>
           </Button>
           <Button onClick={handleOpenCreate} variant="default" size="md">
             <Plus size={16} />
@@ -303,22 +303,22 @@ export function PresupuestosPage(): JSX.Element {
 
       {/* Summary cards */}
       {!isError && !isLoading && estadoList.length > 0 && (
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="card-glass p-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+          <div className="card-glass p-4 sm:p-5 flex sm:flex-col items-center sm:items-start justify-between sm:justify-start gap-2">
             <p className="kpi-label dark:text-finza-t2">{t('presupuestos.budgeted')}</p>
-            <p className="kpi-value dark:text-finza-blue mt-2">
+            <p className="kpi-value dark:text-finza-blue sm:mt-2">
               {formatCurrency(totalPresupuestado)}
             </p>
           </div>
-          <div className="card-glass p-5">
+          <div className="card-glass p-4 sm:p-5 flex sm:flex-col items-center sm:items-start justify-between sm:justify-start gap-2">
             <p className="kpi-label dark:text-finza-t2">{t('presupuestos.spent')}</p>
-            <p className={`kpi-value mt-2 ${totalGastado > totalPresupuestado ? 'dark:text-finza-red' : 'dark:text-finza-green'}`}>
+            <p className={`kpi-value sm:mt-2 ${totalGastado > totalPresupuestado ? 'dark:text-finza-red' : 'dark:text-finza-green'}`}>
               {formatCurrency(totalGastado)}
             </p>
           </div>
-          <div className="card-glass p-5">
+          <div className="card-glass p-4 sm:p-5 flex sm:flex-col items-center sm:items-start justify-between sm:justify-start gap-2">
             <p className="kpi-label dark:text-finza-t2">{t('presupuestos.available')}</p>
-            <p className={`kpi-value mt-2 ${disponible >= 0 ? 'text-prosperity-green dark:text-finza-green' : 'text-alert-red dark:text-finza-red'}`}>
+            <p className={`kpi-value sm:mt-2 ${disponible >= 0 ? 'text-prosperity-green dark:text-finza-green' : 'text-alert-red dark:text-finza-red'}`}>
               {formatCurrency(Math.abs(disponible))}
             </p>
           </div>
