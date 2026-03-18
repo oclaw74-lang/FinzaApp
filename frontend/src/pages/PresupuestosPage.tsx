@@ -239,9 +239,12 @@ export function PresupuestosPage(): JSX.Element {
     <div className="animate-fade-in p-6 md:p-8 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <p className="text-[var(--text-muted)] text-sm">
-          Controla tus limites de gasto por categoria
-        </p>
+        <div>
+          <h1 className="page-title-premium dark:text-[#e8f0ff]">{t('nav.presupuestos')}</h1>
+          <p className="text-[var(--text-muted)] text-sm mt-1">
+            Controla tus limites de gasto por categoria
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <Button
             onClick={handleOpenSugerencias}
@@ -335,7 +338,7 @@ export function PresupuestosPage(): JSX.Element {
           <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-3">
             Con presupuesto asignado
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {isLoading && (
               <>
                 <SkeletonCard />
@@ -367,7 +370,7 @@ export function PresupuestosPage(): JSX.Element {
                   const iconName = cat.icono ?? ''
                   const IconComponent =
                     iconName && (Icons as Record<string, unknown>)[iconName]
-                      ? (Icons as Record<string, React.ComponentType<{ className?: string }>>)[iconName]
+                      ? (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[iconName]
                       : Tag
                   return (
                     <div

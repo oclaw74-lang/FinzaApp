@@ -20,9 +20,9 @@ export function BudgetProgressBar({
   const pct = Math.min(100, Math.max(0, porcentaje))
 
   return (
-    <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+    <div className="w-full bg-white/[0.06] dark:bg-white/[0.06] rounded-full h-2 overflow-hidden">
       <div
-        className="h-2.5 rounded-full transition-all duration-300"
+        className="h-2 rounded-full transition-all duration-300"
         style={{ width: `${pct}%`, background: getBudgetGradient(porcentaje) }}
         role="progressbar"
         aria-valuenow={Math.round(porcentaje)}

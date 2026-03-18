@@ -15,8 +15,8 @@ import { useAuthStore } from '@/store/authStore'
 import { KpiCard } from '@/features/dashboard/components/v2/KpiCard'
 import { MetaProgressItem } from '@/features/dashboard/components/v2/MetaProgressItem'
 import { BudgetProgressBar } from '@/features/presupuestos/components/BudgetProgressBar'
-import { ChartGastosPorCategoria } from '@/features/dashboard/components/ChartGastosPorCategoria'
-import { ChartBalanceTendencia } from '@/features/dashboard/components/ChartBalanceTendencia'
+import { ChartFlujoMensual } from '@/features/dashboard/components/ChartFlujoMensual'
+import { ChartDistribucionEgresos } from '@/features/dashboard/components/ChartDistribucionEgresos'
 import { PrediccionMesCard } from '@/components/dashboard/PrediccionMesCard'
 import { formatDate, formatMoney, cn } from '@/lib/utils'
 import type { DashboardV2Response } from '@/types/dashboard'
@@ -200,29 +200,45 @@ export function DashboardPage(): JSX.Element {
         )}
       </div>
 
-      {/* Prediccion + Charts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      {/* Prediccion */}
+      <div className="mb-6">
         <PrediccionMesCard />
-        <div className="lg:col-span-2">
-          {/* Charts row */}
-          <div className="grid grid-cols-1 gap-4">
-            {isLoading ? (
-              <>
-                <Skeleton className="h-72 rounded-xl" />
-                <Skeleton className="h-72 rounded-xl" />
-              </>
-            ) : (
-              <>
-                <ChartGastosPorCategoria
-                  data={(data?.egresos_por_categoria ?? []).map((e) => ({
-                    categoria: e.categoria,
-                    total: e.total,
-                  }))}
-                />
-                <ChartBalanceTendencia ingresos={ingresos} egresos={egresos} mes={mes} />
-              </>
-            )}
-          </div>
+      </div>
+
+      {/* Charts row: flujo mensual + distribucion egresos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <div className="card-glass dark:bg-white/[0.02] rounded-2xl p-5">
+          <h3 className="text-xs uppercase tracking-widest text-white/40 mb-1">Flujo mensual</h3>
+          <p className="text-white/50 text-xs mb-4">Ingresos vs egresos — ultimos 6 meses</p>
+          {isLoading ? (
+            <Skeleton className="h-52 rounded-xl" />
+          ) : (
+            <ChartFlujoMensual
+              resumen={data?.resumen_financiero ?? {
+                ingresos_mes: 0,
+                egresos_mes: 0,
+                balance_mes: 0,
+                tasa_ahorro: 0,
+                ingresos_mes_anterior: 0,
+                egresos_mes_anterior: 0,
+                variacion_ingresos_pct: 0,
+                variacion_egresos_pct: 0,
+              }}
+              mes={mes}
+              year={year}
+            />
+          )}
+        </div>
+        <div className="card-glass dark:bg-white/[0.02] rounded-2xl p-5">
+          <h3 className="text-xs uppercase tracking-widest text-white/40 mb-1">Distribucion egresos</h3>
+          <p className="text-white/50 text-xs mb-4">Por categoria este mes</p>
+          {isLoading ? (
+            <Skeleton className="h-52 rounded-xl" />
+          ) : (
+            <ChartDistribucionEgresos
+              data={data?.egresos_por_categoria ?? []}
+            />
+          )}
         </div>
       </div>
 
