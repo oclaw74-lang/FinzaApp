@@ -67,7 +67,7 @@ export function DashboardPage(): JSX.Element {
     'Usuario'
 
   return (
-    <div className="animate-fade-in p-6 md:p-8 space-y-6">
+    <div className="animate-fade-in p-4 md:p-6 space-y-6">
       {/* Error state */}
       {isError && (
         <div

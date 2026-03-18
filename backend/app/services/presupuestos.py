@@ -55,6 +55,46 @@ def get_presupuesto_by_id(user_jwt: str, presupuesto_id: str) -> dict:
 
 def create_presupuesto(user_jwt: str, user_id: str, data: PresupuestoCreate) -> dict:
     client = get_user_client(user_jwt)
+
+    if data.aplicar_todos_los_meses:
+        # Insert one record per month for the given year, skipping existing ones
+        created_for_current_month: dict = {}
+        for mes_num in range(1, 13):
+            payload = {
+                "user_id": user_id,
+                "categoria_id": str(data.categoria_id),
+                "mes": mes_num,
+                "year": data.year,
+                "monto_limite": data.monto_limite,
+            }
+            try:
+                resp = client.table("presupuestos").insert(payload).execute()
+                if resp.data and mes_num == data.mes:
+                    created_for_current_month = resp.data[0]
+            except APIError as e:
+                code = e.code or ""
+                # 23505 = unique_violation: skip this month, already exists
+                if code == "23505" or "unique" in str(e.message).lower():
+                    continue
+                _handle_api_error(e)
+        if created_for_current_month:
+            return created_for_current_month
+        # All months already existed or current month was among them — return any
+        try:
+            existing = (
+                client.table("presupuestos")
+                .select("*")
+                .eq("user_id", user_id)
+                .eq("categoria_id", str(data.categoria_id))
+                .eq("mes", data.mes)
+                .eq("year", data.year)
+                .maybe_single()
+                .execute()
+            )
+            return existing.data or {}
+        except APIError:
+            return {}
+
     payload = {
         "user_id": user_id,
         "categoria_id": str(data.categoria_id),

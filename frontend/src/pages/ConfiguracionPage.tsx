@@ -343,7 +343,7 @@ export function ConfiguracionPage(): JSX.Element {
   const userName = metadata.full_name ?? user?.email?.split('@')[0] ?? 'Usuario'
 
   return (
-    <div className="p-6 md:p-8">
+    <div className="p-4 md:p-6">
       <h1 className="page-title-premium dark:text-[#e8f0ff] mb-6">{t('settings.title')}</h1>
 
       {/* Two-column layout: nav left + content right */}

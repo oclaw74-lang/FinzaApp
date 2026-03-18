@@ -84,7 +84,7 @@ export function FondoEmergenciaPage(): JSX.Element {
   }
 
   return (
-    <div className="animate-fade-in max-w-2xl mx-auto p-6 md:p-8 space-y-6">
+    <div className="animate-fade-in p-4 md:p-6 space-y-6">
       <div className="mb-6">
         <h1 className="page-title-premium dark:text-[#e8f0ff]">{t('fondoEmergencia.title')}</h1>
         <p className="text-sm dark:text-finza-t2 mt-0.5">{t('fondoEmergencia.subtitle')}</p>

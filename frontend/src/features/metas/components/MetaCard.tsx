@@ -44,18 +44,27 @@ export function MetaCard({ meta, onClick }: MetaCardProps): JSX.Element {
       )}
       aria-label={`Ver detalle de meta: ${meta.nombre}`}
     >
-      {/* Header: icono/color + nombre + badge */}
+      {/* Header: icono prominente + nombre + badge */}
       <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2 min-w-0">
-          {/* Color / icono indicator */}
-          <div
-            className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5"
-            style={{ backgroundColor: colorMeta }}
-            aria-hidden="true"
-          />
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Icono / emoji */}
+          {meta.icono ? (
+            <div
+              className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl text-2xl"
+              style={{ backgroundColor: `${colorMeta}20` }}
+              aria-hidden="true"
+            >
+              {meta.icono}
+            </div>
+          ) : (
+            <div
+              className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5"
+              style={{ backgroundColor: colorMeta }}
+              aria-hidden="true"
+            />
+          )}
           <div className="min-w-0">
             <p className="text-sm font-semibold text-[var(--text-primary)] truncate">
-              {meta.icono ? `${meta.icono} ` : ''}
               {meta.nombre}
             </p>
             {meta.descripcion && (

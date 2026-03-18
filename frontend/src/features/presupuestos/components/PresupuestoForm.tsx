@@ -10,6 +10,7 @@ const presupuestoSchema = z.object({
   monto_limite: z
     .number({ invalid_type_error: 'Ingresa un monto valido' })
     .positive('El monto limite debe ser mayor a 0'),
+  aplicar_todos_los_meses: z.boolean().default(false),
 })
 
 export type PresupuestoFormData = z.infer<typeof presupuestoSchema>
@@ -53,14 +54,18 @@ export function PresupuestoForm({
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<PresupuestoFormData>({
     resolver: zodResolver(presupuestoSchema),
     defaultValues: {
       categoria_id: categoriaIdInicial ?? '',
       monto_limite: montoLimiteInicial ?? undefined,
+      aplicar_todos_los_meses: false,
     },
   })
+
+  const aplicarTodos = watch('aplicar_todos_los_meses')
 
   const handleFormSubmit = handleSubmit((data) => onSubmit(data))
 
@@ -127,6 +132,38 @@ export function PresupuestoForm({
         error={errors.monto_limite?.message}
         {...register('monto_limite', { valueAsNumber: true })}
       />
+
+      {/* Aplicar a todos los meses — solo al crear */}
+      {!isEditing && (
+        <label className="flex items-center gap-3 cursor-pointer select-none">
+          <div className="relative">
+            <input
+              type="checkbox"
+              className="sr-only"
+              {...register('aplicar_todos_los_meses')}
+            />
+            <div
+              className="w-10 h-[22px] rounded-full transition-colors duration-200"
+              style={{
+                background: aplicarTodos ? 'var(--accent, #3d8ef8)' : 'rgba(255,255,255,0.1)',
+              }}
+            >
+              <div
+                className="absolute top-[3px] left-[3px] w-4 h-4 rounded-full bg-white shadow transition-transform duration-200"
+                style={{ transform: aplicarTodos ? 'translateX(16px)' : 'translateX(0)' }}
+              />
+            </div>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-[var(--text-primary)]">
+              Aplicar a todos los meses de {year}
+            </p>
+            <p className="text-xs text-[var(--text-muted)]">
+              Crea este presupuesto para enero–diciembre {year}
+            </p>
+          </div>
+        </label>
+      )}
 
       {/* Error externo (ej: 409) */}
       {errorMessage && (

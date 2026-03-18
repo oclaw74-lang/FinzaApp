@@ -133,7 +133,7 @@ export function RecurrentesPage(): JSX.Element {
   }
 
   return (
-    <div className="animate-fade-in p-6 md:p-8 space-y-6">
+    <div className="animate-fade-in p-4 md:p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
