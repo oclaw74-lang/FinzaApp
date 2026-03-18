@@ -2,13 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
-  TrendingUp,
   Target,
   Bell,
   BookOpen,
   CreditCard,
   PiggyBank,
-  ArrowRight,
   CheckCircle,
   Shield,
   Zap,
@@ -19,1110 +17,1588 @@ import {
   BarChart2,
   RefreshCw,
   Lightbulb,
+  Star,
+  ChevronDown,
+  ArrowRight,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 
-// ─── Animation Keyframes (injected once) ──────────────────────────────────────
+// ─── CSS Keyframes & Custom Styles ────────────────────────────────────────────
 
-const KEYFRAMES = `
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes fadeInLeft {
-  from { opacity: 0; transform: translateX(-30px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes fadeInRight {
-  from { opacity: 0; transform: translateX(30px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-16px); }
-}
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.4; }
-  50%       { opacity: 0.85; }
-}
-@keyframes shimmer {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-@keyframes orbit {
-  from { transform: rotate(0deg) translateX(80px) rotate(0deg); }
-  to   { transform: rotate(360deg) translateX(80px) rotate(-360deg); }
-}
-@keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50%       { background-position: 100% 50%; }
-}
-@keyframes blobFloat1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33%       { transform: translate(30px, -20px) scale(1.05); }
-  66%       { transform: translate(-20px, 15px) scale(0.95); }
-}
-@keyframes blobFloat2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33%       { transform: translate(-25px, 20px) scale(1.08); }
-  66%       { transform: translate(20px, -10px) scale(0.92); }
-}
-@keyframes blobFloat3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50%       { transform: translate(15px, -25px) scale(1.04); }
-}
-@keyframes particle {
-  0%, 100% { transform: translateY(0px) translateX(0px); opacity: 0.3; }
-  50%       { transform: translateY(-20px) translateX(8px); opacity: 0.8; }
-}
-@keyframes scoreProgress {
-  from { stroke-dashoffset: 339.292; }
-  to   { stroke-dashoffset: 73.64; }
-}
-@keyframes barGrow {
-  from { width: 0%; }
-}
-@keyframes notifSlide {
-  from { opacity: 0; transform: translateX(-20px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes badgeShimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
+const STYLES = `
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(32px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeInLeft {
+    from { opacity: 0; transform: translateX(-32px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(32px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    33%       { transform: translateY(-14px) rotate(1deg); }
+    66%       { transform: translateY(-7px) rotate(-1deg); }
+  }
+  @keyframes floatPhone {
+    0%, 100% { transform: translateY(0px) rotate(3deg); }
+    50%       { transform: translateY(-10px) rotate(3deg); }
+  }
+  @keyframes pulseGlow {
+    0%, 100% { opacity: 0.35; transform: scale(1); }
+    50%       { opacity: 0.65; transform: scale(1.06); }
+  }
+  @keyframes pulseRing {
+    0%, 100% { opacity: 0.6; }
+    50%       { opacity: 1; }
+  }
+  @keyframes rotateDash {
+    from { stroke-dashoffset: 220; }
+    to   { stroke-dashoffset: 0; }
+  }
+  @keyframes shimmer {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
+  }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes orbFloat1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%       { transform: translate(60px, -80px) scale(1.1); }
+    66%       { transform: translate(-40px, 40px) scale(0.95); }
+  }
+  @keyframes orbFloat2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    40%       { transform: translate(-70px, 60px) scale(1.08); }
+    70%       { transform: translate(50px, -50px) scale(0.92); }
+  }
+  @keyframes orbFloat3 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%       { transform: translate(40px, 70px) scale(1.05); }
+  }
+  @keyframes starTwinkle {
+    0%, 100% { opacity: 0.2; }
+    50%       { opacity: 0.8; }
+  }
+  @keyframes scoreCount {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* Scroll reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.65s ease, transform 0.65s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-left {
+    opacity: 0;
+    transform: translateX(-28px);
+    transition: opacity 0.65s ease, transform 0.65s ease;
+  }
+  .reveal-left.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .reveal-right {
+    opacity: 0;
+    transform: translateX(28px);
+    transition: opacity 0.65s ease, transform 0.65s ease;
+  }
+  .reveal-right.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* Glass */
+  .glass {
+    background: rgba(13, 24, 41, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+  }
+  .glass-light {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* Navbar glass */
+  .navbar-glass {
+    background: rgba(4, 8, 15, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* Feature card */
+  .feature-card {
+    background: rgba(13, 24, 41, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 16px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .feature-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    border-color: rgba(61, 142, 248, 0.3);
+  }
+
+  /* Journey card */
+  .journey-card {
+    background: rgba(13, 24, 41, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 16px;
+    transition: transform 0.25s ease, border-color 0.25s ease;
+  }
+  .journey-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(61, 142, 248, 0.25);
+  }
+
+  /* Testimonial card */
+  .testimonial-card {
+    background: rgba(13, 24, 41, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 16px;
+    transition: transform 0.25s ease, border-color 0.25s ease;
+  }
+  .testimonial-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(61, 142, 248, 0.2);
+  }
+
+  /* FAQ card */
+  .faq-card {
+    background: rgba(13, 24, 41, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 14px;
+    transition: border-color 0.25s ease;
+  }
+  .faq-card:hover {
+    border-color: rgba(61, 142, 248, 0.2);
+  }
+
+  /* Secondary feature card */
+  .sec-card {
+    background: rgba(13, 24, 41, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+  .sec-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(61, 142, 248, 0.2);
+  }
+
+  /* Alert card */
+  .alert-item {
+    background: rgba(13, 24, 41, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    transition: border-color 0.2s ease;
+  }
+  .alert-item:hover {
+    border-color: rgba(61, 142, 248, 0.25);
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, #3d8ef8, #00dfa2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .gradient-text-gold {
+    background: linear-gradient(135deg, #FFC000, #ff9a3c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* CTA primary button */
+  .btn-primary {
+    background: linear-gradient(135deg, #3d8ef8, #5B9BD5);
+    border: none;
+    color: white;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 20px rgba(61, 142, 248, 0.35);
+  }
+  .btn-primary:hover {
+    opacity: 0.92;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(61, 142, 248, 0.5);
+  }
+
+  /* CTA outline button */
+  .btn-outline {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
+    border-radius: 10px;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  }
+  .btn-outline:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+  }
+
+  /* Score ring animation */
+  .score-ring-circle {
+    stroke-dasharray: 283;
+    stroke-dashoffset: 283;
+    animation: rotateDash 1.8s ease-out 0.3s forwards;
+    transform-origin: center;
+    transform: rotate(-90deg);
+  }
+
+  /* Shimmer effect on cards */
+  .shimmer-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  /* Mobile menu */
+  .mobile-menu {
+    animation: slideDown 0.2s ease;
+  }
+
+  /* Background grid */
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* Star particles */
+  .star {
+    position: absolute;
+    border-radius: 50%;
+    background: white;
+    animation: starTwinkle var(--dur, 3s) ease-in-out var(--delay, 0s) infinite;
+  }
+
+  /* Device frame */
+  .device-tablet {
+    background: rgba(13, 24, 41, 0.9);
+    border: 2px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    box-shadow:
+      0 40px 100px rgba(0,0,0,0.6),
+      0 0 0 1px rgba(255,255,255,0.05),
+      inset 0 1px 0 rgba(255,255,255,0.1);
+    animation: float 6s ease-in-out infinite;
+  }
+  .device-phone {
+    background: rgba(8, 15, 30, 0.95);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 28px;
+    box-shadow:
+      0 30px 80px rgba(0,0,0,0.5),
+      0 0 0 1px rgba(255,255,255,0.04);
+    animation: floatPhone 5s ease-in-out 1s infinite;
+  }
+
+  /* Responsive utilities */
+  @media (max-width: 768px) {
+    .hero-devices {
+      display: none;
+    }
+    .split-reverse {
+      flex-direction: column-reverse !important;
+    }
+  }
 `
 
-// ─── Custom Hooks ──────────────────────────────────────────────────────────────
+// ─── useScrollReveal Hook ─────────────────────────────────────────────────────
 
-function useScrollReveal(threshold = 0.15) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [visible, setVisible] = useState(false)
+function useScrollReveal() {
   useEffect(() => {
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true)
-          observer.disconnect()
-        }
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible')
+          }
+        })
       },
-      { threshold }
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
     )
-    if (ref.current) observer.observe(ref.current)
+    const elements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right')
+    elements.forEach((el) => observer.observe(el))
     return () => observer.disconnect()
-  }, [threshold])
-  return { ref, visible }
+  }, [])
 }
 
-function useCountUp(target: number, duration = 2000, trigger: boolean): number {
+// ─── useCountUp Hook ──────────────────────────────────────────────────────────
+
+function useCountUp(target: number, duration = 1800, start = false) {
   const [count, setCount] = useState(0)
   useEffect(() => {
-    if (!trigger) return
-    const start = Date.now()
-    const frame = () => {
-      const elapsed = Date.now() - start
-      const progress = Math.min(elapsed / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setCount(Math.round(eased * target))
-      if (progress < 1) requestAnimationFrame(frame)
+    if (!start) return
+    let startTime: number | null = null
+    const step = (timestamp: number) => {
+      if (!startTime) startTime = timestamp
+      const progress = Math.min((timestamp - startTime) / duration, 1)
+      setCount(Math.floor(progress * target))
+      if (progress < 1) requestAnimationFrame(step)
     }
-    requestAnimationFrame(frame)
-  }, [target, duration, trigger])
+    requestAnimationFrame(step)
+  }, [start, target, duration])
   return count
 }
 
-// ─── Types ─────────────────────────────────────────────────────────────────────
+// ─── StarParticles ────────────────────────────────────────────────────────────
 
-interface FeatureCardProps {
-  icon: React.ReactNode
-  title: string
-  description: string
-  accent: string
-  delay: number
-  visible: boolean
-}
-
-// ─── Sub-components ────────────────────────────────────────────────────────────
-
-function FeatureCard({ icon, title, description, accent, delay, visible }: FeatureCardProps) {
+function StarParticles() {
+  const stars = Array.from({ length: 60 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: Math.random() * 2 + 0.5,
+    dur: (Math.random() * 4 + 2).toFixed(1),
+    delay: (Math.random() * 4).toFixed(1),
+  }))
   return (
-    <div
-      className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 transition-all duration-500 hover:-translate-y-2 hover:border-white/[0.15] hover:bg-white/[0.05] cursor-default"
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(28px)',
-        transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms, border-color 0.3s, background 0.3s, box-shadow 0.3s`,
-        boxShadow: undefined,
-      }}
-    >
-      {/* Hover glow */}
-      <div
-        className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{ boxShadow: `inset 0 0 30px ${accent}15` }}
-      />
-      {/* Icon */}
-      <div
-        className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110"
-        style={{ background: `${accent}18`, boxShadow: `0 0 20px ${accent}20` }}
-      >
-        <span style={{ color: accent }}>{icon}</span>
-      </div>
-      <h3 className="mb-2 text-base font-semibold text-white">{title}</h3>
-      <p className="text-sm leading-relaxed text-white/50">{description}</p>
-      {/* Bottom accent line */}
-      <div
-        className="absolute bottom-0 left-6 right-6 h-px rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{ background: `linear-gradient(to right, transparent, ${accent}60, transparent)` }}
-      />
-    </div>
-  )
-}
-
-function ScoreVisual({ animate }: { animate: boolean }) {
-  const score = 78
-  const radius = 54
-  const circumference = 2 * Math.PI * radius
-  const targetOffset = circumference - (score / 100) * circumference
-
-  return (
-    <div className="relative mx-auto w-full max-w-sm rounded-2xl border border-white/[0.08] bg-[#080f1e] p-6 shadow-2xl"
-      style={{ boxShadow: '0 0 60px #1a6fd420, 0 0 120px #4fc8d808' }}>
-      {/* Header */}
-      <div className="mb-5 flex items-center justify-between">
-        <span className="text-sm font-medium text-white/70">Score financiero</span>
-        <span className="rounded-full bg-[#00B050]/10 px-2.5 py-0.5 text-xs font-medium text-[#00B050]">
-          Marzo 2026
-        </span>
-      </div>
-      {/* Circle score */}
-      <div className="flex justify-center">
-        <div className="relative">
-          <svg width="140" height="140" viewBox="0 0 140 140">
-            <circle cx="70" cy="70" r={radius} fill="none" stroke="#ffffff06" strokeWidth="10" />
-            {/* Track glow */}
-            <circle cx="70" cy="70" r={radius} fill="none" stroke="#1a6fd415" strokeWidth="14" />
-            <circle
-              cx="70"
-              cy="70"
-              r={radius}
-              fill="none"
-              stroke="url(#scoreGrad)"
-              strokeWidth="10"
-              strokeLinecap="round"
-              strokeDasharray={circumference}
-              strokeDashoffset={animate ? targetOffset : circumference}
-              transform="rotate(-90 70 70)"
-              style={{
-                transition: animate ? 'stroke-dashoffset 1.6s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none',
-                filter: 'drop-shadow(0 0 10px #3d8ef8aa)',
-              }}
-            />
-            <defs>
-              <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#1a6fd4" />
-                <stop offset="100%" stopColor="#4fc8d8" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-4xl font-bold text-white">{score}</span>
-            <span className="text-xs text-white/40">/ 100</span>
-          </div>
-        </div>
-      </div>
-      {/* Category bars */}
-      <div className="mt-5 space-y-2.5">
-        {[
-          { label: 'Ahorro', pct: 85, color: '#00dfa2' },
-          { label: 'Deudas', pct: 62, color: '#3d8ef8' },
-          { label: 'Presupuesto', pct: 90, color: '#9768ff' },
-          { label: 'Emergencias', pct: 55, color: '#ffb340' },
-          { label: 'Inversiones', pct: 40, color: '#ff4060' },
-        ].map((cat, i) => (
-          <div key={cat.label} className="flex items-center gap-3">
-            <span className="w-24 text-right text-xs text-white/50">{cat.label}</span>
-            <div className="flex-1 overflow-hidden rounded-full bg-white/5">
-              <div
-                className="h-1.5 rounded-full"
-                style={{
-                  width: animate ? `${cat.pct}%` : '0%',
-                  background: cat.color,
-                  boxShadow: `0 0 8px ${cat.color}80`,
-                  transition: animate
-                    ? `width 0.8s cubic-bezier(0.34,1.56,0.64,1) ${300 + i * 120}ms`
-                    : 'none',
-                }}
-              />
-            </div>
-            <span className="w-8 text-xs text-white/40">{cat.pct}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function NotificationsVisual({ animate }: { animate: boolean }) {
-  const notifications = [
-    { icon: '⚠️', title: 'Presupuesto de comida al 90%', time: 'hace 2 min', color: '#ffb340' },
-    { icon: '🎯', title: 'Meta "Vacaciones" — contribuye esta semana', time: 'hace 1h', color: '#9768ff' },
-    { icon: '💳', title: 'Prestamo de RD$15,000 vence en 3 dias', time: 'hace 3h', color: '#ff4060' },
-    { icon: '✅', title: 'Balance positivo este mes. Buen trabajo!', time: 'ayer', color: '#00dfa2' },
-  ]
-
-  return (
-    <div className="relative mx-auto w-full max-w-sm space-y-2.5">
-      {notifications.map((n, i) => (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      {stars.map((s) => (
         <div
-          key={i}
-          className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-[#080f1e] p-3.5 transition-all duration-300 hover:border-white/[0.12] hover:-translate-y-0.5"
+          key={s.id}
+          className="star"
           style={{
-            opacity: animate ? 1 : 0,
-            transform: animate ? 'translateX(0)' : 'translateX(-24px)',
-            transition: animate
-              ? `opacity 0.5s ease ${i * 120}ms, transform 0.5s ease ${i * 120}ms, border-color 0.3s, box-shadow 0.3s`
-              : 'none',
-            boxShadow: `0 4px 20px ${n.color}08`,
+            left: `${s.x}%`,
+            top: `${s.y}%`,
+            width: s.size,
+            height: s.size,
+            // @ts-expect-error css custom props
+            '--dur': `${s.dur}s`,
+            '--delay': `${s.delay}s`,
           }}
-        >
-          <div
-            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-sm"
-            style={{ background: `${n.color}15`, boxShadow: `0 0 12px ${n.color}20` }}
-          >
-            {n.icon}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium leading-snug text-white/80">{n.title}</p>
-            <p className="mt-0.5 text-[11px] text-white/30">{n.time}</p>
-          </div>
-          <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full mt-1" style={{ background: n.color }} />
-        </div>
+        />
       ))}
-      <div
-        className="rounded-xl border border-white/[0.04] bg-white/[0.02] p-3 text-center text-xs text-white/30"
-        style={{
-          opacity: animate ? 1 : 0,
-          transition: animate ? 'opacity 0.5s ease 600ms' : 'none',
-        }}
-      >
-        + 11 tipos de alertas mas
-      </div>
     </div>
   )
 }
 
-function DashboardPreview() {
+// ─── ScoreRing ────────────────────────────────────────────────────────────────
+
+function ScoreRing({ score = 74 }: { score?: number }) {
+  const r = 45
+  const circumference = 2 * Math.PI * r
+  const offset = circumference - (score / 100) * circumference
+
+  const color =
+    score >= 80 ? '#00dfa2' : score >= 60 ? '#3d8ef8' : score >= 40 ? '#FFC000' : '#ff4060'
+
   return (
-    <div
-      className="relative w-full max-w-4xl mx-auto"
-      style={{ animation: 'float 6s ease-in-out infinite' }}
-    >
-      {/* Glow layers */}
-      <div
-        className="pointer-events-none absolute inset-x-16 -bottom-6 h-24 blur-3xl"
-        style={{
-          background: 'linear-gradient(to right, #1a6fd440, #4fc8d830)',
-          animation: 'pulseGlow 3s ease-in-out infinite',
-        }}
-      />
-      <div
-        className="pointer-events-none absolute inset-x-32 -bottom-2 h-12 blur-xl opacity-60"
-        style={{ background: 'linear-gradient(to right, #3d8ef850, #9768ff30)' }}
-      />
-
-      {/* Card */}
-      <div
-        className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#080f1e] shadow-2xl"
-        style={{ boxShadow: '0 40px 80px #00000060, 0 0 0 1px #ffffff08' }}
-      >
-        {/* Browser chrome */}
-        <div className="flex items-center gap-3 border-b border-white/[0.06] bg-[#060d1a] px-5 py-3">
-          <div className="flex gap-1.5">
-            <div className="h-3 w-3 rounded-full bg-[#ff4060]/60" />
-            <div className="h-3 w-3 rounded-full bg-[#ffb340]/60" />
-            <div className="h-3 w-3 rounded-full bg-[#00dfa2]/60" />
-          </div>
-          <div className="mx-auto flex items-center gap-1.5 rounded-md bg-white/[0.04] px-3 py-1 text-xs text-white/30">
-            <div className="h-1.5 w-1.5 rounded-full bg-[#00B050]/60" />
-            <span>finza.app/dashboard</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-3">
-          {/* Score card */}
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-            <p className="mb-1 text-xs text-white/40">Score financiero</p>
-            <div className="flex items-end gap-2">
-              <span className="text-4xl font-bold text-white">78</span>
-              <span className="mb-1 text-sm text-[#00B050]">+4 este mes</span>
-            </div>
-            <div className="mt-3 overflow-hidden rounded-full bg-white/5">
-              <div
-                className="h-1.5 rounded-full"
-                style={{
-                  width: '78%',
-                  background: 'linear-gradient(to right, #1a6fd4, #4fc8d8)',
-                  boxShadow: '0 0 10px #3d8ef860',
-                }}
-              />
-            </div>
-          </div>
-          {/* Balance card */}
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-            <p className="mb-1 text-xs text-white/40">Balance del mes</p>
-            <p className="text-2xl font-bold text-[#00B050]">+RD$12,450</p>
-            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <p className="text-white/40">Ingresos</p>
-                <p className="font-semibold text-white">RD$45,000</p>
-              </div>
-              <div>
-                <p className="text-white/40">Egresos</p>
-                <p className="font-semibold text-[#FF0000]">RD$32,550</p>
-              </div>
-            </div>
-          </div>
-          {/* Meta card */}
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-            <p className="mb-1 text-xs text-white/40">Meta: Fondo emergencia</p>
-            <p className="text-2xl font-bold text-white">65%</p>
-            <div className="mt-3 overflow-hidden rounded-full bg-white/5">
-              <div
-                className="h-1.5 rounded-full"
-                style={{ width: '65%', background: '#00dfa2', boxShadow: '0 0 8px #00dfa260' }}
-              />
-            </div>
-            <p className="mt-2 text-xs text-white/30">RD$65,000 / RD$100,000</p>
-          </div>
-        </div>
-
-        {/* Bottom stats row */}
-        <div className="grid grid-cols-2 gap-4 px-5 pb-5 sm:grid-cols-4">
-          {[
-            { label: 'Prestamos activos', value: '2', color: '#ffb340' },
-            { label: 'Presupuestos', value: '5/6 OK', color: '#9768ff' },
-            { label: 'Alertas', value: '3 nuevas', color: '#ff4060' },
-            { label: 'Recurrentes', value: 'RD$8,200', color: '#4fc8d8' },
-          ].map((item) => (
-            <div key={item.label} className="rounded-lg border border-white/[0.04] bg-white/[0.02] p-3">
-              <p className="text-xs text-white/40">{item.label}</p>
-              <p className="mt-0.5 text-sm font-semibold" style={{ color: item.color }}>
-                {item.value}
-              </p>
-            </div>
-          ))}
-        </div>
+    <div className="relative flex items-center justify-center" style={{ width: 140, height: 140 }}>
+      <svg width="140" height="140" viewBox="0 0 100 100" className="absolute inset-0" aria-hidden="true">
+        <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
+        <circle
+          cx="50"
+          cy="50"
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth="8"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          className="score-ring-circle"
+          style={{ filter: `drop-shadow(0 0 8px ${color}80)` }}
+        />
+      </svg>
+      <div className="text-center z-10">
+        <div className="font-bold text-3xl text-white leading-none">{score}</div>
+        <div className="text-xs mt-0.5" style={{ color }}>Bueno</div>
       </div>
     </div>
   )
 }
 
-// ─── Main Component ─────────────────────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export function LandingPage(): JSX.Element {
   const { t } = useTranslation()
-  const { session } = useAuthStore()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
+  const { user } = useAuthStore()
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [statsVisible, setStatsVisible] = useState(false)
+  const statsRef = useRef<HTMLDivElement>(null)
 
-  // Scroll listener for navbar glassmorphism
+  useScrollReveal()
+
+  // Trigger countup when stats band enters viewport
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    if (!statsRef.current) return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setStatsVisible(true) },
+      { threshold: 0.3 }
+    )
+    obs.observe(statsRef.current)
+    return () => obs.disconnect()
   }, [])
 
-  // Scroll reveal hooks for each section
-  const statsReveal = useScrollReveal(0.2)
-  const featuresReveal = useScrollReveal(0.1)
-  const scoreReveal = useScrollReveal(0.2)
-  const notifsReveal = useScrollReveal(0.2)
-  const extrasReveal = useScrollReveal(0.15)
-  const ctaReveal = useScrollReveal(0.2)
+  const scoreCount = useCountUp(74, 1600, statsVisible)
 
-  // Count-up values (numeric portions only)
-  const count15 = useCountUp(15, 1800, statsReveal.visible)
+  const ctaHref = user ? '/dashboard' : '/register'
+  const ctaLabel = user ? t('landing.ctaDashboard') : t('landing.ctaStart')
 
-  // Particles (20 floating dots)
-  const particles = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    size: 2 + Math.random() * 4,
-    left: Math.random() * 100,
-    top: 10 + Math.random() * 80,
-    delay: Math.random() * 4,
-    duration: 3 + Math.random() * 4,
-    opacity: 0.15 + Math.random() * 0.4,
-    color: i % 3 === 0 ? '#4fc8d8' : i % 3 === 1 ? '#3d8ef8' : '#1a6fd4',
-  }))
-
+  // ── Feature data ──────────────────────────────────────────────────────────
   const features = [
     {
-      icon: <BarChart3 className="h-5 w-5" />,
+      icon: <BarChart3 size={22} />,
       title: t('landing.feature1Title'),
-      description: t('landing.feature1Desc'),
-      accent: '#3d8ef8',
+      desc: t('landing.feature1Desc'),
+      color: '#3d8ef8',
+      bg: 'rgba(61,142,248,0.12)',
     },
     {
-      icon: <Target className="h-5 w-5" />,
+      icon: <PiggyBank size={22} />,
       title: t('landing.feature2Title'),
-      description: t('landing.feature2Desc'),
-      accent: '#9768ff',
+      desc: t('landing.feature2Desc'),
+      color: '#00dfa2',
+      bg: 'rgba(0,223,162,0.12)',
     },
     {
-      icon: <PiggyBank className="h-5 w-5" />,
+      icon: <Target size={22} />,
       title: t('landing.feature3Title'),
-      description: t('landing.feature3Desc'),
-      accent: '#00dfa2',
+      desc: t('landing.feature3Desc'),
+      color: '#9768ff',
+      bg: 'rgba(151,104,255,0.12)',
     },
     {
-      icon: <CreditCard className="h-5 w-5" />,
+      icon: <CreditCard size={22} />,
       title: t('landing.feature4Title'),
-      description: t('landing.feature4Desc'),
-      accent: '#ffb340',
+      desc: t('landing.feature4Desc'),
+      color: '#FFC000',
+      bg: 'rgba(255,192,0,0.12)',
     },
     {
-      icon: <Bell className="h-5 w-5" />,
+      icon: <Bell size={22} />,
       title: t('landing.feature5Title'),
-      description: t('landing.feature5Desc'),
-      accent: '#ff4060',
+      desc: t('landing.feature5Desc'),
+      color: '#ff4060',
+      bg: 'rgba(255,64,96,0.12)',
     },
     {
-      icon: <BookOpen className="h-5 w-5" />,
+      icon: <BookOpen size={22} />,
       title: t('landing.feature6Title'),
-      description: t('landing.feature6Desc'),
-      accent: '#4fc8d8',
+      desc: t('landing.feature6Desc'),
+      color: '#5B9BD5',
+      bg: 'rgba(91,155,213,0.12)',
     },
   ]
 
-  const extraFeatures = [
-    { icon: <Moon className="h-5 w-5" />, title: t('landing.extra1Title'), desc: t('landing.extra1Desc'), color: '#9768ff' },
-    { icon: <BarChart2 className="h-5 w-5" />, title: t('landing.extra2Title'), desc: t('landing.extra2Desc'), color: '#3d8ef8' },
-    { icon: <RefreshCw className="h-5 w-5" />, title: t('landing.extra3Title'), desc: t('landing.extra3Desc'), color: '#4fc8d8' },
-    { icon: <Lightbulb className="h-5 w-5" />, title: t('landing.extra4Title'), desc: t('landing.extra4Desc'), color: '#ffb340' },
+  // ── Secondary features ────────────────────────────────────────────────────
+  const extras = [
+    { icon: <Moon size={20} />, title: t('landing.extra1Title'), desc: t('landing.extra1Desc'), color: '#9768ff' },
+    { icon: <BarChart2 size={20} />, title: t('landing.extra2Title'), desc: t('landing.extra2Desc'), color: '#00dfa2' },
+    { icon: <RefreshCw size={20} />, title: t('landing.extra3Title'), desc: t('landing.extra3Desc'), color: '#3d8ef8' },
+    { icon: <Lightbulb size={20} />, title: t('landing.extra4Title'), desc: t('landing.extra4Desc'), color: '#FFC000' },
+  ]
+
+  // ── Alert samples ─────────────────────────────────────────────────────────
+  const alertSamples = [
+    {
+      icon: '⚠️', color: '#FFC000', bg: 'rgba(255,192,0,0.12)',
+      title: t('landing.alertSample1Title'),
+      body: t('landing.alertSample1Body'),
+      time: t('landing.alertSample1Time'),
+    },
+    {
+      icon: '🎯', color: '#9768ff', bg: 'rgba(151,104,255,0.12)',
+      title: t('landing.alertSample2Title'),
+      body: t('landing.alertSample2Body'),
+      time: t('landing.alertSample2Time'),
+    },
+    {
+      icon: '🔔', color: '#ff4060', bg: 'rgba(255,64,96,0.12)',
+      title: t('landing.alertSample3Title'),
+      body: t('landing.alertSample3Body'),
+      time: t('landing.alertSample3Time'),
+    },
+    {
+      icon: '✅', color: '#00dfa2', bg: 'rgba(0,223,162,0.12)',
+      title: t('landing.alertSample4Title'),
+      body: t('landing.alertSample4Body'),
+      time: t('landing.alertSample4Time'),
+    },
+  ]
+
+  // ── Testimonials ──────────────────────────────────────────────────────────
+  const testimonials = [
+    {
+      name: t('landing.t1Name'),
+      location: t('landing.t1Location'),
+      quote: t('landing.t1Quote'),
+      initials: 'LM',
+      color: '#3d8ef8',
+    },
+    {
+      name: t('landing.t2Name'),
+      location: t('landing.t2Location'),
+      quote: t('landing.t2Quote'),
+      initials: 'CR',
+      color: '#00dfa2',
+    },
+    {
+      name: t('landing.t3Name'),
+      location: t('landing.t3Location'),
+      quote: t('landing.t3Quote'),
+      initials: 'AP',
+      color: '#9768ff',
+    },
+  ]
+
+  // ── FAQ ───────────────────────────────────────────────────────────────────
+  const faqs = [
+    { q: t('landing.faq1Q'), a: t('landing.faq1A') },
+    { q: t('landing.faq2Q'), a: t('landing.faq2A') },
+    { q: t('landing.faq3Q'), a: t('landing.faq3A') },
+    { q: t('landing.faq4Q'), a: t('landing.faq4A') },
   ]
 
   return (
-    <div className="min-h-screen bg-[#04080f] font-sans antialiased overflow-x-hidden">
-      {/* Inject keyframes */}
-      <style>{KEYFRAMES}</style>
+    <>
+      {/* Inject styles once */}
+      <style dangerouslySetInnerHTML={{ __html: STYLES }} />
 
-      {/* ── Navbar ─────────────────────────────────────────────────────────── */}
-      <nav
-        className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
-          scrolled
-            ? 'border-b border-white/[0.05] bg-[#04080f]/80 backdrop-blur-xl'
-            : 'bg-transparent'
-        }`}
+      <div
+        style={{
+          background: '#04080f',
+          color: 'rgba(255,255,255,0.87)',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          overflowX: 'hidden',
+          minHeight: '100vh',
+        }}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 sm:px-6">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <img
-              src="/logo.svg"
-              alt="Finza"
-              className="h-8 w-8 transition-transform duration-300 group-hover:scale-110"
-            />
-            <span className="text-lg font-bold tracking-tight text-white">Finza</span>
-          </Link>
-
-          {/* Desktop nav */}
-          <div className="hidden items-center gap-2 sm:flex">
-            {session ? (
-              <Link
-                to="/dashboard"
-                className="relative overflow-hidden rounded-lg bg-[#1a6fd4] px-5 py-2 text-sm font-semibold text-white transition-all hover:bg-[#3d8ef8] hover:shadow-lg hover:shadow-[#3d8ef840]"
-              >
-                <span className="relative z-10 flex items-center gap-1.5">
-                  {t('landing.ctaDashboard')}
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </span>
-              </Link>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="rounded-lg px-4 py-2 text-sm font-medium text-white/60 transition-colors hover:text-white"
-                >
-                  {t('landing.ctaLogin')}
-                </Link>
-                <Link
-                  to="/register"
-                  className="relative overflow-hidden rounded-lg bg-[#1a6fd4] px-5 py-2 text-sm font-semibold text-white transition-all hover:bg-[#3d8ef8] hover:shadow-lg hover:shadow-[#3d8ef840]"
-                >
-                  <span className="relative z-10">{t('landing.ctaStart')}</span>
-                  {/* Shimmer */}
-                  <span
-                    className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                    style={{ animation: 'shimmer 2.5s infinite 1s' }}
-                  />
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* Mobile hamburger */}
-          <button
-            className="flex items-center justify-center rounded-lg p-2 text-white/60 transition-colors hover:text-white sm:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Abrir menu"
-          >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
-
-        {/* Mobile menu */}
-        <div
-          className={`overflow-hidden border-t border-white/[0.05] bg-[#04080f]/95 backdrop-blur-xl transition-all duration-300 sm:hidden ${
-            mobileMenuOpen ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'
-          }`}
+        {/* ── NAVBAR ─────────────────────────────────────────────────────── */}
+        <header
+          className="navbar-glass sticky top-0 z-50"
+          role="banner"
         >
-          <div className="px-4 pb-4 pt-2 space-y-1">
-            {session ? (
-              <Link
-                to="/dashboard"
-                className="flex items-center justify-center gap-1.5 rounded-lg bg-[#1a6fd4] px-4 py-2.5 text-sm font-semibold text-white"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {t('landing.ctaDashboard')} <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="block rounded-lg px-4 py-2.5 text-sm text-white/60 hover:text-white"
-                  onClick={() => setMobileMenuOpen(false)}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2.5" aria-label="Finza inicio">
+              <img src="/logo.svg" alt="Finza" className="w-8 h-8" />
+              <span className="font-bold text-lg text-white tracking-tight">Finza</span>
+            </Link>
+
+            {/* Desktop nav */}
+            <nav className="hidden md:flex items-center gap-7" aria-label="Navegacion principal">
+              {[
+                { label: t('landing.navFeatures'), href: '#features' },
+                { label: t('landing.navScore'), href: '#score' },
+                { label: t('landing.navAlerts'), href: '#alerts' },
+                { label: t('landing.navFaq'), href: '#faq' },
+              ].map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="text-sm font-medium transition-colors"
+                  style={{ color: 'rgba(255,255,255,0.6)' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.95)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}
                 >
-                  {t('landing.ctaLogin')}
-                </Link>
-                <Link
-                  to="/register"
-                  className="block rounded-lg bg-[#1a6fd4] px-4 py-2.5 text-center text-sm font-semibold text-white"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {t('landing.ctaStart')}
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </nav>
+                  {item.label}
+                </a>
+              ))}
+            </nav>
 
-      {/* ── Hero ───────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden px-4 pb-28 pt-32 sm:px-6 sm:pt-44">
-        {/* Animated background blobs */}
-        <div
-          className="pointer-events-none absolute -top-32 left-1/4 h-[700px] w-[700px] rounded-full opacity-[0.12] blur-3xl"
-          style={{
-            background: 'radial-gradient(circle, #1a6fd4 0%, transparent 70%)',
-            animation: 'blobFloat1 14s ease-in-out infinite',
-          }}
-        />
-        <div
-          className="pointer-events-none absolute right-0 top-1/3 h-[500px] w-[500px] rounded-full opacity-[0.08] blur-3xl"
-          style={{
-            background: 'radial-gradient(circle, #4fc8d8 0%, transparent 70%)',
-            animation: 'blobFloat2 18s ease-in-out infinite',
-          }}
-        />
-        <div
-          className="pointer-events-none absolute bottom-0 left-0 h-[350px] w-[350px] rounded-full opacity-[0.07] blur-3xl"
-          style={{
-            background: 'radial-gradient(circle, #3d8ef8 0%, transparent 70%)',
-            animation: 'blobFloat3 12s ease-in-out infinite',
-          }}
-        />
-
-        {/* Floating particles */}
-        {particles.map((p) => (
-          <div
-            key={p.id}
-            className="pointer-events-none absolute rounded-full"
-            style={{
-              width: p.size,
-              height: p.size,
-              left: `${p.left}%`,
-              top: `${p.top}%`,
-              background: p.color,
-              opacity: p.opacity,
-              boxShadow: `0 0 ${p.size * 2}px ${p.color}`,
-              animation: `particle ${p.duration}s ease-in-out infinite ${p.delay}s`,
-            }}
-          />
-        ))}
-
-        <div className="relative mx-auto max-w-6xl">
-          {/* Badge */}
-          <div
-            className="mb-8 flex justify-center"
-            style={{ animation: 'fadeInUp 0.7s ease both' }}
-          >
-            <span
-              className="relative inline-flex items-center gap-2 overflow-hidden rounded-full border border-[#3d8ef8]/25 bg-[#3d8ef8]/[0.08] px-4 py-1.5 text-xs font-medium text-[#7ed8e8]"
-            >
-              <span
-                className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                style={{ animation: 'shimmer 3s infinite 2s' }}
-              />
-              <span>✨</span>
-              {t('landing.badge')}
-            </span>
-          </div>
-
-          {/* Headline */}
-          <h1
-            className="mx-auto mb-6 max-w-4xl text-center text-5xl font-extrabold leading-tight tracking-tight text-white sm:text-6xl lg:text-7xl"
-            style={{ animation: 'fadeInUp 0.7s ease 0.1s both' }}
-          >
-            {t('landing.headline1')}{' '}
-            <span
-              className="bg-clip-text text-transparent"
-              style={{
-                backgroundImage: 'linear-gradient(135deg, #1a6fd4 0%, #4fc8d8 40%, #3d8ef8 70%, #7ed8e8 100%)',
-                backgroundSize: '300% 300%',
-                animation: 'gradientShift 4s ease infinite',
-                WebkitBackgroundClip: 'text',
-              }}
-            >
-              {t('landing.headline2')}
-            </span>
-          </h1>
-
-          {/* Subheadline */}
-          <p
-            className="mx-auto mb-10 max-w-2xl text-center text-base leading-relaxed text-white/50 sm:text-lg"
-            style={{ animation: 'fadeInUp 0.7s ease 0.2s both' }}
-          >
-            {t('landing.subheadline')}
-          </p>
-
-          {/* CTAs */}
-          <div
-            className="flex flex-col items-center justify-center gap-3 sm:flex-row"
-            style={{ animation: 'fadeInUp 0.7s ease 0.3s both' }}
-          >
-            {session ? (
-              <Link
-                to="/dashboard"
-                className="group relative overflow-hidden flex w-full items-center justify-center gap-2 rounded-xl bg-[#1a6fd4] px-9 py-4 text-base font-bold text-white shadow-xl shadow-[#1a6fd430] transition-all hover:bg-[#3d8ef8] hover:shadow-[#3d8ef840] sm:w-auto"
-              >
-                <span className="relative z-10 flex items-center gap-2">
+            {/* Desktop CTAs */}
+            <div className="hidden md:flex items-center gap-3">
+              {user ? (
+                <Link to="/dashboard" className="btn-primary text-sm px-5 py-2">
                   {t('landing.ctaDashboard')}
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </span>
-                <span
-                  className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/15 to-transparent"
-                  style={{ animation: 'shimmer 2.5s infinite 0.5s' }}
-                />
-              </Link>
-            ) : (
-              <>
-                <Link
-                  to="/register"
-                  className="group relative overflow-hidden flex w-full items-center justify-center gap-2 rounded-xl bg-[#1a6fd4] px-9 py-4 text-base font-bold text-white shadow-xl shadow-[#1a6fd430] transition-all hover:bg-[#3d8ef8] hover:shadow-[#3d8ef840] sm:w-auto"
-                >
-                  <span className="relative z-10 flex items-center gap-2">
-                    {t('landing.ctaStart')}
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </span>
-                  <span
-                    className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/15 to-transparent"
-                    style={{ animation: 'shimmer 2.5s infinite 0.5s' }}
-                  />
                 </Link>
-                <Link
-                  to="/login"
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.04] px-9 py-4 text-base font-medium text-white/70 transition-all hover:bg-white/[0.08] hover:text-white sm:w-auto"
-                >
-                  {t('landing.ctaLogin')}
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* Trust badges */}
-          <div
-            className="mt-8 flex flex-wrap items-center justify-center gap-5 text-xs text-white/30"
-            style={{ animation: 'fadeInUp 0.7s ease 0.4s both' }}
-          >
-            <span className="flex items-center gap-1.5 transition-colors hover:text-white/50">
-              <Shield className="h-3.5 w-3.5 text-[#4fc8d8]" /> {t('landing.trust1')}
-            </span>
-            <span className="flex items-center gap-1.5 transition-colors hover:text-white/50">
-              <Zap className="h-3.5 w-3.5 text-[#ffb340]" /> {t('landing.trust2')}
-            </span>
-            <span className="flex items-center gap-1.5 transition-colors hover:text-white/50">
-              <CheckCircle className="h-3.5 w-3.5 text-[#00dfa2]" /> {t('landing.trust3')}
-            </span>
-          </div>
-
-          {/* Dashboard preview */}
-          <div
-            className="mt-16 px-4 sm:px-0"
-            style={{ animation: 'fadeInUp 0.9s ease 0.5s both' }}
-          >
-            <DashboardPreview />
-          </div>
-        </div>
-      </section>
-
-      {/* ── Stats Section ─────────────────────────────────────────────────── */}
-      <section className="relative px-4 py-24 sm:px-6">
-        {/* Grid texture */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px)',
-            backgroundSize: '40px 40px',
-          }}
-        />
-        <div ref={statsReveal.ref} className="relative mx-auto max-w-6xl">
-          {/* Section heading */}
-          <div
-            className="mb-12 text-center"
-            style={{
-              opacity: statsReveal.visible ? 1 : 0,
-              transform: statsReveal.visible ? 'translateY(0)' : 'translateY(24px)',
-              transition: 'opacity 0.6s ease, transform 0.6s ease',
-            }}
-          >
-            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#00B050]/20 bg-[#00B050]/10 px-3 py-1 text-xs font-medium text-[#00B050]">
-              <TrendingUp className="h-3 w-3" />
-              Estadisticas de la plataforma
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="text-sm font-medium transition-colors"
+                    style={{ color: 'rgba(255,255,255,0.65)' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = 'white')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.65)')}
+                  >
+                    {t('landing.navLogin')}
+                  </Link>
+                  <Link to="/register" className="btn-primary text-sm px-5 py-2">
+                    {t('landing.navCta')}
+                  </Link>
+                </>
+              )}
             </div>
-            <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">{t('landing.statsTitle')}</h2>
+
+            {/* Mobile hamburger */}
+            <button
+              className="md:hidden p-2 rounded-lg transition-colors"
+              style={{ color: 'rgba(255,255,255,0.7)' }}
+              onClick={() => setMobileOpen((v) => !v)}
+              aria-label={mobileOpen ? 'Cerrar menu' : 'Abrir menu'}
+              aria-expanded={mobileOpen}
+            >
+              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
           </div>
 
-          {/* Stats grid */}
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-            {[
-              { value: `${count15}+`, label: t('landing.stat1Label'), color: '#3d8ef8', delay: 0 },
-              { value: t('landing.stat2Value'), label: t('landing.stat2Label'), color: '#9768ff', delay: 100 },
-              { value: t('landing.stat3Value'), label: t('landing.stat3Label'), color: '#00dfa2', delay: 200 },
-              { value: t('landing.stat4Value'), label: t('landing.stat4Label'), color: '#ffb340', delay: 300 },
-            ].map((stat, i) => (
-              <div
-                key={i}
-                className="group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 text-center transition-all duration-300 hover:border-white/[0.12] hover:bg-white/[0.04] hover:-translate-y-1"
-                style={{
-                  opacity: statsReveal.visible ? 1 : 0,
-                  transform: statsReveal.visible ? 'translateY(0)' : 'translateY(28px)',
-                  transition: `opacity 0.6s ease ${stat.delay}ms, transform 0.6s ease ${stat.delay}ms, border-color 0.3s, background 0.3s`,
-                }}
-              >
-                {/* Gradient border top */}
+          {/* Mobile menu */}
+          {mobileOpen && (
+            <div
+              className="mobile-menu md:hidden glass-light border-t"
+              style={{ borderColor: 'rgba(255,255,255,0.06)' }}
+            >
+              <nav className="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-3">
+                {[
+                  { label: t('landing.navFeatures'), href: '#features' },
+                  { label: t('landing.navScore'), href: '#score' },
+                  { label: t('landing.navAlerts'), href: '#alerts' },
+                  { label: t('landing.navFaq'), href: '#faq' },
+                ].map((item) => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    className="text-sm font-medium py-2"
+                    style={{ color: 'rgba(255,255,255,0.7)' }}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {item.label}
+                  </a>
+                ))}
+                <div className="flex flex-col gap-2 pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                  {!user && (
+                    <Link to="/login" className="btn-outline text-sm text-center py-2.5 px-4">
+                      {t('landing.navLogin')}
+                    </Link>
+                  )}
+                  <Link
+                    to={ctaHref}
+                    className="btn-primary text-sm text-center py-2.5 px-4"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {ctaLabel}
+                  </Link>
+                </div>
+              </nav>
+            </div>
+          )}
+        </header>
+
+        {/* ── HERO ───────────────────────────────────────────────────────── */}
+        <section
+          className="relative overflow-hidden"
+          style={{
+            background: 'radial-gradient(ellipse 80% 50% at 20% 40%, rgba(61,142,248,0.12) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 60%, rgba(0,223,162,0.07) 0%, transparent 50%), #04080f',
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <StarParticles />
+
+          {/* Background grid */}
+          <div className="absolute inset-0 bg-grid opacity-40 pointer-events-none" aria-hidden="true" />
+
+          {/* Orbs */}
+          <div
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              width: 600,
+              height: 600,
+              top: '-10%',
+              left: '-15%',
+              background: 'radial-gradient(circle, rgba(61,142,248,0.18) 0%, transparent 70%)',
+              animation: 'orbFloat1 18s ease-in-out infinite',
+            }}
+            aria-hidden="true"
+          />
+          <div
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              width: 500,
+              height: 500,
+              bottom: '-5%',
+              right: '-10%',
+              background: 'radial-gradient(circle, rgba(0,223,162,0.12) 0%, transparent 70%)',
+              animation: 'orbFloat2 22s ease-in-out infinite',
+            }}
+            aria-hidden="true"
+          />
+
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 w-full py-24 lg:py-0" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center' }}>
+            <div className="flex flex-col lg:flex-row items-center gap-16 w-full">
+              {/* Left: copy */}
+              <div className="flex-1 max-w-xl">
+                {/* Badge */}
                 <div
-                  className="absolute inset-x-0 top-0 h-px"
-                  style={{ background: `linear-gradient(to right, transparent, ${stat.color}60, transparent)` }}
-                />
-                {/* Glow */}
-                <div
-                  className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                  style={{ boxShadow: `inset 0 0 40px ${stat.color}12` }}
-                />
-                <div
-                  className="mb-1 text-4xl font-black sm:text-5xl"
+                  className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium mb-8"
                   style={{
-                    background: `linear-gradient(135deg, ${stat.color}, #ffffff)`,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
+                    background: 'rgba(61,142,248,0.12)',
+                    border: '1px solid rgba(61,142,248,0.25)',
+                    color: '#5B9BD5',
+                    animation: 'fadeInUp 0.6s ease both',
                   }}
                 >
-                  {stat.value}
+                  <span aria-hidden="true">✨</span>
+                  {t('landing.badge')}
                 </div>
-                <div className="text-sm text-white/50">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* ── Features Grid ─────────────────────────────────────────────────── */}
-      <section className="px-4 py-24 sm:px-6">
-        <div ref={featuresReveal.ref} className="mx-auto max-w-6xl">
-          {/* Heading */}
-          <div
-            className="mb-14 text-center"
-            style={{
-              opacity: featuresReveal.visible ? 1 : 0,
-              transform: featuresReveal.visible ? 'translateY(0)' : 'translateY(24px)',
-              transition: 'opacity 0.6s ease, transform 0.6s ease',
-            }}
-          >
-            <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">
-              {t('landing.featuresTitle')}
-            </h2>
-            <p className="mx-auto max-w-xl text-base text-white/50">{t('landing.featuresSub')}</p>
-          </div>
-
-          {/* Feature cards with stagger */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((f, i) => (
-              <FeatureCard
-                key={f.title}
-                icon={f.icon}
-                title={f.title}
-                description={f.description}
-                accent={f.accent}
-                delay={i * 80}
-                visible={featuresReveal.visible}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Highlight: Score Financiero ───────────────────────────────────── */}
-      <section className="px-4 py-24 sm:px-6">
-        <div ref={scoreReveal.ref} className="mx-auto max-w-6xl">
-          <div className="flex flex-col gap-12 lg:flex-row lg:items-center lg:gap-20">
-            {/* Text side */}
-            <div
-              className="flex-1"
-              style={{
-                opacity: scoreReveal.visible ? 1 : 0,
-                transform: scoreReveal.visible ? 'translateX(0)' : 'translateX(-30px)',
-                transition: 'opacity 0.7s ease, transform 0.7s ease',
-              }}
-            >
-              <div className="mb-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
-                style={{ background: '#3d8ef818', color: '#3d8ef8' }}>
-                Score Financiero
-              </div>
-              <h2 className="mb-5 text-3xl font-bold text-white sm:text-4xl leading-tight">
-                {t('landing.scoreTitle')}
-              </h2>
-              <p className="mb-6 text-base leading-relaxed text-white/50">{t('landing.scoreDesc')}</p>
-              <ul className="space-y-3.5">
-                {[
-                  t('landing.scoreBullet1'),
-                  t('landing.scoreBullet2'),
-                  t('landing.scoreBullet3'),
-                  t('landing.scoreBullet4'),
-                ].map((b, i) => (
-                  <li key={i} className="flex items-start gap-2.5">
-                    <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#3d8ef8]" />
-                    <span className="text-sm text-white/70">{b}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            {/* Visual side */}
-            <div
-              className="flex-1"
-              style={{
-                opacity: scoreReveal.visible ? 1 : 0,
-                transform: scoreReveal.visible ? 'translateX(0)' : 'translateX(30px)',
-                transition: 'opacity 0.7s ease 0.15s, transform 0.7s ease 0.15s',
-              }}
-            >
-              <ScoreVisual animate={scoreReveal.visible} />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Highlight: Notificaciones ─────────────────────────────────────── */}
-      <section className="px-4 py-24 sm:px-6">
-        <div ref={notifsReveal.ref} className="mx-auto max-w-6xl">
-          <div className="flex flex-col gap-12 lg:flex-row-reverse lg:items-center lg:gap-20">
-            {/* Text side */}
-            <div
-              className="flex-1"
-              style={{
-                opacity: notifsReveal.visible ? 1 : 0,
-                transform: notifsReveal.visible ? 'translateX(0)' : 'translateX(30px)',
-                transition: 'opacity 0.7s ease, transform 0.7s ease',
-              }}
-            >
-              <div className="mb-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
-                style={{ background: '#ff406018', color: '#ff4060' }}>
-                Notificaciones Inteligentes
-              </div>
-              <h2 className="mb-5 text-3xl font-bold text-white sm:text-4xl leading-tight">
-                {t('landing.notifsTitle')}
-              </h2>
-              <p className="mb-6 text-base leading-relaxed text-white/50">{t('landing.notifsDesc')}</p>
-              <ul className="space-y-3.5">
-                {[
-                  t('landing.notifsBullet1'),
-                  t('landing.notifsBullet2'),
-                  t('landing.notifsBullet3'),
-                  t('landing.notifsBullet4'),
-                  t('landing.notifsBullet5'),
-                ].map((b, i) => (
-                  <li key={i} className="flex items-start gap-2.5">
-                    <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#ff4060]" />
-                    <span className="text-sm text-white/70">{b}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            {/* Visual side */}
-            <div
-              className="flex-1"
-              style={{
-                opacity: notifsReveal.visible ? 1 : 0,
-                transform: notifsReveal.visible ? 'translateX(0)' : 'translateX(-30px)',
-                transition: 'opacity 0.7s ease 0.15s, transform 0.7s ease 0.15s',
-              }}
-            >
-              <NotificationsVisual animate={notifsReveal.visible} />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Additional Features Row ───────────────────────────────────────── */}
-      <section className="px-4 py-16 sm:px-6">
-        <div ref={extrasReveal.ref} className="mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {extraFeatures.map((item, i) => (
-              <div
-                key={i}
-                className="group relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 transition-all duration-300 hover:border-white/[0.1] hover:bg-white/[0.04] hover:-translate-y-1"
-                style={{
-                  opacity: extrasReveal.visible ? 1 : 0,
-                  transform: extrasReveal.visible ? 'translateY(0)' : 'translateY(24px)',
-                  transition: `opacity 0.6s ease ${i * 80}ms, transform 0.6s ease ${i * 80}ms, border-color 0.3s, background 0.3s`,
-                }}
-              >
-                <div
-                  className="pointer-events-none absolute inset-0 rounded-xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                  style={{ boxShadow: `inset 0 0 24px ${item.color}10` }}
-                />
-                <div
-                  className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-110"
-                  style={{ background: `${item.color}15`, color: item.color }}
+                {/* Headline */}
+                <h1
+                  className="font-bold leading-tight mb-6"
+                  style={{
+                    fontSize: 'clamp(2.5rem, 5vw, 4rem)',
+                    animation: 'fadeInUp 0.6s ease 0.1s both',
+                  }}
                 >
-                  {item.icon}
+                  <span className="text-white">{t('landing.headline1')}</span>
+                  <br />
+                  <span className="gradient-text">{t('landing.headline2')}</span>
+                </h1>
+
+                {/* Subheadline */}
+                <p
+                  className="text-base leading-relaxed mb-8"
+                  style={{
+                    color: 'rgba(255,255,255,0.55)',
+                    animation: 'fadeInUp 0.6s ease 0.2s both',
+                  }}
+                >
+                  {t('landing.subheadline')}
+                </p>
+
+                {/* CTAs */}
+                <div
+                  className="flex flex-wrap gap-3 mb-10"
+                  style={{ animation: 'fadeInUp 0.6s ease 0.3s both' }}
+                >
+                  <Link
+                    to={ctaHref}
+                    className="btn-primary flex items-center gap-2 px-6 py-3 text-sm"
+                  >
+                    {ctaLabel}
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </Link>
+                  <a
+                    href="#features"
+                    className="btn-outline flex items-center gap-2 px-6 py-3 text-sm"
+                  >
+                    {t('landing.ctaExplore')}
+                    <ChevronDown size={16} aria-hidden="true" />
+                  </a>
                 </div>
-                <h3 className="mb-1.5 text-sm font-semibold text-white">{item.title}</h3>
-                <p className="text-xs leading-relaxed text-white/40">{item.desc}</p>
+
+                {/* Trust bullets */}
+                <div
+                  className="flex flex-wrap gap-x-5 gap-y-2"
+                  style={{ animation: 'fadeInUp 0.6s ease 0.4s both' }}
+                >
+                  {[
+                    t('landing.trust1'),
+                    t('landing.trust2'),
+                    t('landing.trust3'),
+                  ].map((item) => (
+                    <div
+                      key={item}
+                      className="flex items-center gap-1.5 text-xs"
+                      style={{ color: 'rgba(255,255,255,0.5)' }}
+                    >
+                      <CheckCircle size={13} style={{ color: '#00dfa2' }} aria-hidden="true" />
+                      {item}
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* ── Final CTA ─────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden px-4 py-32 sm:px-6">
-        {/* Radial glow background */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(ellipse 70% 60% at 50% 50%, #1a6fd415 0%, transparent 70%)',
-            animation: 'pulseGlow 5s ease-in-out infinite',
-          }}
-        />
-        {/* Grid */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.025]"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px)',
-            backgroundSize: '40px 40px',
-          }}
-        />
-
-        <div ref={ctaReveal.ref} className="relative mx-auto max-w-2xl text-center">
-          <div
-            style={{
-              opacity: ctaReveal.visible ? 1 : 0,
-              transform: ctaReveal.visible ? 'translateY(0)' : 'translateY(24px)',
-              transition: 'opacity 0.7s ease, transform 0.7s ease',
-            }}
-          >
-            <div className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-[#00B050]/20 bg-[#00B050]/10 px-3 py-1 text-xs font-medium text-[#00B050]">
-              {t('landing.ctaFinalBadge')}
-            </div>
-            <h2 className="mb-5 text-4xl font-extrabold text-white sm:text-5xl lg:text-6xl leading-tight">
-              {t('landing.ctaFinalTitle1')}{' '}
-              <span
-                className="bg-clip-text text-transparent"
+              {/* Right: device mockup */}
+              <div
+                className="hero-devices flex-shrink-0 relative"
                 style={{
-                  backgroundImage: 'linear-gradient(135deg, #00dfa2 0%, #4fc8d8 50%, #3d8ef8 100%)',
-                  backgroundSize: '300% 300%',
-                  animation: 'gradientShift 4s ease infinite',
-                  WebkitBackgroundClip: 'text',
+                  width: 420,
+                  height: 400,
+                  animation: 'fadeInRight 0.8s ease 0.3s both',
                 }}
+                aria-hidden="true"
               >
-                {t('landing.ctaFinalTitle2')}
-              </span>
-            </h2>
-            <p className="mb-10 text-base text-white/50 sm:text-lg">{t('landing.ctaFinalSub')}</p>
+                {/* Tablet */}
+                <div
+                  className="device-tablet absolute"
+                  style={{
+                    width: 300,
+                    height: 220,
+                    top: 30,
+                    left: 0,
+                    padding: 16,
+                    transform: 'rotate(-4deg)',
+                  }}
+                >
+                  {/* Mini dashboard UI */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <img src="/logo.svg" alt="" className="w-5 h-5" />
+                    <span className="text-xs font-bold text-white">Finza</span>
+                    <div className="ml-auto flex gap-1">
+                      {[0,1,2].map(i => (
+                        <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: i===0?'#ff4060':i===1?'#FFC000':'#00dfa2', opacity: 0.7 }} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    {[
+                      { label: 'Balance', val: 'DOP 24,500', color: '#00dfa2' },
+                      { label: 'Egresos', val: 'DOP 8,200', color: '#ff4060' },
+                    ].map((c) => (
+                      <div key={c.label} className="rounded-lg p-2" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                        <div className="text-xs mb-1" style={{ color: 'rgba(255,255,255,0.45)' }}>{c.label}</div>
+                        <div className="text-sm font-bold" style={{ color: c.color }}>{c.val}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Mini bar chart */}
+                  <div className="flex items-end gap-1.5" style={{ height: 48 }}>
+                    {[35, 60, 45, 80, 55, 70, 90].map((h, i) => (
+                      <div
+                        key={i}
+                        className="flex-1 rounded-sm"
+                        style={{
+                          height: `${h}%`,
+                          background: i === 6
+                            ? 'linear-gradient(to top, #3d8ef8, #00dfa2)'
+                            : 'rgba(61,142,248,0.35)',
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
 
-            {session ? (
-              <Link
-                to="/dashboard"
-                className="group relative inline-flex overflow-hidden items-center gap-2 rounded-2xl bg-[#1a6fd4] px-12 py-5 text-base font-bold text-white shadow-2xl shadow-[#1a6fd435] transition-all hover:bg-[#3d8ef8] hover:shadow-[#3d8ef845]"
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  {t('landing.ctaDashboard')}
-                  <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-                </span>
-                <span
-                  className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                  style={{ animation: 'shimmer 2.5s infinite 1s' }}
-                />
-              </Link>
-            ) : (
-              <Link
-                to="/register"
-                className="group relative inline-flex overflow-hidden items-center gap-2 rounded-2xl bg-[#1a6fd4] px-12 py-5 text-base font-bold text-white shadow-2xl shadow-[#1a6fd435] transition-all hover:bg-[#3d8ef8] hover:shadow-[#3d8ef845]"
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  {t('landing.ctaFinalBtn')}
-                  <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-                </span>
-                <span
-                  className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                  style={{ animation: 'shimmer 2.5s infinite 1s' }}
-                />
-              </Link>
-            )}
+                {/* Phone */}
+                <div
+                  className="device-phone absolute"
+                  style={{
+                    width: 160,
+                    height: 260,
+                    top: 60,
+                    right: 0,
+                    padding: 14,
+                    transform: 'rotate(3deg)',
+                  }}
+                >
+                  {/* Score ring on phone */}
+                  <div className="flex justify-center mb-3">
+                    <ScoreRing score={scoreCount || 74} />
+                  </div>
+                  {/* Score bars */}
+                  {[
+                    { label: 'Ahorro', pct: 72, color: '#00dfa2' },
+                    { label: 'Deudas', pct: 58, color: '#3d8ef8' },
+                    { label: 'Presup.', pct: 85, color: '#9768ff' },
+                  ].map((b) => (
+                    <div key={b.label} className="mb-1.5">
+                      <div className="flex justify-between text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        <span>{b.label}</span>
+                        <span>{b.pct}</span>
+                      </div>
+                      <div className="rounded-full" style={{ height: 4, background: 'rgba(255,255,255,0.08)' }}>
+                        <div
+                          className="rounded-full h-full"
+                          style={{ width: `${b.pct}%`, background: b.color }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
-            {!session && (
-              <p className="mt-5 text-sm text-white/30">
-                {t('landing.ctaFinalHaveAccount')}{' '}
-                <Link to="/login" className="text-[#4fc8d8] transition-colors hover:text-[#7ed8e8]">
-                  {t('landing.ctaFinalSignIn')}
-                </Link>
+                {/* Glow behind devices */}
+                <div
+                  className="absolute rounded-full pointer-events-none"
+                  style={{
+                    width: 300,
+                    height: 300,
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    background: 'radial-gradient(circle, rgba(61,142,248,0.2) 0%, transparent 70%)',
+                    animation: 'pulseGlow 4s ease-in-out infinite',
+                  }}
+                  aria-hidden="true"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Scroll indicator */}
+          <div
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
+            style={{ color: 'rgba(255,255,255,0.3)', animation: 'float 2.5s ease-in-out infinite' }}
+            aria-hidden="true"
+          >
+            <ChevronDown size={18} />
+          </div>
+        </section>
+
+        {/* ── STATS BAND ─────────────────────────────────────────────────── */}
+        <section
+          ref={statsRef}
+          className="relative py-12"
+          style={{ background: 'rgba(8,15,30,0.8)' }}
+          aria-label="Estadisticas"
+        >
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+            aria-hidden="true"
+          />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {[
+                { value: t('landing.stat1Value'), label: t('landing.stat1Label'), color: '#3d8ef8' },
+                { value: t('landing.stat2Value'), label: t('landing.stat2Label'), color: '#00dfa2' },
+                { value: t('landing.stat3Value'), label: t('landing.stat3Label'), color: '#9768ff' },
+                { value: t('landing.stat4Value'), label: t('landing.stat4Label'), color: '#FFC000' },
+              ].map((stat, i) => (
+                <div
+                  key={i}
+                  className="glass rounded-2xl p-6 text-center reveal"
+                  style={{ transitionDelay: `${i * 0.1}s` }}
+                >
+                  <div
+                    className="text-3xl font-bold mb-1"
+                    style={{ color: stat.color, textShadow: `0 0 20px ${stat.color}60` }}
+                  >
+                    {stat.value}
+                  </div>
+                  <div className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── FEATURES ───────────────────────────────────────────────────── */}
+        <section
+          id="features"
+          className="py-24 relative"
+          style={{ background: '#04080f' }}
+          aria-labelledby="features-heading"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            {/* Section header */}
+            <div className="text-center mb-16 reveal">
+              <div
+                className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium mb-5"
+                style={{ background: 'rgba(61,142,248,0.1)', border: '1px solid rgba(61,142,248,0.2)', color: '#5B9BD5' }}
+              >
+                <Zap size={12} aria-hidden="true" />
+                Funciones
+              </div>
+              <h2
+                id="features-heading"
+                className="font-bold mb-4 text-white"
+                style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)' }}
+              >
+                {t('landing.featuresTitle')}
+              </h2>
+              <p className="max-w-xl mx-auto text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                {t('landing.featuresSub')}
               </p>
-            )}
-          </div>
-        </div>
-      </section>
+            </div>
 
-      {/* ── Footer ────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-white/[0.05] px-4 py-8 sm:px-6">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
-          <Link to="/" className="flex items-center gap-2 group">
-            <img src="/logo.svg" alt="Finza" className="h-6 w-6 transition-transform duration-300 group-hover:scale-110" />
-            <span className="text-sm font-semibold text-white/50 transition-colors group-hover:text-white/70">Finza</span>
-          </Link>
-          <p className="text-xs text-white/20">
-            &copy; {new Date().getFullYear()} Finza. {t('landing.copyright')}
-          </p>
-          <div className="flex items-center gap-5 text-xs text-white/35">
-            {session ? (
-              <Link to="/dashboard" className="transition-colors hover:text-white/60">
-                {t('landing.ctaDashboard')}
-              </Link>
-            ) : (
-              <>
-                <Link to="/login" className="transition-colors hover:text-white/60">
-                  {t('landing.ctaLogin')}
-                </Link>
-                <Link to="/register" className="transition-colors hover:text-white/60">
-                  {t('landing.ctaStart')}
-                </Link>
-              </>
-            )}
+            {/* Feature grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {features.map((f, i) => (
+                <div
+                  key={i}
+                  className="feature-card p-6 relative overflow-hidden reveal"
+                  style={{ transitionDelay: `${i * 0.08}s` }}
+                >
+                  <div className="shimmer-overlay" aria-hidden="true" />
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                    style={{ background: f.bg, color: f.color }}
+                    aria-hidden="true"
+                  >
+                    {f.icon}
+                  </div>
+                  <h3 className="font-semibold text-base text-white mb-2">{f.title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    {f.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </footer>
-    </div>
+        </section>
+
+        {/* ── SCORE SHOWCASE ─────────────────────────────────────────────── */}
+        <section
+          id="score"
+          className="py-24 relative overflow-hidden"
+          style={{
+            background: 'radial-gradient(ellipse 70% 60% at 80% 50%, rgba(61,142,248,0.08) 0%, transparent 60%), #080f1e',
+          }}
+          aria-labelledby="score-heading"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="flex flex-col lg:flex-row items-center gap-16">
+              {/* Left: copy */}
+              <div className="flex-1 reveal-left">
+                <div
+                  className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium mb-6"
+                  style={{ background: 'rgba(61,142,248,0.1)', border: '1px solid rgba(61,142,248,0.2)', color: '#5B9BD5' }}
+                >
+                  <BarChart3 size={12} aria-hidden="true" />
+                  Score Financiero
+                </div>
+                <h2
+                  id="score-heading"
+                  className="font-bold text-white mb-4"
+                  style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)' }}
+                >
+                  {t('landing.scoreTitle')}
+                </h2>
+                <p className="text-sm leading-relaxed mb-8" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  {t('landing.scoreDesc')}
+                </p>
+                <ul className="space-y-3">
+                  {[
+                    t('landing.scoreBullet1'),
+                    t('landing.scoreBullet2'),
+                    t('landing.scoreBullet3'),
+                    t('landing.scoreBullet4'),
+                  ].map((b) => (
+                    <li key={b} className="flex items-start gap-3 text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                      <CheckCircle size={16} className="mt-0.5 flex-shrink-0" style={{ color: '#00dfa2' }} aria-hidden="true" />
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  to={ctaHref}
+                  className="btn-primary inline-flex items-center gap-2 px-6 py-3 text-sm mt-8"
+                >
+                  {ctaLabel}
+                  <ArrowRight size={15} aria-hidden="true" />
+                </Link>
+              </div>
+
+              {/* Right: score card */}
+              <div className="flex-shrink-0 reveal-right">
+                <div
+                  className="glass rounded-2xl p-8 relative overflow-hidden"
+                  style={{ width: 320 }}
+                >
+                  <div className="shimmer-overlay" aria-hidden="true" />
+                  {/* Header */}
+                  <div className="flex items-center gap-2 mb-6">
+                    <img src="/logo.svg" alt="" className="w-6 h-6" aria-hidden="true" />
+                    <span className="text-sm font-semibold text-white">Score Financiero</span>
+                  </div>
+
+                  {/* Ring */}
+                  <div className="flex justify-center mb-6">
+                    <ScoreRing score={74} />
+                  </div>
+
+                  {/* Dimension bars */}
+                  <div className="space-y-3">
+                    {[
+                      { label: 'Ahorro', score: 72, color: '#00dfa2' },
+                      { label: 'Deudas', score: 58, color: '#3d8ef8' },
+                      { label: 'Presupuesto', score: 85, color: '#9768ff' },
+                      { label: 'Emergencias', score: 45, color: '#FFC000' },
+                    ].map((d) => (
+                      <div key={d.label}>
+                        <div className="flex justify-between text-xs mb-1.5" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                          <span>{d.label}</span>
+                          <span style={{ color: d.color }}>{d.score}</span>
+                        </div>
+                        <div className="rounded-full" style={{ height: 6, background: 'rgba(255,255,255,0.07)' }}>
+                          <div
+                            className="rounded-full h-full"
+                            style={{
+                              width: `${d.score}%`,
+                              background: `linear-gradient(90deg, ${d.color}80, ${d.color})`,
+                              boxShadow: `0 0 8px ${d.color}50`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── ALERTS SHOWCASE ────────────────────────────────────────────── */}
+        <section
+          id="alerts"
+          className="py-24 relative overflow-hidden"
+          style={{
+            background: 'radial-gradient(ellipse 60% 50% at 20% 50%, rgba(0,223,162,0.07) 0%, transparent 60%), #04080f',
+          }}
+          aria-labelledby="alerts-heading"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="flex flex-col lg:flex-row items-center gap-16">
+              {/* Left: alert list */}
+              <div className="flex-shrink-0 w-full lg:w-auto reveal-left order-2 lg:order-1">
+                <div className="space-y-3" style={{ maxWidth: 360 }}>
+                  {alertSamples.map((a, i) => (
+                    <div
+                      key={i}
+                      className="alert-item flex items-start gap-3 p-4"
+                      style={{ transitionDelay: `${i * 0.08}s` }}
+                    >
+                      <div
+                        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base"
+                        style={{ background: a.bg }}
+                        aria-hidden="true"
+                      >
+                        {a.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-sm font-medium text-white">{a.title}</span>
+                          <span className="text-xs flex-shrink-0" style={{ color: 'rgba(255,255,255,0.35)' }}>{a.time}</span>
+                        </div>
+                        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{a.body}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right: copy */}
+              <div className="flex-1 reveal-right order-1 lg:order-2">
+                <div
+                  className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium mb-6"
+                  style={{ background: 'rgba(0,223,162,0.1)', border: '1px solid rgba(0,223,162,0.2)', color: '#00dfa2' }}
+                >
+                  <Bell size={12} aria-hidden="true" />
+                  Alertas Inteligentes
+                </div>
+                <h2
+                  id="alerts-heading"
+                  className="font-bold text-white mb-4"
+                  style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)' }}
+                >
+                  {t('landing.alertsTitle')}
+                </h2>
+                <p className="text-sm leading-relaxed mb-8" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  {t('landing.alertsDesc')}
+                </p>
+                <ul className="space-y-3">
+                  {[
+                    t('landing.alertsBullet1'),
+                    t('landing.alertsBullet2'),
+                    t('landing.alertsBullet3'),
+                    t('landing.alertsBullet4'),
+                  ].map((b) => (
+                    <li key={b} className="flex items-start gap-3 text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                      <CheckCircle size={16} className="mt-0.5 flex-shrink-0" style={{ color: '#00dfa2' }} aria-hidden="true" />
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── SECONDARY FEATURES ─────────────────────────────────────────── */}
+        <section
+          className="py-20 relative"
+          style={{ background: '#080f1e' }}
+          aria-label="Funciones adicionales"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-12 reveal">
+              <h2
+                className="font-bold text-white mb-3"
+                style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2rem)' }}
+              >
+                Y mucho mas...
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {extras.map((e, i) => (
+                <div
+                  key={i}
+                  className="sec-card p-5 reveal"
+                  style={{ transitionDelay: `${i * 0.08}s` }}
+                >
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                    style={{ background: `${e.color}18`, color: e.color }}
+                    aria-hidden="true"
+                  >
+                    {e.icon}
+                  </div>
+                  <h3 className="font-semibold text-sm text-white mb-1.5">{e.title}</h3>
+                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.48)' }}>
+                    {e.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── JOURNEY ────────────────────────────────────────────────────── */}
+        <section
+          className="py-24 relative"
+          style={{ background: '#04080f' }}
+          aria-labelledby="journey-heading"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-16 reveal">
+              <h2
+                id="journey-heading"
+                className="font-bold text-white mb-3"
+                style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)' }}
+              >
+                {t('landing.journeyTitle')}
+              </h2>
+              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                {t('landing.journeySub')}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+              {/* Connecting line */}
+              <div
+                className="hidden md:block absolute top-12 left-1/6 right-1/6 h-px pointer-events-none"
+                style={{ background: 'linear-gradient(90deg, transparent, rgba(61,142,248,0.3), rgba(61,142,248,0.3), transparent)' }}
+                aria-hidden="true"
+              />
+
+              {[
+                { step: t('landing.journey1Step'), title: t('landing.journey1Title'), desc: t('landing.journey1Desc'), color: '#3d8ef8' },
+                { step: t('landing.journey2Step'), title: t('landing.journey2Title'), desc: t('landing.journey2Desc'), color: '#00dfa2' },
+                { step: t('landing.journey3Step'), title: t('landing.journey3Title'), desc: t('landing.journey3Desc'), color: '#9768ff' },
+              ].map((j, i) => (
+                <div
+                  key={i}
+                  className="journey-card p-7 text-center reveal"
+                  style={{ transitionDelay: `${i * 0.12}s` }}
+                >
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg mx-auto mb-5"
+                    style={{ background: `${j.color}18`, color: j.color, border: `1px solid ${j.color}35` }}
+                    aria-hidden="true"
+                  >
+                    {j.step}
+                  </div>
+                  <h3 className="font-semibold text-base text-white mb-2">{j.title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    {j.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── TESTIMONIALS ───────────────────────────────────────────────── */}
+        <section
+          className="py-24 relative"
+          style={{ background: '#080f1e' }}
+          aria-labelledby="testimonials-heading"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-16 reveal">
+              <h2
+                id="testimonials-heading"
+                className="font-bold text-white mb-3"
+                style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)' }}
+              >
+                {t('landing.testimonialsTitle')}
+              </h2>
+              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                {t('landing.testimonialsSub')}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {testimonials.map((tm, i) => (
+                <div
+                  key={i}
+                  className="testimonial-card p-6 flex flex-col reveal"
+                  style={{ transitionDelay: `${i * 0.1}s` }}
+                >
+                  {/* Stars */}
+                  <div className="flex gap-1 mb-4" aria-label="5 estrellas">
+                    {Array.from({ length: 5 }).map((_, s) => (
+                      <Star key={s} size={14} fill="#FFC000" stroke="none" aria-hidden="true" />
+                    ))}
+                  </div>
+
+                  {/* Quote */}
+                  <blockquote
+                    className="text-sm leading-relaxed flex-1 mb-6"
+                    style={{ color: 'rgba(255,255,255,0.65)' }}
+                  >
+                    &ldquo;{tm.quote}&rdquo;
+                  </blockquote>
+
+                  {/* Author */}
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                      style={{ background: `${tm.color}25`, color: tm.color }}
+                      aria-hidden="true"
+                    >
+                      {tm.initials}
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-white">{tm.name}</div>
+                      <div className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                        {tm.location}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── FAQ ────────────────────────────────────────────────────────── */}
+        <section
+          id="faq"
+          className="py-24 relative"
+          style={{ background: '#04080f' }}
+          aria-labelledby="faq-heading"
+        >
+          <div className="max-w-4xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-16 reveal">
+              <h2
+                id="faq-heading"
+                className="font-bold text-white mb-3"
+                style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)' }}
+              >
+                {t('landing.faqTitle')}
+              </h2>
+              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                {t('landing.faqSub')}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {faqs.map((faq, i) => (
+                <div
+                  key={i}
+                  className="faq-card p-6 reveal"
+                  style={{ transitionDelay: `${i * 0.08}s` }}
+                >
+                  <h3 className="font-semibold text-sm text-white mb-2 flex items-start gap-2">
+                    <span
+                      className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5"
+                      style={{ background: 'rgba(61,142,248,0.15)', color: '#3d8ef8' }}
+                      aria-hidden="true"
+                    >
+                      ?
+                    </span>
+                    {faq.q}
+                  </h3>
+                  <p className="text-sm leading-relaxed pl-7" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    {faq.a}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── CTA FINAL ──────────────────────────────────────────────────── */}
+        <section
+          className="py-24 relative overflow-hidden"
+          style={{ background: '#080f1e' }}
+          aria-label="Llamada a la accion"
+        >
+          {/* Background orbs */}
+          <div
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              width: 500,
+              height: 500,
+              top: '50%',
+              left: '25%',
+              transform: 'translate(-50%, -50%)',
+              background: 'radial-gradient(circle, rgba(61,142,248,0.12) 0%, transparent 70%)',
+              animation: 'pulseGlow 5s ease-in-out infinite',
+            }}
+            aria-hidden="true"
+          />
+          <div
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              width: 400,
+              height: 400,
+              top: '50%',
+              right: '10%',
+              transform: 'translateY(-50%)',
+              background: 'radial-gradient(circle, rgba(0,223,162,0.08) 0%, transparent 70%)',
+              animation: 'pulseGlow 6s ease-in-out 1s infinite',
+            }}
+            aria-hidden="true"
+          />
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 relative">
+            <div className="flex flex-col lg:flex-row items-center gap-16">
+              {/* Left: main CTA copy */}
+              <div className="flex-1 reveal-left">
+                <div
+                  className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium mb-6"
+                  style={{ background: 'rgba(61,142,248,0.1)', border: '1px solid rgba(61,142,248,0.2)', color: '#5B9BD5' }}
+                >
+                  <Zap size={12} aria-hidden="true" />
+                  {t('landing.ctaFinalBadge')}
+                </div>
+                <h2
+                  className="font-bold text-white mb-4"
+                  style={{ fontSize: 'clamp(1.75rem, 3.5vw, 3rem)' }}
+                >
+                  {t('landing.ctaFinalTitle1')}
+                  <br />
+                  <span className="gradient-text">{t('landing.ctaFinalTitle2')}</span>
+                </h2>
+                <p className="text-sm leading-relaxed mb-8" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  {t('landing.ctaFinalSub')}
+                </p>
+                <Link
+                  to={ctaHref}
+                  className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 text-base font-semibold"
+                >
+                  {t('landing.ctaFinalBtn')}
+                  <ArrowRight size={18} aria-hidden="true" />
+                </Link>
+                {!user && (
+                  <div className="mt-4 text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    {t('landing.ctaFinalHaveAccount')}{' '}
+                    <Link
+                      to="/login"
+                      className="transition-colors"
+                      style={{ color: '#3d8ef8' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = '#5B9BD5')}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = '#3d8ef8')}
+                    >
+                      {t('landing.ctaFinalSignIn')}
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Right: proof panel */}
+              <div className="flex-shrink-0 reveal-right">
+                <div
+                  className="glass rounded-2xl p-8 relative overflow-hidden"
+                  style={{ width: 300 }}
+                >
+                  <div className="shimmer-overlay" aria-hidden="true" />
+                  <div className="text-center mb-6">
+                    <img src="/logo.svg" alt="Finza" className="w-12 h-12 mx-auto mb-3" />
+                    <div className="font-bold text-lg text-white">Finza</div>
+                    <div className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                      App de finanzas personales
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    {[
+                      { icon: <CheckCircle size={14} />, label: t('landing.ctaProof1'), color: '#00dfa2' },
+                      { icon: <CheckCircle size={14} />, label: t('landing.ctaProof2'), color: '#00dfa2' },
+                      { icon: <CheckCircle size={14} />, label: t('landing.ctaProof3'), color: '#00dfa2' },
+                      { icon: <Shield size={14} />, label: 'Datos protegidos con RLS', color: '#3d8ef8' },
+                    ].map((p, i) => (
+                      <div key={i} className="flex items-center gap-3 text-sm" style={{ color: 'rgba(255,255,255,0.65)' }}>
+                        <span style={{ color: p.color }} aria-hidden="true">{p.icon}</span>
+                        {p.label}
+                      </div>
+                    ))}
+                  </div>
+                  <div
+                    className="mt-6 pt-5 text-center text-xs"
+                    style={{ borderTop: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.3)' }}
+                  >
+                    Republica Dominicana · LatAm
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── FOOTER ─────────────────────────────────────────────────────── */}
+        <footer
+          className="relative"
+          style={{
+            background: '#04080f',
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+          }}
+          role="contentinfo"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              {/* Brand */}
+              <div className="flex items-center gap-2.5">
+                <img src="/logo.svg" alt="Finza" className="w-7 h-7" />
+                <div>
+                  <div className="font-bold text-base text-white">Finza</div>
+                  <div className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                    {t('landing.footerTagline')}
+                  </div>
+                </div>
+              </div>
+
+              {/* Links */}
+              <nav className="flex items-center gap-6" aria-label="Footer">
+                {[
+                  { label: t('landing.footerPrivacy'), href: '#' },
+                  { label: t('landing.footerTerms'), href: '#' },
+                  { label: t('landing.footerContact'), href: '#' },
+                ].map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    className="text-sm transition-colors"
+                    style={{ color: 'rgba(255,255,255,0.4)' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
+
+              {/* Copyright */}
+              <div className="text-xs" style={{ color: 'rgba(255,255,255,0.28)' }}>
+                &copy; {new Date().getFullYear()} Finza. {t('landing.copyright')}
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </>
   )
 }
