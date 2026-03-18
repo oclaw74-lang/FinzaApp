@@ -97,10 +97,10 @@ describe('PrestamosPage', () => {
     setupMocks()
   })
 
-  it('renders tabs "Me deben" and "Yo debo"', () => {
+  it('renders unified list without tabs', () => {
     render(<PrestamosPage />)
-    expect(screen.getByRole('tab', { name: /me deben/i })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /yo debo/i })).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: /me deben/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: /yo debo/i })).not.toBeInTheDocument()
   })
 
   it('renders page title', () => {
@@ -123,15 +123,7 @@ describe('PrestamosPage', () => {
   it('shows empty state when no data and not loading', () => {
     setupMocks({ prestamosData: [] })
     render(<PrestamosPage />)
-    expect(screen.getByText(/no hay prestamos donde te deban/i)).toBeInTheDocument()
-  })
-
-  it('shows empty state for yo_debo tab', () => {
-    setupMocks({ prestamosData: [] })
-    render(<PrestamosPage />)
-    const yoDeboTab = screen.getByRole('tab', { name: /yo debo/i })
-    fireEvent.click(yoDeboTab)
-    expect(screen.getByText(/no hay prestamos donde debas/i)).toBeInTheDocument()
+    expect(screen.getByText(/no hay prestamos registrados/i)).toBeInTheDocument()
   })
 
   it('renders prestamo rows when data is available', () => {
@@ -154,10 +146,9 @@ describe('PrestamosPage', () => {
     expect(yoDebo.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('tab "Me deben" is active by default', () => {
+  it('renders tipo badge on prestamo rows', () => {
     render(<PrestamosPage />)
-    const tab = screen.getByRole('tab', { name: /me deben/i })
-    expect(tab).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByText('Me deben')).toBeInTheDocument()
   })
 
   it('renders cuota_mensual badge when present', () => {
