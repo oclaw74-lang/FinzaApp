@@ -716,11 +716,6 @@ export function TarjetasPage(): JSX.Element {
             >
               <Info size={14} />
             </button>
-            {tarjeta.tipo === 'credito' && tarjeta.limite_credito && (
-              <div className="mt-2 px-1">
-                <UtilizationBar saldo={tarjeta.saldo_actual} limite={tarjeta.limite_credito} />
-              </div>
-            )}
           </div>
         ))}
       </div>
