@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { I18nextProvider } from 'react-i18next'
 import { Toaster } from 'sonner'
@@ -39,7 +39,7 @@ const queryClient = new QueryClient({
 })
 
 function RootRoute(): JSX.Element {
-  const { session, isLoading } = useAuthStore()
+  const { isLoading } = useAuthStore()
 
   if (isLoading) {
     return (
@@ -53,10 +53,6 @@ function RootRoute(): JSX.Element {
         </div>
       </div>
     )
-  }
-
-  if (session) {
-    return <Navigate to="/dashboard" replace />
   }
 
   return <LandingPage />
@@ -89,6 +85,7 @@ export function App(): JSX.Element {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<RootRoute />} />
+            <Route path="/landing" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
