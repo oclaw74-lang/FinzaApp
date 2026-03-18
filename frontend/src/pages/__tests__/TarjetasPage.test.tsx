@@ -326,8 +326,8 @@ describe('TarjetasPage', () => {
   })
 
   it('detail modal shows movimiento list when data exists', () => {
-    const { useMovimientosTarjeta: mockMov } = vi.mocked({ useMovimientosTarjeta })
-    mockMov.mockReturnValue({
+    setupMocks([mockCredito])
+    vi.mocked(useMovimientosTarjeta).mockReturnValue({
       data: [
         {
           id: 'm-1',
@@ -345,7 +345,6 @@ describe('TarjetasPage', () => {
       isError: false,
     } as ReturnType<typeof useMovimientosTarjeta>)
 
-    setupMocks([mockCredito])
     render(<TarjetasPage />)
 
     fireEvent.click(screen.getByRole('button', { name: /Visa Popular/i }))
@@ -354,13 +353,13 @@ describe('TarjetasPage', () => {
   })
 
   it('detail modal shows loading skeletons while movimientos are loading', () => {
+    setupMocks([mockCredito])
     vi.mocked(useMovimientosTarjeta).mockReturnValue({
       data: undefined,
       isLoading: true,
       isError: false,
     } as ReturnType<typeof useMovimientosTarjeta>)
 
-    setupMocks([mockCredito])
     render(<TarjetasPage />)
 
     fireEvent.click(screen.getByRole('button', { name: /Visa Popular/i }))
@@ -417,6 +416,7 @@ describe('TarjetasPage', () => {
 
   it('calls eliminar mutation when deleting a movimiento with confirmation', async () => {
     const mutateAsync = vi.fn().mockResolvedValue({})
+    setupMocks([mockCredito])
     vi.mocked(useMovimientosTarjeta).mockReturnValue({
       data: [
         {
@@ -437,7 +437,6 @@ describe('TarjetasPage', () => {
     vi.mocked(useEliminarMovimiento).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useEliminarMovimiento>)
     vi.spyOn(window, 'confirm').mockReturnValue(true)
 
-    setupMocks([mockCredito])
     render(<TarjetasPage />)
 
     fireEvent.click(screen.getByRole('button', { name: /Visa Popular/i }))
