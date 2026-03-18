@@ -70,7 +70,7 @@ export function PrestamoDetail({
 
   if (isLoading && !displayPrestamo) {
     return (
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+      <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
         <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-xl p-6 animate-pulse">
           <div className="h-6 w-48 bg-[var(--surface-raised)] rounded mb-4" />
@@ -86,7 +86,7 @@ export function PrestamoDetail({
 
   if (isError && !displayPrestamo) {
     return (
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+      <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
         <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-xl p-6">
           <p className="text-sm text-[var(--text-muted)]">No se pudo cargar el detalle del prestamo.</p>
@@ -116,7 +116,7 @@ export function PrestamoDetail({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label={`Detalle de prestamo con ${displayPrestamo.persona}`}
