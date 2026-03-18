@@ -74,9 +74,11 @@
     --finza-border: rgba(255,255,255,0.06);
     --finza-glass: rgba(8,15,30,0.6);
   }
-  * { @apply border-border; }
+  * { border-color: var(--border); }
   body {
-    @apply bg-background text-[var(--text-primary)] font-sans;
+    background-color: var(--bg);
+    color: var(--text-primary);
+    @apply font-sans;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
