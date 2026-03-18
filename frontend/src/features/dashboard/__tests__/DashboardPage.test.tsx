@@ -16,18 +16,18 @@ vi.mock('@/store/authStore', () => ({
 }))
 
 // Mock recharts-based chart components — ResponsiveContainer has 0 dimensions in jsdom
-vi.mock('@/features/dashboard/components/ChartGastosPorCategoria', () => ({
-  ChartGastosPorCategoria: ({ data }: { data: Array<{ categoria: string; total: number }> }) => (
-    <div data-testid="chart-gastos-categoria">
+vi.mock('@/features/dashboard/components/ChartFlujoMensual', () => ({
+  ChartFlujoMensual: () => <div data-testid="chart-flujo-mensual" />,
+}))
+
+vi.mock('@/features/dashboard/components/ChartDistribucionEgresos', () => ({
+  ChartDistribucionEgresos: ({ data }: { data: Array<{ categoria: string; total: number; porcentaje: number }> }) => (
+    <div data-testid="chart-distribucion-egresos">
       {data.map((d) => (
         <span key={d.categoria}>{d.categoria}</span>
       ))}
     </div>
   ),
-}))
-
-vi.mock('@/features/dashboard/components/ChartBalanceTendencia', () => ({
-  ChartBalanceTendencia: () => <div data-testid="chart-balance-tendencia" />,
 }))
 
 import { useDashboardV2 } from '@/hooks/useDashboardV2'
@@ -195,11 +195,11 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Supermercado')).toBeInTheDocument()
   })
 
-  it('renders category breakdown bars', () => {
+  it('renders category breakdown charts', () => {
     render(<DashboardPage />)
-    // Alimentacion appears in presupuestos_estado AND in the mocked chart
+    // Alimentacion appears in presupuestos_estado AND in the mocked distribution chart
     expect(screen.getAllByText('Alimentacion').length).toBeGreaterThan(0)
-    // Transporte appears in the mocked ChartGastosPorCategoria
+    // Transporte appears in the mocked ChartDistribucionEgresos
     expect(screen.getByText('Transporte')).toBeInTheDocument()
   })
 
