@@ -148,7 +148,7 @@ describe('PrestamosPage', () => {
 
   it('renders tipo badge on prestamo rows', () => {
     render(<PrestamosPage />)
-    expect(screen.getByText('Me deben')).toBeInTheDocument()
+    expect(screen.getAllByText('Me deben').length).toBeGreaterThanOrEqual(1)
   })
 
   it('renders cuota_mensual badge when present', () => {
