@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Sidebar } from '@/components/shared/Sidebar'
 
 // Mock stores
@@ -22,6 +23,10 @@ vi.mock('@/components/shared/ScoreWidget', () => ({
 
 vi.mock('@/components/ui/avatar', () => ({
   Avatar: ({ name }: { name: string }) => <div data-testid="avatar">{name}</div>,
+}))
+
+vi.mock('@/lib/api', () => ({
+  default: { get: vi.fn().mockResolvedValue({ data: { completed: false } }) },
 }))
 
 import { useUiStore } from '@/store/uiStore'
@@ -48,10 +53,13 @@ function setupMocks({
 }
 
 function renderSidebar() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
-    <MemoryRouter>
-      <Sidebar />
-    </MemoryRouter>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <Sidebar />
+      </MemoryRouter>
+    </QueryClientProvider>
   )
 }
 

@@ -1,4 +1,4 @@
-﻿const es = {
+const es = {
   nav: {
     dashboard: 'Dashboard', ingresos: 'Ingresos', egresos: 'Egresos',
     prestamos: 'Prestamos', metas: 'Metas', presupuestos: 'Presupuestos',
@@ -17,7 +17,7 @@
     delete: 'Eliminar', loading: 'Cargando...', error: 'Error',
     success: 'Exito', confirm: 'Confirmar', close: 'Cerrar',
     search: 'Buscar', filter: 'Filtrar', noData: 'Sin datos',
-    month: 'Mes', year: 'Ano', amount: 'Monto', description: 'Descripcion',
+    month: 'Mes', year: 'Año', amount: 'Monto', description: 'Descripcion',
     category: 'Categoria', date: 'Fecha', actions: 'Acciones',
     new: 'Nuevo', total: 'Total', of: 'de',
     viewAll: 'Ver todas',
