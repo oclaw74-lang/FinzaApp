@@ -23,7 +23,6 @@ import { useUiStore } from '@/store/uiStore'
 import { useAuthStore } from '@/store/authStore'
 import { useTranslation } from 'react-i18next'
 import { Avatar } from '@/components/ui/avatar'
-import { ScoreWidget } from '@/components/shared/ScoreWidget'
 
 interface NavItemDef {
   to: string
@@ -278,9 +277,6 @@ export function Sidebar(): JSX.Element {
             </div>
           ))}
         </nav>
-
-        {/* Score widget */}
-        <ScoreWidget collapsed={sidebarCollapsed} />
 
         {/* User section */}
         <div

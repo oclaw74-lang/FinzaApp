@@ -7,7 +7,6 @@ import {
   CalendarClock,
   ChevronRight,
   TrendingUp,
-  AlertTriangle,
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDashboardV2 } from '@/hooks/useDashboardV2'
@@ -97,18 +96,68 @@ export function DashboardPage(): JSX.Element {
 
       {/* Greeting header */}
       <div className="flex flex-col gap-4 mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] dark:text-white mb-1 leading-tight" data-testid="dashboard-greeting">
-              {getGreeting()}, {firstName}
-            </h1>
-            <p className="text-[var(--text-muted)] dark:text-white/50 text-sm">
-              {getWeekContext()} · {getFinancialContext(data)}
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] dark:text-white mb-1 leading-tight" data-testid="dashboard-greeting">
+            {getGreeting()}, {firstName}
+          </h1>
+          <p className="text-[var(--text-muted)] dark:text-white/50 text-sm">
+            {getWeekContext()} · {getFinancialContext(data)}
+          </p>
+        </div>
 
-          {/* Year nav — always visible, compact */}
-          <div className="flex items-center gap-1 card-glass rounded-xl px-2 py-1 self-start">
+        {/* Month + Year selector — inline on mobile, pills on desktop */}
+        <div className="sm:hidden flex items-center gap-2">
+          <select
+            value={mes}
+            onChange={(e) => setMes(Number(e.target.value))}
+            className="finza-input flex-1 text-sm font-medium py-1.5"
+            aria-label="Seleccionar mes"
+          >
+            {MESES_SHORT.map((m, i) => (
+              <option key={i} value={i + 1}>{m}</option>
+            ))}
+          </select>
+          <div className="flex items-center gap-0.5 card-glass rounded-xl px-1.5 py-0.5">
+            <button
+              type="button"
+              onClick={() => setYear((y) => y - 1)}
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] text-sm font-bold"
+              aria-label="Ano anterior"
+            >
+              ←
+            </button>
+            <span className="text-sm font-semibold text-[var(--text-primary)] min-w-[40px] text-center tabular-nums">{year}</span>
+            <button
+              type="button"
+              onClick={() => setYear((y) => y + 1)}
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] text-sm font-bold"
+              aria-label="Ano siguiente"
+            >
+              →
+            </button>
+          </div>
+        </div>
+
+        {/* Desktop: pills + year */}
+        <div className="hidden sm:flex sm:items-center sm:gap-3">
+          <div className="flex items-center gap-1 bg-[var(--surface-raised)] dark:bg-white/[0.05] rounded-xl p-1 flex-wrap flex-1">
+            {MESES_SHORT.map((m, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setMes(i + 1)}
+                className={cn(
+                  'px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap',
+                  mes === i + 1
+                    ? 'bg-[#3d8ef8] text-white shadow'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                )}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-1 card-glass rounded-xl px-2 py-1">
             <button
               type="button"
               onClick={() => setYear((y) => y - 1)}
@@ -127,39 +176,6 @@ export function DashboardPage(): JSX.Element {
               →
             </button>
           </div>
-        </div>
-
-        {/* Month pills — scrollable row on desktop, select on mobile */}
-        <div className="hidden sm:block overflow-x-auto">
-          <div className="flex items-center gap-1 bg-[var(--surface-raised)] dark:bg-white/[0.05] rounded-xl p-1 flex-wrap">
-            {MESES_SHORT.map((m, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setMes(i + 1)}
-                className={cn(
-                  'px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap',
-                  mes === i + 1
-                    ? 'bg-[#3d8ef8] text-white shadow'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-                )}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="sm:hidden">
-          <select
-            value={mes}
-            onChange={(e) => setMes(Number(e.target.value))}
-            className="finza-input w-full text-sm font-medium"
-            aria-label="Seleccionar mes"
-          >
-            {MESES_SHORT.map((m, i) => (
-              <option key={i} value={i + 1}>{m}</option>
-            ))}
-          </select>
         </div>
       </div>
 
@@ -309,20 +325,6 @@ export function DashboardPage(): JSX.Element {
           </div>
         ) : null}
       </div>
-
-      {/* Budget alerts */}
-      {!isLoading && (data?.presupuestos_estado ?? []).some((p) => p.alerta) && (
-        <div className="flex items-start gap-3 p-3 mb-4 bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-xl">
-          <AlertTriangle size={16} className="flex-shrink-0 mt-0.5 text-[var(--warning)]" />
-          <div className="text-xs text-[var(--text-primary)]">
-            <span className="font-semibold">Presupuestos al limite: </span>
-            {(data?.presupuestos_estado ?? [])
-              .filter((p) => p.alerta)
-              .map((p) => `${p.categoria} (${p.porcentaje_usado.toFixed(0)}%)`)
-              .join(', ')}
-          </div>
-        </div>
-      )}
 
       {/* Charts row: flujo mensual + distribucion egresos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">

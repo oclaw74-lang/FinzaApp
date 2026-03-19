@@ -152,7 +152,7 @@ describe('DashboardPage', () => {
 
   it('renders year selector', () => {
     renderDashboard()
-    expect(screen.getByLabelText('Ano anterior')).toBeInTheDocument()
+    expect(screen.getAllByLabelText('Ano anterior').length).toBeGreaterThan(0)
   })
 
   it('shows loading skeleton state with 4 KPI cards', () => {
@@ -266,10 +266,10 @@ describe('DashboardPage', () => {
   it('changes year when selector changes', () => {
     renderDashboard()
     const currentYear = new Date().getFullYear()
-    expect(screen.getByText(String(currentYear))).toBeInTheDocument()
-    const nextYearBtn = screen.getByLabelText('Ano siguiente')
-    fireEvent.click(nextYearBtn)
-    expect(screen.getByText(String(currentYear + 1))).toBeInTheDocument()
+    expect(screen.getAllByText(String(currentYear)).length).toBeGreaterThan(0)
+    const nextYearBtns = screen.getAllByLabelText('Ano siguiente')
+    fireEvent.click(nextYearBtns[0])
+    expect(screen.getAllByText(String(currentYear + 1)).length).toBeGreaterThan(0)
   })
 
   it('does not show error alert when isError is false', () => {

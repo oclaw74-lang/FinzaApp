@@ -1,5 +1,6 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import type { EgresoCategoria } from '@/types/dashboard'
+import type { ContentType } from 'recharts/types/component/DefaultLegendContent'
 
 const COLORS = [
   '#6366f1',
@@ -41,12 +42,29 @@ function CustomTooltip({
   )
 }
 
+const renderCustomLegend: ContentType = ({ payload }) => {
+  if (!payload) return null
+  return (
+    <div className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 mt-2">
+      {payload.map((entry, index) => {
+        const item = entry.payload as EgresoCategoria & { color: string }
+        return (
+          <span key={index} className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
+            <span>{entry.value} ({item.porcentaje.toFixed(0)}%)</span>
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
 export function ChartDistribucionEgresos({ data }: Props): JSX.Element {
   const chartData = data.slice(0, 8).map((item, i) => ({
     ...item,
     name:
-      item.categoria.length > 12
-        ? item.categoria.slice(0, 12) + '\u2026'
+      item.categoria.length > 14
+        ? item.categoria.slice(0, 14) + '\u2026'
         : item.categoria,
     color: COLORS[i % COLORS.length],
   }))
@@ -61,27 +79,25 @@ export function ChartDistribucionEgresos({ data }: Props): JSX.Element {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <ResponsiveContainer width="100%" height={260}>
       <PieChart>
         <Pie
           data={chartData}
           cx="50%"
-          cy="50%"
+          cy="45%"
           innerRadius={55}
           outerRadius={85}
           paddingAngle={3}
           dataKey="total"
+          label={({ porcentaje }) => `${porcentaje.toFixed(0)}%`}
+          labelLine={false}
         >
           {chartData.map((entry, index) => (
             <Cell key={index} fill={entry.color} fillOpacity={0.9} />
           ))}
         </Pie>
         <Tooltip content={<CustomTooltip />} />
-        <Legend
-          wrapperStyle={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}
-          iconSize={8}
-          iconType="circle"
-        />
+        <Legend content={renderCustomLegend} />
       </PieChart>
     </ResponsiveContainer>
   )
