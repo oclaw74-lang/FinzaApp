@@ -1,0 +1,14 @@
+name: Deploy to Staging
+on:
+  push:
+    branches: [staging]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests before deploy
+        run: echo "Add test command here"
+      - name: Deploy to staging
+        run: echo "Add deploy command here (gcloud run deploy...)"
