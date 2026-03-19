@@ -1,258 +1,349 @@
-# Finza — VPS Deployment Guide
+# 🚀 Guía de Deploy — Finza
 
-Server: Ubuntu VPS at 35.169.196.48
-Stack: FastAPI backend + React/Vite frontend + nginx reverse proxy
-SSL: Let's Encrypt via certbot
-DB: Supabase cloud (no local DB)
+## Estructura de branches
 
----
+```
+testing  →  staging  →  main
+   ↓           ↓          ↓
+  dev      pre-prod   producción
+                     (auto-deploy)
+```
 
-## Prerequisites
-
-- A domain purchased on GoDaddy (or any registrar)
-- SSH access to the VPS as root or a sudo user
-- GitHub token with `repo` read access (if the repo is private)
-- All Supabase keys ready (URL, anon key, service role key, JWT secret)
-
----
-
-## Step 1 — Configure DNS in GoDaddy
-
-1. Log in to GoDaddy > Manage DNS for your domain.
-2. Add or update the A record:
-
-   | Type | Name | Value          | TTL  |
-   |------|------|----------------|------|
-   | A    | @    | 35.169.196.48  | 600  |
-   | A    | www  | 35.169.196.48  | 600  |
-
-3. DNS propagation can take 5–30 minutes. Verify with:
-
-   ```bash
-   dig +short your-domain.com
-   # Should return: 35.169.196.48
-   ```
+**Flujo de trabajo:**
+1. Desarrollas en `testing`
+2. Cuando está listo, merge a `staging` para probar en pre-producción
+3. Cuando está validado, merge a `main` → GitHub Actions despliega automáticamente al VPS
 
 ---
 
-## Step 2 — SSH into the VPS
+## Prerequisitos
+
+- [ ] VPS con Ubuntu 22.04
+- [ ] Acceso SSH al VPS (como root o usuario con sudo)
+- [ ] Dominios apuntando al VPS (`finza.online`, `www.finza.online`)
+- [ ] Credenciales de Supabase (URL, ANON_KEY, SERVICE_ROLE_KEY, JWT_SECRET)
+
+---
+
+## PASO 1 — Configurar DNS
+
+En tu proveedor de dominios, agrega estos registros A:
+
+| Tipo | Nombre | Valor | TTL |
+|------|--------|-------|-----|
+| A | `finza.online` | `IP_DE_TU_VPS` | 300 |
+| A | `www.finza.online` | `IP_DE_TU_VPS` | 300 |
+| A | `finza.digital` | `IP_DE_TU_VPS` | 300 |
+
+> ⏳ La propagación DNS tarda entre 5 y 30 minutos. Verifica con:
+> ```bash
+> nslookup finza.online
+> # Debe responder con la IP de tu VPS
+> ```
+
+---
+
+## PASO 2 — Preparar el VPS (solo una vez)
+
+Conéctate al VPS:
+```bash
+ssh root@IP_DE_TU_VPS
+```
+
+### 2.1 Instalar Docker
 
 ```bash
-ssh root@35.169.196.48
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+newgrp docker
+
+# Docker Compose plugin
+sudo apt install -y docker-compose-plugin
+
+# Verificar
+docker --version
+docker compose version
+```
+
+### 2.2 Clonar el repositorio
+
+```bash
+git clone https://github.com/oclaw74-lang/FinzaApp.git /opt/finza
+cd /opt/finza
+git checkout main
+```
+
+### 2.3 Configurar variables de entorno
+
+```bash
+cp .env.production.example .env
+nano .env
+```
+
+Valores obligatorios a llenar:
+
+```env
+DOMAIN=finza.online
+EMAIL=tu@email.com
+
+SUPABASE_URL=https://XXXX.supabase.co
+SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+JWT_SECRET=tu-jwt-secret
+
+VITE_SUPABASE_URL=https://XXXX.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJ...
+VITE_API_URL=https://finza.online/api/v1
+```
+
+### 2.4 Dar permisos a los scripts
+
+```bash
+chmod +x scripts/init-letsencrypt.sh
+chmod +x scripts/deploy.sh
 ```
 
 ---
 
-## Step 3 — Run the setup script (run once)
+## PASO 3 — Obtener certificado SSL (solo una vez)
 
-Upload the script or clone the repo manually first, then:
-
-```bash
-# Option A: clone and run
-git clone https://github.com/oclaw74-lang/FinzaApp.git /tmp/finza-setup
-chmod +x /tmp/finza-setup/scripts/setup-vps.sh
-sudo /tmp/finza-setup/scripts/setup-vps.sh
-```
-
-This script:
-- Installs Docker, Docker Compose v2, certbot, git, ufw, fail2ban
-- Creates a `finza` system user (non-root, added to the `docker` group)
-- Clones the repo to `/opt/finza`
-- Creates `/opt/finza/.env.production` from the example template
-- Opens ports 22, 80, 443 in the firewall
-- Installs and enables a `finza.service` systemd unit so the app starts automatically on server reboot
-
----
-
-## Step 4 — Edit .env.production
-
-```bash
-nano /opt/finza/.env.production
-```
-
-Fill in every variable:
-
-```
-SUPABASE_URL=https://omhfdzcrusahvvzoljpf.supabase.co
-SUPABASE_ANON_KEY=<from Supabase dashboard>
-SUPABASE_SERVICE_ROLE_KEY=<from Supabase dashboard>
-JWT_SECRET=<from Supabase dashboard, Settings > API > JWT Secret>
-ENVIRONMENT=production
-CORS_ORIGINS=https://your-domain.com
-VITE_SUPABASE_URL=https://omhfdzcrusahvvzoljpf.supabase.co
-VITE_SUPABASE_ANON_KEY=<same as SUPABASE_ANON_KEY>
-VITE_API_URL=https://your-domain.com/api/v1
-```
-
-Save and exit (`Ctrl+O`, `Enter`, `Ctrl+X`).
-
----
-
-## Step 5 — Obtain SSL certificate
-
-DNS must be propagated before running this step.
-
-```bash
-chmod +x /opt/finza/scripts/setup-ssl.sh
-sudo /opt/finza/scripts/setup-ssl.sh your-domain.com admin@your-domain.com
-```
-
-This script:
-- Obtains a Let's Encrypt certificate for `your-domain.com` and `www.your-domain.com`
-- Replaces the `DOMINIO` placeholder in `nginx/nginx.production.conf`
-- Configures a daily cron job for auto-renewal
-
----
-
-## Step 6 — Deploy
-
-```bash
-chmod +x /opt/finza/scripts/deploy.sh
-sudo -u finza /opt/finza/scripts/deploy.sh main
-```
-
-The deploy script:
-1. Validates that `.env.production` has no empty required values
-2. Pulls latest code from the specified branch
-3. Builds Docker images from scratch (`--no-cache`)
-4. Starts all containers
-5. Runs a health check against `http://localhost/api/v1/health`
-6. Prunes old Docker images
-
----
-
-## Step 7 — Verify
-
-```bash
-# Backend health
-curl https://your-domain.com/api/v1/health
-
-# HTTPS redirect
-curl -I http://your-domain.com
-
-# Container status
-docker compose -f /opt/finza/docker-compose.production.yml ps
-
-# Logs
-docker compose -f /opt/finza/docker-compose.production.yml logs -f
-```
-
----
-
-## Updating the application
-
-For every new deployment after the initial setup:
-
-```bash
-sudo -u finza /opt/finza/scripts/deploy.sh main
-```
-
-Or to deploy from a specific branch:
-
-```bash
-sudo -u finza /opt/finza/scripts/deploy.sh testing
-```
-
----
-
-## Rollback
-
-To revert to a previous commit:
+> ⚠️ El DNS debe estar propagado antes de este paso.
 
 ```bash
 cd /opt/finza
-git log --oneline -10          # find the commit hash to roll back to
-git checkout <commit-hash>
-sudo -u finza /opt/finza/scripts/deploy.sh
+./scripts/init-letsencrypt.sh
 ```
 
-To rollback without rebuilding (instant, uses last built image):
+Este script:
+1. Crea los directorios para certbot
+2. Levanta nginx temporalmente en HTTP
+3. Obtiene el certificado de Let's Encrypt para `finza.online` y `www.finza.online`
+4. El certificado se renueva automáticamente cada 12h
+
+---
+
+## PASO 4 — Primer deploy
 
 ```bash
 cd /opt/finza
-docker compose -f docker-compose.production.yml --env-file .env.production down
-git checkout <commit-hash>
-docker compose -f docker-compose.production.yml --env-file .env.production up -d
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
 
----
-
-## Renewing SSL manually
-
-Certbot auto-renews via cron, but you can force it:
+Verificar que todo está corriendo:
 
 ```bash
-sudo certbot renew --force-renewal
-docker exec finza-nginx nginx -s reload
+docker compose ps
+# Deben aparecer: finza-backend, finza-frontend, finza-nginx, finza-certbot
+
+curl https://finza.online/api/v1/health
+# Respuesta esperada: {"status":"ok","environment":"production"}
 ```
 
 ---
 
-## Systemd service controls
+## PASO 5 — Configurar GitHub Actions (auto-deploy desde main)
 
-After setup, `finza.service` manages the app as a systemd unit:
+### 5.1 Crear SSH key dedicada para deployments
+
+En el VPS:
 
 ```bash
-# Status
-systemctl status finza
+# Generar key pair
+ssh-keygen -t ed25519 -C "github-actions-finza" -f ~/.ssh/finza_deploy -N ""
 
-# Start / stop / restart
-sudo systemctl start finza
-sudo systemctl stop finza
-sudo systemctl restart finza
+# Agregar la clave pública al VPS
+cat ~/.ssh/finza_deploy.pub >> ~/.ssh/authorized_keys
 
-# View service logs (combines all containers)
-journalctl -u finza -f
-
-# Disable auto-start (if needed)
-sudo systemctl disable finza
+# Mostrar la clave privada (la copiarás a GitHub en el siguiente paso)
+cat ~/.ssh/finza_deploy
 ```
 
-The service is of type `oneshot` with `RemainAfterExit=yes`. It calls
-`docker compose up -d` on start and `docker compose down` on stop.
+### 5.2 Agregar Secrets en GitHub
+
+Ve a tu repositorio en GitHub → **Settings → Secrets and variables → Actions → New repository secret**
+
+Agrega estos 3 secrets:
+
+| Secret | Valor |
+|--------|-------|
+| `VPS_HOST` | IP de tu VPS (ej: `123.45.67.89`) |
+| `VPS_USER` | Usuario SSH (ej: `root`) |
+| `VPS_SSH_KEY` | Contenido completo del archivo `~/.ssh/finza_deploy` (clave privada) |
+
+### 5.3 El workflow ya está configurado
+
+El archivo `.github/workflows/deploy.yml` ya está en el repositorio y se activa automáticamente cuando haces push a `main`.
+
+**Flujo automático:**
+
+```
+git push origin main
+        ↓
+GitHub Actions detecta el push
+        ↓
+Se conecta al VPS por SSH
+        ↓
+git pull origin main
+        ↓
+docker compose up -d --build
+        ↓
+✅ App actualizada en https://finza.online
+```
 
 ---
 
-## File locations on the VPS
+## PASO 6 — Configurar Supabase para producción
 
-| Path                                       | Purpose                                |
-|--------------------------------------------|----------------------------------------|
-| `/opt/finza/`                              | Application root                       |
-| `/opt/finza/.env.production`               | Production secrets (chmod 600)         |
-| `/opt/finza/docker-compose.production.yml` | Production compose config              |
-| `/opt/finza/nginx/nginx.production.conf`   | nginx config (DOMINIO replaced by SSL script) |
-| `/opt/finza/scripts/setup-vps.sh`          | Initial server setup (run once)        |
-| `/opt/finza/scripts/setup-ssl.sh`          | Certbot certificate setup (run once)   |
-| `/opt/finza/scripts/deploy.sh`             | Subsequent deploys                     |
-| `/etc/systemd/system/finza.service`        | systemd unit for auto-start on reboot  |
-| `/etc/letsencrypt/live/<domain>/`          | SSL certificates                       |
-| `/var/log/nginx/`                          | nginx access and error logs            |
+En el dashboard de Supabase (supabase.com → tu proyecto):
+
+1. **Authentication → URL Configuration**
+   - **Site URL**: `https://finza.online`
+
+2. **Authentication → URL Configuration → Redirect URLs**
+   - Agregar: `https://finza.online/**`
+
+> Si usas un proyecto Supabase separado para producción, corre las migraciones:
+> ```bash
+> supabase db push --db-url "postgresql://postgres:PASSWORD@db.XXXX.supabase.co:5432/postgres"
+> ```
 
 ---
 
-## Hardening SSH (recommended)
+## Flujo de trabajo diario (desarrollo → producción)
 
-After verifying you can log in with your SSH key, disable password authentication:
+```
+1. Desarrollar en rama feature/xxx
+2. Merge a testing  → probar localmente
+3. Merge a staging  → probar en pre-producción
+4. Merge a main     → GitHub Actions despliega automáticamente
+```
+
+### Merge a staging
 
 ```bash
-# On the VPS
-sudo sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
-sudo sed -i 's/^#*PermitRootLogin.*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
-sudo systemctl reload sshd
+git checkout staging
+git merge testing
+git push origin staging
 ```
 
-Do not close your current session until you confirm you can open a new SSH connection successfully.
+### Merge a main (dispara el deploy automático)
+
+```bash
+git checkout main
+git merge staging
+git push origin main
+# ← GitHub Actions se activa aquí automáticamente
+```
 
 ---
 
-## Security checklist
+## Comandos útiles en el VPS
 
-- [ ] `.env.production` permissions are 600 (`stat /opt/finza/.env.production`)
-- [ ] No secrets in any Dockerfile or committed file (`git log --all --full-diff -- '*.env'`)
-- [ ] UFW firewall allows only 22, 80, 443 (`ufw status verbose`)
-- [ ] fail2ban active (`systemctl status fail2ban`)
-- [ ] SSH password authentication disabled (`sshd -T | grep passwordauth`)
-- [ ] `finza.service` enabled (`systemctl is-enabled finza`)
-- [ ] Auto-renewal cron present (`crontab -l | grep certbot`)
-- [ ] HSTS header confirmed (`curl -I https://your-domain.com | grep Strict`)
-- [ ] Containers not running as root (`docker exec finza-backend id`)
+### Ver logs en tiempo real
+
+```bash
+# Todos los servicios
+docker compose logs -f
+
+# Solo el backend
+docker compose logs -f backend
+
+# Solo nginx
+docker compose logs -f nginx
+```
+
+### Estado de los contenedores
+
+```bash
+docker compose ps
+```
+
+### Reiniciar un servicio
+
+```bash
+docker compose restart backend
+docker compose restart nginx
+```
+
+### Deploy manual (sin GitHub Actions)
+
+```bash
+cd /opt/finza
+./scripts/deploy.sh
+```
+
+---
+
+## Rollback — revertir a versión anterior
+
+```bash
+cd /opt/finza
+
+# Ver commits recientes
+git log --oneline -10
+
+# Volver a un commit específico
+git checkout <COMMIT_HASH> -- .
+
+# Reconstruir con esa versión
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+# Para volver al estado más reciente
+git checkout main
+```
+
+---
+
+## Renovación SSL
+
+El certificado se renueva automáticamente cada 12h gracias al contenedor `certbot`. No necesitas hacer nada manualmente.
+
+Para verificar el estado del certificado:
+
+```bash
+docker compose run --rm certbot certificates
+```
+
+Para forzar la renovación:
+
+```bash
+docker compose run --rm certbot renew --force-renewal
+docker compose restart nginx
+```
+
+---
+
+## Resolución de problemas
+
+### La app no carga después del deploy
+
+```bash
+docker compose ps
+docker compose logs --tail=50 backend
+docker compose logs --tail=50 nginx
+```
+
+### Error de certificado SSL
+
+```bash
+# Verificar que los archivos del cert existen
+ls data/certbot/conf/live/finza.online/
+
+# Si no existen, volver a correr:
+./scripts/init-letsencrypt.sh
+```
+
+### Puerto 80/443 bloqueado
+
+```bash
+sudo ufw status
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw allow 22/tcp   # ← NO olvidar SSH
+```
+
+### GitHub Actions falla en "Deploy via SSH"
+
+1. Verificar que `VPS_HOST`, `VPS_USER` y `VPS_SSH_KEY` están bien configurados en GitHub Secrets
+2. Verificar que la clave pública está en `~/.ssh/authorized_keys` en el VPS
+3. Verificar que el directorio `/opt/finza` existe en el VPS

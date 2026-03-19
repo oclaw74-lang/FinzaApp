@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-BRANCH="${1:-testing}"
+BRANCH="${1:-main}"
 
 echo "=== Finza Deploy ==="
 echo "Branch: $BRANCH"
