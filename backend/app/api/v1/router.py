@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.api.v1.routes.catalogos import router as catalogos_router
 from app.api.v1.routes.categorias import router as categorias_router
 from app.api.v1.routes.fondo_emergencia import router as fondo_emergencia_router
 from app.api.v1.routes.impulso import router as impulso_router
@@ -23,6 +24,7 @@ from app.api.v1.routes.tarjetas import router as tarjetas_router
 
 api_router = APIRouter()
 api_router.include_router(health_router, tags=["health"])
+api_router.include_router(catalogos_router)
 api_router.include_router(categorias_router)
 api_router.include_router(ingresos_router)
 api_router.include_router(egresos_router)

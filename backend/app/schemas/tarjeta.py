@@ -11,6 +11,8 @@ RedTarjeta = Literal["visa", "mastercard", "amex", "discover", "otro"]
 
 class TarjetaCreate(BaseModel):
     banco: str
+    banco_id: Optional[str] = None
+    banco_custom: Optional[str] = None
     titular: Optional[str] = None  # defaults to user email in service if not provided
     ultimos_digitos: str = Field(min_length=4, max_length=4)
     tipo: TipoTarjeta
@@ -60,6 +62,8 @@ class TarjetaCreate(BaseModel):
 
 class TarjetaUpdate(BaseModel):
     banco: Optional[str] = None
+    banco_id: Optional[str] = None
+    banco_custom: Optional[str] = None
     titular: Optional[str] = None
     tipo: Optional[TipoTarjeta] = None
     red: Optional[RedTarjeta] = None
@@ -126,6 +130,8 @@ class TarjetaResponse(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID
     banco: str
+    banco_id: Optional[str] = None
+    banco_custom: Optional[str] = None
     titular: Optional[str] = None
     ultimos_digitos: str
     tipo: str
