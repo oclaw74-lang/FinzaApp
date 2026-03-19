@@ -57,6 +57,7 @@ const preprocessNumber = (v: unknown) => {
   return isNaN(n) ? null : n
 }
 
+// TODO: i18n when zod supports dynamic messages
 const TarjetaSchema = z
   .object({
     banco: z.string().min(1, 'Requerido').max(100),
@@ -875,6 +876,7 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
 
 // ─── Movimiento modal ──────────────────────────────────────────────────────────
 
+// TODO: i18n when zod supports dynamic messages
 const MovimientoSchema = z.object({
   tipo: z.enum(['compra', 'pago']),
   monto: z.coerce.number({ invalid_type_error: 'Ingresa un monto' }).positive('Debe ser mayor a 0'),
@@ -893,6 +895,7 @@ interface MovimientoModalProps {
 }
 
 function MovimientoModal({ tarjetaId, tipoInicial, onClose }: MovimientoModalProps): JSX.Element {
+  const { t } = useTranslation()
   const registrar = useRegistrarMovimiento(tarjetaId)
   const { data: todasCategorias = [] } = useCategorias()
   const categoriasEgreso = todasCategorias.filter((c) => c.tipo === 'egreso' || c.tipo === 'ambos')
@@ -923,10 +926,10 @@ function MovimientoModal({ tarjetaId, tipoInicial, onClose }: MovimientoModalPro
         categoria_id: data.tipo === 'compra' ? data.categoria_id : undefined,
       }
       await registrar.mutateAsync(payload)
-      toast.success(data.tipo === 'compra' ? 'Compra registrada' : 'Pago registrado')
+      toast.success(data.tipo === 'compra' ? t('tarjetas.compraRegistrada') : t('tarjetas.pagoRegistrado'))
       onClose()
     } catch {
-      toast.error('Error al registrar movimiento')
+      toast.error(t('tarjetas.errorMovimiento'))
     }
   }
 
@@ -1070,9 +1073,9 @@ function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): 
     if (!window.confirm(t('tarjetas.deleteMovimiento'))) return
     try {
       await eliminarMovimiento.mutateAsync(movimientoId)
-      toast.success('Movimiento eliminado')
+      toast.success(t('tarjetas.movimientoEliminado'))
     } catch {
-      toast.error('Error al eliminar movimiento')
+      toast.error(t('tarjetas.errorEliminar'))
     }
   }
 
@@ -1352,7 +1355,7 @@ export function TarjetasPage(): JSX.Element {
       }
       await createTarjeta.mutateAsync(payload)
       setIsModalOpen(false)
-      toast.success('Tarjeta creada')
+      toast.success(t('tarjetas.created'))
     } catch {
       toast.error(t('common.error'))
     }
@@ -1373,7 +1376,7 @@ export function TarjetasPage(): JSX.Element {
       }
       await updateTarjeta.mutateAsync(payload)
       setTarjetaEditando(null)
-      toast.success('Tarjeta actualizada')
+      toast.success(t('tarjetas.updated'))
     } catch {
       toast.error(t('common.error'))
     }
@@ -1384,7 +1387,7 @@ export function TarjetasPage(): JSX.Element {
     try {
       await deleteTarjeta.mutateAsync(id)
       setTarjetaDetalle(null)
-      toast.success('Tarjeta eliminada')
+      toast.success(t('tarjetas.deleted'))
     } catch {
       toast.error(t('common.error'))
     }

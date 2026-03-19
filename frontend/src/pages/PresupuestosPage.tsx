@@ -225,7 +225,7 @@ export function PresupuestosPage(): JSX.Element {
 
   const handleDelete = async (): Promise<void> => {
     if (!editingEstado) return
-    if (window.confirm('Eliminar este presupuesto?')) {
+    if (window.confirm(t('presupuestos.deleteConfirm'))) {
       try {
         await deletePresupuesto.mutateAsync(editingEstado.id)
         handleCloseEdit()
