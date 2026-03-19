@@ -216,7 +216,7 @@ export function CategoriasPage(): JSX.Element {
   const isPending = createCategoria.isPending || updateCategoria.isPending
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in p-4 md:p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <p className="text-[var(--text-muted)] text-sm">

@@ -26,8 +26,9 @@ import { useTranslation } from 'react-i18next'
 import i18n from '@/i18n'
 import type { CategoriaResponse } from '@/types/transacciones'
 
-type Tab = 'profile' | 'appearance' | 'language' | 'security' | 'finances' | 'categorias'
+type Tab = 'profile' | 'appearance' | 'security' | 'categorias'
 
+// TODO: i18n when zod supports dynamic messages
 const profileSchema = z.object({
   fullName: z.string().min(2, 'Nombre requerido'),
   phone: z.string().optional(),
@@ -35,12 +36,14 @@ const profileSchema = z.object({
   country: z.string().optional(),
 })
 
+// TODO: i18n when zod supports dynamic messages
 const passwordSchema = z
   .object({
     newPassword: z.string().min(8, 'Minimo 8 caracteres'),
     confirmPassword: z.string(),
   })
   .refine((d) => d.newPassword === d.confirmPassword, {
+    // TODO: i18n when zod supports dynamic messages
     message: 'Las contrasenas no coinciden',
     path: ['confirmPassword'],
   })
@@ -86,6 +89,7 @@ interface NuevaCategoriaFormProps {
 }
 
 function NuevaCategoriaForm({ onDone }: NuevaCategoriaFormProps): JSX.Element {
+  const { t } = useTranslation()
   const [nombre, setNombre] = useState('')
   const [tipo, setTipo] = useState<'ingreso' | 'egreso' | 'ambos'>('egreso')
   const createCategoria = useCreateCategoria()
@@ -95,17 +99,17 @@ function NuevaCategoriaForm({ onDone }: NuevaCategoriaFormProps): JSX.Element {
     if (!nombre.trim()) return
     try {
       await createCategoria.mutateAsync({ nombre: nombre.trim(), tipo })
-      toast.success('Categoria creada')
+      toast.success(t('categorias.created'))
       setNombre('')
       onDone()
     } catch {
-      toast.error('Error al crear la categoria')
+      toast.error(t('common.error'))
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="card-glass rounded-xl p-4 space-y-3 border border-[var(--border)]">
-      <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest">Nueva categoria</p>
+      <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest">{t('categorias.nueva')}</p>
       <div className="flex flex-col xs:flex-row gap-2">
         <input
           type="text"
@@ -127,10 +131,10 @@ function NuevaCategoriaForm({ onDone }: NuevaCategoriaFormProps): JSX.Element {
       </div>
       <div className="flex gap-2">
         <Button type="submit" size="md" isLoading={createCategoria.isPending} className="flex-1">
-          Guardar
+          {t('common.save')}
         </Button>
         <Button type="button" size="md" variant="secondary" onClick={onDone} className="flex-1">
-          Cancelar
+          {t('common.cancel')}
         </Button>
       </div>
     </form>
@@ -138,21 +142,22 @@ function NuevaCategoriaForm({ onDone }: NuevaCategoriaFormProps): JSX.Element {
 }
 
 function CategoriasTab({ navigate }: CategoriasTabProps): JSX.Element {
+  const { t } = useTranslation()
   const { data: categorias = [], isLoading, isError } = useCategorias()
   const deleteCategoria = useDeleteCategoria()
   const [showForm, setShowForm] = useState(false)
 
   const handleDelete = async (cat: CategoriaResponse): Promise<void> => {
     if (cat.es_sistema) {
-      toast.error('No se pueden eliminar categorias del sistema')
+      toast.error(t('categorias.systemDeleteError'))
       return
     }
     if (window.confirm(`Eliminar categoria "${cat.nombre}"?`)) {
       try {
         await deleteCategoria.mutateAsync(cat.id)
-        toast.success('Categoria eliminada')
+        toast.success(t('categorias.deleted'))
       } catch {
-        toast.error('Error al eliminar la categoria')
+        toast.error(t('categorias.deleteError'))
       }
     }
   }
@@ -161,9 +166,9 @@ function CategoriasTab({ navigate }: CategoriasTabProps): JSX.Element {
     <div className="card-glass p-4 sm:p-6 space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-[var(--text-primary)]">Gestiona tus categorias</p>
+          <p className="text-sm font-medium text-[var(--text-primary)]">{t('categorias.manage')}</p>
           <p className="text-xs text-[var(--text-muted)] mt-0.5">
-            Categorias del sistema no pueden eliminarse
+            {t('categorias.systemNote')}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -172,7 +177,7 @@ function CategoriasTab({ navigate }: CategoriasTabProps): JSX.Element {
             size="md"
             onClick={() => navigate('/categorias')}
           >
-            Ver todas
+            {t('common.viewAll')}
           </Button>
           <Button
             variant="default"
@@ -180,7 +185,7 @@ function CategoriasTab({ navigate }: CategoriasTabProps): JSX.Element {
             onClick={() => setShowForm(true)}
           >
             <Plus size={14} />
-            Nueva
+            {t('common.new')}
           </Button>
         </div>
       </div>
@@ -199,7 +204,7 @@ function CategoriasTab({ navigate }: CategoriasTabProps): JSX.Element {
 
       {isError && (
         <p className="text-sm text-[var(--text-muted)] text-center py-4">
-          No se pudieron cargar las categorias.
+          {t('categorias.loadError')}
         </p>
       )}
 
@@ -219,7 +224,7 @@ function CategoriasTab({ navigate }: CategoriasTabProps): JSX.Element {
                 {getTipoBadge(cat.tipo)}
                 {cat.es_sistema && (
                   <span className="text-[10px] text-[var(--text-muted)] px-1.5 py-0.5 rounded bg-[var(--surface-raised)]">
-                    Sistema
+                    {t('common.system')}
                   </span>
                 )}
                 {!cat.es_sistema && (
@@ -251,6 +256,7 @@ interface PaisModalProps {
 }
 
 function PaisModal({ currentPaisCodigo, onClose, onSave, isSaving }: PaisModalProps): JSX.Element {
+  const { t } = useTranslation()
   const { data: paises = [], isLoading } = usePaises()
   const [selected, setSelected] = useState(currentPaisCodigo)
 
@@ -266,7 +272,7 @@ function PaisModal({ currentPaisCodigo, onClose, onSave, isSaving }: PaisModalPr
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="w-full max-w-sm bg-white dark:bg-[#0d1520] dark:border dark:border-white/[0.08] rounded-xl shadow-2xl p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-[var(--text-primary)]">Cambiar pais</h2>
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">{t('settings.cambiarPais')}</h2>
             <button
               type="button"
               onClick={onClose}
@@ -279,7 +285,7 @@ function PaisModal({ currentPaisCodigo, onClose, onSave, isSaving }: PaisModalPr
 
           {isLoading ? (
             <div className="h-36 flex items-center justify-center">
-              <p className="text-sm text-[var(--text-muted)]">Cargando paises...</p>
+              <p className="text-sm text-[var(--text-muted)]">{t('settings.cargandoPaises')}</p>
             </div>
           ) : (
             <div className="max-h-64 overflow-y-auto space-y-1 rounded-lg border border-[var(--border)]">
@@ -307,7 +313,7 @@ function PaisModal({ currentPaisCodigo, onClose, onSave, isSaving }: PaisModalPr
 
           <div className="flex gap-3">
             <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
-              Cancelar
+              {t('common.cancel')}
             </Button>
             <Button
               type="button"
@@ -315,7 +321,7 @@ function PaisModal({ currentPaisCodigo, onClose, onSave, isSaving }: PaisModalPr
               onClick={handleSave}
               disabled={isSaving || isLoading}
             >
-              {isSaving ? 'Guardando...' : 'Guardar'}
+              {isSaving ? t('settings.guardando') : t('common.save')}
             </Button>
           </div>
         </div>
@@ -431,10 +437,10 @@ export function ConfiguracionPage(): JSX.Element {
         toast.error(error.message)
         return
       }
-      toast.success('Pais actualizado')
+      toast.success(t('settings.paisActualizado'))
       setPaisModalOpen(false)
     } catch {
-      toast.error('Error al actualizar el pais')
+      toast.error(t('settings.errorPais'))
     } finally {
       setSavingPais(false)
     }
@@ -442,11 +448,9 @@ export function ConfiguracionPage(): JSX.Element {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'profile', label: t('settings.profile') },
-    { id: 'finances', label: t('profile.title') },
     { id: 'appearance', label: t('settings.appearance') },
-    { id: 'language', label: t('settings.language') },
     { id: 'security', label: t('settings.security') },
-    { id: 'categorias', label: 'Categorias' },
+    { id: 'categorias', label: t('settings.categorias') },
   ]
 
   const userName = metadata.full_name ?? user?.email?.split('@')[0] ?? 'Usuario'
@@ -555,15 +559,15 @@ export function ConfiguracionPage(): JSX.Element {
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
                 <Globe size={14} className="text-[var(--accent)]" />
-                Pais y moneda principal
+                {t('settings.paisYMoneda')}
               </label>
               <div className="flex items-center gap-3 p-3 rounded-xl border border-[var(--border)] dark:border-white/[0.08] bg-[var(--surface-raised)]">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-[var(--text-primary)] truncate">
-                    {metadata.country || 'No configurado'}
+                    {metadata.country || t('settings.noConfigurado')}
                   </p>
                   <p className="text-xs text-[var(--text-muted)]">
-                    Moneda: {metadata.currency || 'DOP'}
+                    {t('settings.moneda')}: {metadata.currency || 'DOP'}
                   </p>
                 </div>
                 <Button
@@ -572,7 +576,7 @@ export function ConfiguracionPage(): JSX.Element {
                   variant="secondary"
                   onClick={() => setPaisModalOpen(true)}
                 >
-                  Cambiar
+                  {t('settings.cambiar')}
                 </Button>
               </div>
             </div>
@@ -585,6 +589,62 @@ export function ConfiguracionPage(): JSX.Element {
               {t('common.save')}
             </Button>
           </form>
+
+          {/* Finances section (salary + work hours) */}
+          <div className="border-t border-[var(--border)] pt-6 space-y-5">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
+                <DollarSign size={15} className="text-[var(--accent)]" />
+                {t('profile.salario')}
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={salarioValue}
+                onChange={(e) => setSalarioValue(e.target.value)}
+                className="finza-input w-full"
+              />
+              <p className="text-xs text-[var(--text-muted)]">{t('profile.salarioHint')}</p>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-xl border border-[var(--border)] dark:border-white/[0.08] dark:bg-white/[0.05]">
+              <div className="flex items-center gap-2">
+                <Clock size={15} className="text-[var(--accent)]" />
+                <div>
+                  <p className="text-sm font-medium text-[var(--text-primary)]">{t('profile.mostrarHoras')}</p>
+                  {profile?.horas_por_peso != null && (
+                    <p className="text-xs text-[var(--text-muted)]">
+                      {t('profile.horasPorPeso')}: {profile.horas_por_peso.toFixed(4)} h/$
+                    </p>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => setMostrarHoras((v) => !v)}
+                className={cn(
+                  'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
+                  mostrarHoras ? 'bg-[#3d8ef8]' : 'bg-[var(--border-strong)]'
+                )}
+              >
+                <span
+                  className={cn(
+                    'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200',
+                    mostrarHoras ? 'left-[21px]' : 'left-[3px]'
+                  )}
+                />
+              </button>
+            </div>
+
+            <Button
+              onClick={handleSaveFinances}
+              isLoading={updateProfile.isPending}
+              className="w-full"
+            >
+              {t('common.save')}
+            </Button>
+          </div>
         </div>
       )}
 
@@ -598,148 +658,90 @@ export function ConfiguracionPage(): JSX.Element {
         />
       )}
 
-      {/* Tab: Appearance */}
+      {/* Tab: Appearance (theme + language) */}
       {activeTab === 'appearance' && (
-        <div
-          className="rounded-[20px] overflow-hidden card-glass"
-        >
-          {/* Row: Modo oscuro */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
-            <div>
-              <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
-                {t('settings.darkMode')}
-              </h4>
-              <p className="text-[12px] text-[var(--text-muted)]">{t('settings.currentTheme')}</p>
-            </div>
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className={cn(
-                'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
-                theme === 'dark' ? 'bg-[#3d8ef8]' : 'bg-[var(--border-strong)]'
-              )}
-              aria-label="Toggle modo oscuro"
-            >
-              <span
-                className={cn(
-                  'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200',
-                  theme === 'dark' ? 'left-[21px]' : 'left-[3px]'
-                )}
-              />
-            </button>
-          </div>
-
-          {/* Row: Modo claro */}
-          <div className="flex items-center justify-between px-5 py-4">
-            <div>
-              <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
-                {t('settings.lightMode')}
-              </h4>
-              <p className="text-[12px] text-[#657a9e]">Interfaz con fondo claro</p>
-            </div>
-            <button
-              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-              className={cn(
-                'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
-                theme === 'light' ? 'bg-[#3d8ef8]' : 'bg-[var(--border-strong)]'
-              )}
-              aria-label="Toggle modo claro"
-            >
-              <span
-                className={cn(
-                  'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200',
-                  theme === 'light' ? 'left-[21px]' : 'left-[3px]'
-                )}
-              />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Tab: Language */}
-      {activeTab === 'language' && (
-        <div className="card-glass p-6 space-y-4">
-          <p className="text-sm text-[var(--text-muted)]">{t('settings.changeLanguage')}</p>
-          <div className="space-y-3">
-            {[
-              { code: 'es', label: 'Espanol', flag: 'ES' },
-              { code: 'en', label: 'English', flag: 'EN' },
-            ].map(({ code, label, flag }) => (
-              <button
-                key={code}
-                onClick={() => handleLangChange(code as 'es' | 'en')}
-                className={cn(
-                  'w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200',
-                  language === code
-                    ? 'border-finza-blue bg-finza-blue/5'
-                    : 'border-border hover:border-finza-blue/40'
-                )}
-              >
-                <span className="text-xl font-bold text-[var(--text-muted)] w-8">{flag}</span>
-                <span className="font-medium text-[var(--text-primary)]">{label}</span>
-                {language === code && (
-                  <div className="ml-auto w-2 h-2 rounded-full bg-finza-blue" />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Tab: Finances */}
-      {activeTab === 'finances' && (
-        <div className="card-glass p-6 space-y-5">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
-              <DollarSign size={15} className="text-[var(--accent)]" />
-              {t('profile.salario')}
-            </label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0.00"
-              value={salarioValue}
-              onChange={(e) => setSalarioValue(e.target.value)}
-              className="finza-input w-full"
-            />
-            <p className="text-xs text-[var(--text-muted)]">{t('profile.salarioHint')}</p>
-          </div>
-
-          <div className="flex items-center justify-between p-3 rounded-xl border border-[var(--border)] dark:border-white/[0.08] dark:bg-white/[0.05]">
-            <div className="flex items-center gap-2">
-              <Clock size={15} className="text-[var(--accent)]" />
-              <div>
-                <p className="text-sm font-medium text-[var(--text-primary)]">{t('profile.mostrarHoras')}</p>
-                {profile?.horas_por_peso != null && (
-                  <p className="text-xs text-[var(--text-muted)]">
-                    {t('profile.horasPorPeso')}: {profile.horas_por_peso.toFixed(4)} h/$
-                  </p>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={() => setMostrarHoras((v) => !v)}
-              className={cn(
-                'w-11 h-6 rounded-full transition-colors relative',
-                mostrarHoras ? 'bg-[var(--accent)] dark:bg-finza-blue' : 'bg-[var(--border)]'
-              )}
-            >
-              <span
-                className={cn(
-                  'absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform',
-                  mostrarHoras ? 'translate-x-6' : 'translate-x-1'
-                )}
-              />
-            </button>
-          </div>
-
-          <Button
-            onClick={handleSaveFinances}
-            isLoading={updateProfile.isPending}
-            className="w-full"
+        <div className="space-y-4">
+          <div
+            className="rounded-[20px] overflow-hidden card-glass"
           >
-            {t('common.save')}
-          </Button>
+            {/* Row: Modo oscuro */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
+              <div>
+                <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
+                  {t('settings.darkMode')}
+                </h4>
+                <p className="text-[12px] text-[var(--text-muted)]">{t('settings.darkModeDesc')}</p>
+              </div>
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className={cn(
+                  'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
+                  theme === 'dark' ? 'bg-[#3d8ef8]' : 'bg-[var(--border-strong)]'
+                )}
+                aria-label="Toggle modo oscuro"
+              >
+                <span
+                  className={cn(
+                    'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200',
+                    theme === 'dark' ? 'left-[21px]' : 'left-[3px]'
+                  )}
+                />
+              </button>
+            </div>
+
+            {/* Row: Modo claro */}
+            <div className="flex items-center justify-between px-5 py-4">
+              <div>
+                <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
+                  {t('settings.lightMode')}
+                </h4>
+                <p className="text-[12px] text-[#657a9e]">{t('settings.lightModeDesc')}</p>
+              </div>
+              <button
+                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                className={cn(
+                  'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
+                  theme === 'light' ? 'bg-[#3d8ef8]' : 'bg-[var(--border-strong)]'
+                )}
+                aria-label="Toggle modo claro"
+              >
+                <span
+                  className={cn(
+                    'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200',
+                    theme === 'light' ? 'left-[21px]' : 'left-[3px]'
+                  )}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Language selector */}
+          <div className="card-glass p-6 space-y-4">
+            <p className="text-sm text-[var(--text-muted)]">{t('settings.changeLanguage')}</p>
+            <div className="space-y-3">
+              {[
+                { code: 'es', label: 'Espanol', flag: 'ES' },
+                { code: 'en', label: 'English', flag: 'EN' },
+              ].map(({ code, label, flag }) => (
+                <button
+                  key={code}
+                  onClick={() => handleLangChange(code as 'es' | 'en')}
+                  className={cn(
+                    'w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200',
+                    language === code
+                      ? 'border-finza-blue bg-finza-blue/5'
+                      : 'border-border hover:border-finza-blue/40'
+                  )}
+                >
+                  <span className="text-xl font-bold text-[var(--text-muted)] w-8">{flag}</span>
+                  <span className="font-medium text-[var(--text-primary)]">{label}</span>
+                  {language === code && (
+                    <div className="ml-auto w-2 h-2 rounded-full bg-finza-blue" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -775,14 +777,14 @@ export function ConfiguracionPage(): JSX.Element {
                 <Input
                   label={t('auth.newPassword')}
                   type="password"
-                  placeholder="Minimo 8 caracteres"
+                  placeholder={t('settings.minChars')}
                   error={passwordForm.formState.errors.newPassword?.message}
                   {...passwordForm.register('newPassword')}
                 />
                 <Input
                   label={t('auth.confirmPassword')}
                   type="password"
-                  placeholder="Repite tu contrasena"
+                  placeholder={t('settings.repeatPassword')}
                   error={passwordForm.formState.errors.confirmPassword?.message}
                   {...passwordForm.register('confirmPassword')}
                 />

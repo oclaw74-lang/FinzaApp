@@ -17,11 +17,16 @@ import {
   X,
   ChevronLeft,
   LogOut,
+  Sun,
+  Moon,
+  Languages,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUiStore } from '@/store/uiStore'
 import { useAuthStore } from '@/store/authStore'
+import { useThemeStore } from '@/store/themeStore'
 import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
 import { Avatar } from '@/components/ui/avatar'
 
 interface NavItemDef {
@@ -141,6 +146,7 @@ function NavItem({
 export function Sidebar(): JSX.Element {
   const { sidebarOpen, setSidebarOpen, sidebarCollapsed, setSidebarCollapsed } = useUiStore()
   const { user, signOut } = useAuthStore()
+  const { theme, setTheme, language, setLanguage } = useThemeStore()
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
@@ -277,6 +283,30 @@ export function Sidebar(): JSX.Element {
             </div>
           ))}
         </nav>
+
+        {/* Quick settings */}
+        <div className="mx-2 mb-2 flex items-center gap-1.5">
+          <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium text-white/50 hover:text-white/80 hover:bg-white/[0.06] transition-colors"
+            title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+          >
+            {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
+            {!sidebarCollapsed && <span>{theme === 'dark' ? 'Claro' : 'Oscuro'}</span>}
+          </button>
+          <button
+            onClick={() => {
+              const newLang = language === 'es' ? 'en' : 'es'
+              setLanguage(newLang)
+              i18n.changeLanguage(newLang)
+            }}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium text-white/50 hover:text-white/80 hover:bg-white/[0.06] transition-colors"
+            title="Cambiar idioma"
+          >
+            <Languages size={13} />
+            {!sidebarCollapsed && <span>{language === 'es' ? 'EN' : 'ES'}</span>}
+          </button>
+        </div>
 
         {/* User section */}
         <div

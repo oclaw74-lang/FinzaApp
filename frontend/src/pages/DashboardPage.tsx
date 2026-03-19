@@ -50,8 +50,6 @@ function getInitialPeriod(): { mes: number; year: number } {
   return { mes: now.getMonth() + 1, year: now.getFullYear() }
 }
 
-const MESES_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-
 function getScoreColor(score: number): string {
   if (score <= 40) return 'var(--danger)'
   if (score <= 65) return '#F5C542'
@@ -61,6 +59,7 @@ function getScoreColor(score: number): string {
 
 export function DashboardPage(): JSX.Element {
   const { t } = useTranslation()
+  const MESES_SHORT = t('months.short', { returnObjects: true }) as string[]
   const navigate = useNavigate()
   const { user } = useAuthStore()
 
@@ -240,12 +239,12 @@ export function DashboardPage(): JSX.Element {
                 style={{ background: 'rgba(151,104,255,0.10)' }}>
                 🎯
               </div>
-              <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-[#657a9e]">Metas activas</p>
+              <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-[#657a9e]">{t('dashboard.activeGoalsLabel')}</p>
               <p className="text-lg sm:text-[26px] font-bold text-[#9768ff] leading-none tabular-nums"
                 style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.04em' }}>
                 {String(data?.metas_activas.length ?? 0)}
               </p>
-              <p className="text-[10px] sm:text-xs font-medium text-[#657a9e]">En progreso</p>
+              <p className="text-[10px] sm:text-xs font-medium text-[#657a9e]">{t('common.inProgress')}</p>
             </div>
 
             {/* Tasa de ahorro */}
@@ -262,7 +261,7 @@ export function DashboardPage(): JSX.Element {
                 style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.04em' }}>
                 {tasaAhorro.toFixed(1)}%
               </p>
-              <p className="text-[10px] sm:text-xs font-medium text-[#657a9e]">Del total de ingresos</p>
+              <p className="text-[10px] sm:text-xs font-medium text-[#657a9e]">{t('dashboard.ofTotalIncome')}</p>
             </div>
           </>
         )}
@@ -306,7 +305,7 @@ export function DashboardPage(): JSX.Element {
                 >
                   {t(`score.${scoreData.estado}`)}
                 </span>
-                <p className="text-[10px] text-[var(--text-muted)] mt-1">/100 puntos</p>
+                <p className="text-[10px] text-[var(--text-muted)] mt-1">/100 {t('dashboard.scorePoints')}</p>
               </div>
             </div>
             <div className="grid grid-cols-4 gap-2">
@@ -329,8 +328,8 @@ export function DashboardPage(): JSX.Element {
       {/* Charts row: flujo mensual + distribucion egresos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <div className="card-glass dark:bg-white/[0.02] rounded-2xl p-5">
-          <h3 className="text-xs uppercase tracking-widest text-[var(--text-muted)] dark:text-white/40 mb-1">Flujo mensual</h3>
-          <p className="text-[var(--text-muted)] dark:text-white/50 text-xs mb-4">Ingresos vs egresos — ultimos 6 meses</p>
+          <h3 className="text-xs uppercase tracking-widest text-[var(--text-muted)] dark:text-white/40 mb-1">{t('dashboard.flowChart')}</h3>
+          <p className="text-[var(--text-muted)] dark:text-white/50 text-xs mb-4">{t('dashboard.flowChartDesc')}</p>
           {isLoading ? (
             <Skeleton className="h-52 rounded-xl" />
           ) : (
@@ -351,8 +350,8 @@ export function DashboardPage(): JSX.Element {
           )}
         </div>
         <div className="card-glass dark:bg-white/[0.02] rounded-2xl p-5">
-          <h3 className="text-xs uppercase tracking-widest text-[var(--text-muted)] dark:text-white/40 mb-1">Distribucion egresos</h3>
-          <p className="text-[var(--text-muted)] dark:text-white/50 text-xs mb-4">Por categoria este mes</p>
+          <h3 className="text-xs uppercase tracking-widest text-[var(--text-muted)] dark:text-white/40 mb-1">{t('dashboard.expenseDistribution')}</h3>
+          <p className="text-[var(--text-muted)] dark:text-white/50 text-xs mb-4">{t('dashboard.expenseDistributionDesc')}</p>
           {isLoading ? (
             <Skeleton className="h-52 rounded-xl" />
           ) : (
@@ -372,7 +371,7 @@ export function DashboardPage(): JSX.Element {
               {t('dashboard.recentTransactions')}
             </p>
             <a href="/ingresos" className="text-xs text-[var(--accent)] hover:underline">
-              Ver todos
+              {t('common.viewAll')}
             </a>
           </div>
           {isLoading ? (
@@ -448,12 +447,12 @@ export function DashboardPage(): JSX.Element {
                   className="text-[var(--text-muted)] opacity-40 mb-2"
                   aria-hidden="true"
                 />
-                <p className="text-sm text-[var(--text-muted)]">Sin prestamos activos</p>
+                <p className="text-sm text-[var(--text-muted)]">{t('dashboard.noLoans')}</p>
               </div>
             ) : (
               <div className="space-y-3">
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-0.5">Deuda total</p>
+                  <p className="text-xs text-[var(--text-muted)] mb-0.5">{t('dashboard.totalDebt')}</p>
                   <p className="text-2xl font-bold font-mono text-[var(--danger)] dark:text-finza-red">
                     {formatMoney(data?.prestamos_activos.total_deuda ?? 0)}
                   </p>
@@ -462,15 +461,15 @@ export function DashboardPage(): JSX.Element {
                   <CreditCard size={14} className="text-[var(--accent)]" aria-hidden="true" />
                   <span>
                     {data?.prestamos_activos.count ?? 0}{' '}
-                    prestamo{(data?.prestamos_activos.count ?? 0) !== 1 ? 's' : ''} activo
-                    {(data?.prestamos_activos.count ?? 0) !== 1 ? 's' : ''}
+                    {(data?.prestamos_activos.count ?? 0) !== 1 ? t('dashboard.loans') : t('dashboard.loan')}{' '}
+                    {(data?.prestamos_activos.count ?? 0) !== 1 ? t('dashboard.actives') : t('dashboard.active')}
                   </span>
                 </div>
                 {data?.prestamos_activos.proximo_vencimiento && (
                   <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
                     <CalendarClock size={14} className="text-[var(--warning)]" aria-hidden="true" />
                     <span>
-                      Proximo:{' '}
+                      {t('dashboard.nextPayment')}:{' '}
                       <span className="font-medium text-[var(--warning)]">
                         {formatDate(data.prestamos_activos.proximo_vencimiento)}
                       </span>
