@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react'
+∩╗┐import React, { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, Target, Sparkles, X, Tag } from 'lucide-react'
 import * as Icons from 'lucide-react'
@@ -263,7 +263,7 @@ export function PresupuestosPage(): JSX.Element {
         </div>
       </div>
 
-      {/* Selector de mes / año */}
+      {/* Selector de mes / a├▒o */}
       <div className="flex items-center gap-3 mb-6">
         <div className="flex flex-col gap-1">
           <label htmlFor="mes-selector" className="text-xs text-[var(--text-muted)] font-medium">
@@ -328,8 +328,7 @@ export function PresupuestosPage(): JSX.Element {
       {/* Error state */}
       {isError && (
         <p className="text-sm text-[var(--text-muted)] text-center py-4 mb-4">
-          El servidor no esta disponible. Los presupuestos se mostraran cuando
-          el backend responda.
+          {t('presupuestos.serverError')}
         </p>
       )}
 
