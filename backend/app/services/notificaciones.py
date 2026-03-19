@@ -92,6 +92,27 @@ def marcar_todas_leidas(user_jwt: str, user_id: str) -> dict:
     except APIError as e:
         _handle_api_error(e)
     count = len(result.data or [])
+    # --- Trigger 16: Encuesta pendiente ---
+    try:
+        survey_r = (
+            client.table("survey_responses")
+            .select("id", count="exact")
+            .eq("user_id", user_id)
+            .execute()
+        )
+        if (survey_r.count or 0) == 0:
+            if _crear_notificacion(
+                client,
+                user_id,
+                "informativa",
+                "encuesta_pendiente",
+                "¡Ayúdanos a mejorar Finza!",
+                "Tienes una encuesta pendiente. Solo toma 2 minutos y nos ayuda a mejorar la app para ti.",
+            ):
+                generadas += 1
+    except Exception:
+        pass
+
     return {"actualizadas": count}
 
 
@@ -745,6 +766,27 @@ def generar_notificaciones(user_jwt: str, user_id: str) -> dict:
                 f"balance_negativo_{mes_actual}_{year_actual}",
                 "Estás gastando más de lo que ganas este mes",
                 f"Este mes tus gastos (${total_egresos_mes:,.0f}) superan tus ingresos (${total_ingresos_mes:,.0f}) por ${diferencia:,.0f}. Revisa tus presupuestos.",
+            ):
+                generadas += 1
+    except Exception:
+        pass
+
+    # --- Trigger 16: Encuesta pendiente ---
+    try:
+        survey_r = (
+            client.table("survey_responses")
+            .select("id", count="exact")
+            .eq("user_id", user_id)
+            .execute()
+        )
+        if (survey_r.count or 0) == 0:
+            if _crear_notificacion(
+                client,
+                user_id,
+                "informativa",
+                "encuesta_pendiente",
+                "¡Ayúdanos a mejorar Finza!",
+                "Tienes una encuesta pendiente. Solo toma 2 minutos y nos ayuda a mejorar la app para ti.",
             ):
                 generadas += 1
     except Exception:

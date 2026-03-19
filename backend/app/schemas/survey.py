@@ -16,3 +16,7 @@ class SurveySubmission(BaseModel):
 class SurveyResponse(BaseModel):
     id: str
     message: str
+
+
+class SurveyStatusResponse(BaseModel):
+    completed: bool

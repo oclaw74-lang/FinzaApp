@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.security import get_current_user, get_raw_token
 from app.core.supabase_client import get_user_client
-from app.schemas.survey import SurveySubmission, SurveyResponse
+from app.schemas.survey import SurveySubmission, SurveyResponse, SurveyStatusResponse
 
 router = APIRouter(prefix="/surveys", tags=["surveys"])
 

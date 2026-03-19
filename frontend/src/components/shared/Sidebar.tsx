@@ -29,6 +29,8 @@ import { useThemeStore } from '@/store/themeStore'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/i18n'
 import { Avatar } from '@/components/ui/avatar'
+import { useQuery } from '@tanstack/react-query'
+import { api } from '@/lib/api'
 
 interface NavItemDef {
   to: string
@@ -152,6 +154,23 @@ export function Sidebar(): JSX.Element {
   const navigate = useNavigate()
   const location = useLocation()
 
+  const { data: surveyStatus } = useQuery({
+    queryKey: ['survey-status'],
+    queryFn: async () => {
+      const res = await api.get<{ completed: boolean }>('/surveys/me')
+      return res.data
+    },
+    staleTime: 1000 * 60 * 10, // 10 minutes
+  })
+
+  const filteredNavGroups = navGroups.map(group => ({
+    ...group,
+    items: group.items.filter(item => {
+      if (item.to === '/survey' && surveyStatus?.completed === true) return false
+      return true
+    }),
+  }))
+
   // Close sidebar on navigation on mobile (< 1024px)
   useEffect(() => {
     if (window.innerWidth < 1024) {
@@ -250,7 +269,7 @@ export function Sidebar(): JSX.Element {
 
         {/* Navigation */}
         <nav className="flex-1 px-2 py-3 overflow-y-auto overflow-x-hidden">
-          {navGroups.map((group) => (
+          {filteredNavGroups.map((group) => (
             <div key={group.sectionKey}>
               {/* Section label — hidden when collapsed */}
               {!sidebarCollapsed && (
