@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+﻿import React, { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, Target, Sparkles, X, Tag } from 'lucide-react'
 import * as Icons from 'lucide-react'
@@ -153,10 +153,10 @@ export function PresupuestosPage(): JSX.Element {
         year,
         monto_limite: sugerido.sugerido,
       })
-      toast.success(`Presupuesto para ${sugerido.categoria_nombre} creado`)
+      toast.success(t('presupuestos.sugeridoCreado', { categoria: sugerido.categoria_nombre }))
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 409) {
-        toast.error(`Ya existe un presupuesto para ${sugerido.categoria_nombre}`)
+        toast.error(t('presupuestos.sugeridoExiste', { categoria: sugerido.categoria_nombre }))
       } else {
         toast.error(getApiErrorMessage(error))
       }
@@ -199,9 +199,9 @@ export function PresupuestosPage(): JSX.Element {
       toast.success(t('presupuestos.created'))
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 409) {
-        setFormError(getApiErrorMessage(error, 'Ya existe un presupuesto para esta categoria'))
+        setFormError(getApiErrorMessage(error, t('presupuestos.errorExiste')))
       } else {
-        setFormError(getApiErrorMessage(error, 'Error al crear el presupuesto. Intenta de nuevo.'))
+        setFormError(getApiErrorMessage(error, t('presupuestos.errorCrear')))
         toast.error(getApiErrorMessage(error))
       }
     }
@@ -218,7 +218,7 @@ export function PresupuestosPage(): JSX.Element {
       handleCloseEdit()
       toast.success(t('presupuestos.updated'))
     } catch (error) {
-      setFormError(getApiErrorMessage(error, 'Error al actualizar el presupuesto. Intenta de nuevo.'))
+      setFormError(getApiErrorMessage(error, t('presupuestos.errorActualizar')))
       toast.error(getApiErrorMessage(error))
     }
   }
@@ -243,7 +243,7 @@ export function PresupuestosPage(): JSX.Element {
         <div className="min-w-0">
           <h1 className="page-title-premium dark:text-[#e8f0ff]">{t('nav.presupuestos')}</h1>
           <p className="text-[var(--text-muted)] text-sm mt-1">
-            Controla tus limites de gasto por categoria
+            {t('presupuestos.subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -267,7 +267,7 @@ export function PresupuestosPage(): JSX.Element {
       <div className="flex items-center gap-3 mb-6">
         <div className="flex flex-col gap-1">
           <label htmlFor="mes-selector" className="text-xs text-[var(--text-muted)] font-medium">
-            Mes
+            {t('common.month')}
           </label>
           <select
             id="mes-selector"
@@ -284,7 +284,7 @@ export function PresupuestosPage(): JSX.Element {
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="year-selector" className="text-xs text-[var(--text-muted)] font-medium">
-            Año
+            {t('common.year')}
           </label>
           <select
             id="year-selector"
@@ -337,7 +337,7 @@ export function PresupuestosPage(): JSX.Element {
       {!isError && (
         <>
           <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-3">
-            Con presupuesto asignado
+            {t('presupuestos.conPresupuesto')}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {isLoading && (
@@ -367,10 +367,10 @@ export function PresupuestosPage(): JSX.Element {
                            flex flex-col items-center justify-center gap-2 text-[#657a9e]
                            hover:border-[#3d8ef8] hover:text-[#3d8ef8] hover:bg-[rgba(61,142,248,0.04)]
                            transition-all duration-200 cursor-pointer"
-                aria-label="Nuevo presupuesto"
+                aria-label={t('presupuestos.nuevoPresupuesto')}
               >
                 <span className="text-[28px] leading-none">+</span>
-                <span className="text-[13px] font-medium">Nuevo presupuesto</span>
+                <span className="text-[13px] font-medium">{t('presupuestos.nuevoPresupuesto')}</span>
               </button>
             )}
           </div>
@@ -379,7 +379,7 @@ export function PresupuestosPage(): JSX.Element {
           {!isLoading && categoriasSinPresupuesto.length > 0 && (
             <>
               <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-3">
-                Sin presupuesto
+                {t('presupuestos.sinPresupuesto')}
               </h2>
               <div className="card-glass p-0 overflow-hidden">
                 {categoriasSinPresupuesto.map((cat, idx) => {
@@ -407,7 +407,7 @@ export function PresupuestosPage(): JSX.Element {
                         className="text-xs py-1 px-3 h-auto"
                       >
                         <Plus size={13} className="mr-1" />
-                        Asignar limite
+                        {t('presupuestos.asignarLimite')}
                       </Button>
                     </div>
                   )
@@ -415,7 +415,7 @@ export function PresupuestosPage(): JSX.Element {
                 {/* Boton para agregar presupuesto de categoria no listada */}
                 <div className="border-t border-border px-4 py-3 flex items-center justify-between">
                   <span className="text-xs text-[var(--text-muted)]">
-                    ¿No ves tu categoria?
+                    {t('presupuestos.noVesCategoria')}
                   </span>
                   <Button
                     variant="secondary"
@@ -423,7 +423,7 @@ export function PresupuestosPage(): JSX.Element {
                     className="text-xs py-1 px-3 h-auto"
                   >
                     <Plus size={13} className="mr-1" />
-                    Agregar otro
+                    {t('presupuestos.agregarOtro')}
                   </Button>
                 </div>
               </div>

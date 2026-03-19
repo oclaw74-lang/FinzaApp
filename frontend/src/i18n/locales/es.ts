@@ -1,4 +1,4 @@
-const es = {
+﻿const es = {
   nav: {
     dashboard: 'Dashboard', ingresos: 'Ingresos', egresos: 'Egresos',
     prestamos: 'Prestamos', metas: 'Metas', presupuestos: 'Presupuestos',
@@ -171,6 +171,19 @@ const es = {
     sugerido: 'Sugerido',
     sugerenciasAplicadas: '{{n}} presupuesto(s) aplicado(s)',
     deleteConfirm: 'Eliminar este presupuesto?',
+    subtitle: 'Controla tus limites de gasto por categoria',
+    conPresupuesto: 'Con presupuesto asignado',
+    sinPresupuesto: 'Sin presupuesto',
+    asignarLimite: 'Asignar limite',
+    noVesCategoria: '¿No ves tu categoria?',
+    agregarOtro: 'Agregar otro',
+    nuevoPresupuesto: 'Nuevo presupuesto',
+    sugeridoCreado: 'Presupuesto para {{categoria}} creado',
+    sugeridoExiste: 'Ya existe un presupuesto para {{categoria}}',
+    errorExiste: 'Ya existe un presupuesto para esta categoria',
+    errorCrear: 'Error al crear el presupuesto. Intenta de nuevo.',
+    errorActualizar: 'Error al actualizar el presupuesto. Intenta de nuevo.',
+    serverError: 'El servidor no esta disponible. Los presupuestos se mostraran cuando el backend responda.',
   },
   categorias: {
     title: 'Categorias',
@@ -197,6 +210,12 @@ const es = {
     nameRequired: 'El nombre es requerido',
     deleteError: 'Error al eliminar la categoria',
     systemDeleteError: 'No se pueden eliminar categorias del sistema',
+    namePlaceholder: 'Ej: Alimentacion',
+    serverError: 'El servidor no esta disponible. Las categorias se mostraran cuando el backend responda.',
+    editLabel: 'Editar {{name}}',
+    deleteLabel: 'Eliminar {{name}}',
+    systemSection: 'Categorias del sistema',
+    customSection: 'Categorias personalizadas',
   },
   notificaciones: {
     title: 'Notificaciones',
@@ -255,6 +274,10 @@ const es = {
     gastoDiario: 'Gasto diario',
     siPresupuesto: 'Si respeta presupuesto',
     mayorImpacto: 'Mayor impacto',
+    sugerenciaReducir: 'Si reduces {{categoria}} un 20%, ahorras {{monto}} este mes',
+    sugerenciaPositiva: 'Tu proyeccion de saldo es positiva. ¡Buen ritmo!',
+    sugerenciaNegativa: 'Tu gasto proyectado supera tus ingresos. Considera reducir gastos.',
+    diasRestantes: '{{dias}} dias restantes',
   },
   fondoEmergencia: {
     title: 'Fondo de emergencia',

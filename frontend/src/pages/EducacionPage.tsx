@@ -29,21 +29,24 @@ interface LeccionModalProps {
 }
 
 function LeccionModal({ leccion, onClose, onCompletar, isLoading }: LeccionModalProps): JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isEn = i18n.language === 'en'
+  const titulo = isEn && leccion.titulo_en ? leccion.titulo_en : leccion.titulo
+  const contenido = isEn && leccion.contenido_json_en ? leccion.contenido_json_en : leccion.contenido_json
 
   return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60"
       role="dialog"
       aria-modal="true"
-      aria-label={leccion.titulo}
+      aria-label={titulo}
     >
       <div className="finza-card w-full max-w-lg max-h-[90vh] overflow-y-auto p-0">
         {/* Modal header */}
         <div className="flex items-start justify-between gap-3 p-5 border-b border-[var(--border)]">
           <div className="flex-1 min-w-0">
             <p className="text-xs text-[var(--text-muted)] mb-1">{leccion.duracion_minutos} {t('educacion.minutos')}</p>
-            <h2 className="text-base font-bold text-[var(--text-primary)]">{leccion.titulo}</h2>
+            <h2 className="text-base font-bold text-[var(--text-primary)]">{titulo}</h2>
           </div>
           <button
             type="button"
@@ -62,7 +65,7 @@ function LeccionModal({ leccion, onClose, onCompletar, isLoading }: LeccionModal
             <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1 uppercase tracking-wide">
               {t('educacion.hook')}
             </p>
-            <p className="text-sm text-[var(--text-primary)]">{leccion.contenido_json.hook}</p>
+            <p className="text-sm text-[var(--text-primary)]">{contenido.hook}</p>
           </div>
 
           {/* Concept */}
@@ -70,7 +73,7 @@ function LeccionModal({ leccion, onClose, onCompletar, isLoading }: LeccionModal
             <p className="text-xs font-semibold text-[var(--text-muted)] mb-1 uppercase tracking-wide">
               {t('educacion.concept')}
             </p>
-            <p className="text-sm text-[var(--text-primary)]">{leccion.contenido_json.concept}</p>
+            <p className="text-sm text-[var(--text-primary)]">{contenido.concept}</p>
           </div>
 
           {/* Action */}
@@ -78,7 +81,7 @@ function LeccionModal({ leccion, onClose, onCompletar, isLoading }: LeccionModal
             <p className="text-xs font-semibold text-green-600 dark:text-green-400 mb-1 uppercase tracking-wide">
               {t('educacion.action')}
             </p>
-            <p className="text-sm text-[var(--text-primary)]">{leccion.contenido_json.action}</p>
+            <p className="text-sm text-[var(--text-primary)]">{contenido.action}</p>
           </div>
 
           {/* Tip */}
@@ -86,7 +89,7 @@ function LeccionModal({ leccion, onClose, onCompletar, isLoading }: LeccionModal
             <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1 uppercase tracking-wide">
               {t('educacion.tip')}
             </p>
-            <p className="text-sm text-[var(--text-primary)]">{leccion.contenido_json.tip}</p>
+            <p className="text-sm text-[var(--text-primary)]">{contenido.tip}</p>
           </div>
         </div>
 
@@ -116,7 +119,10 @@ interface LeccionCardProps {
 }
 
 function LeccionCard({ leccion, onClick }: LeccionCardProps): JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isEn = i18n.language === 'en'
+  const titulo = isEn && leccion.titulo_en ? leccion.titulo_en : leccion.titulo
+  const descripcion = isEn && leccion.descripcion_corta_en ? leccion.descripcion_corta_en : leccion.descripcion_corta
 
   return (
     <button
@@ -128,10 +134,10 @@ function LeccionCard({ leccion, onClick }: LeccionCardProps): JSX.Element {
           ? 'opacity-70 cursor-default'
           : 'finza-card-hover cursor-pointer'
       )}
-      aria-label={leccion.titulo}
+      aria-label={titulo}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-semibold text-[var(--text-primary)] flex-1">{leccion.titulo}</p>
+        <p className="text-sm font-semibold text-[var(--text-primary)] flex-1">{titulo}</p>
         {leccion.completada ? (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 shrink-0">
             <CheckCircle2 size={12} />
@@ -143,7 +149,7 @@ function LeccionCard({ leccion, onClick }: LeccionCardProps): JSX.Element {
           </span>
         )}
       </div>
-      <p className="text-xs text-[var(--text-muted)] line-clamp-2">{leccion.descripcion_corta}</p>
+      <p className="text-xs text-[var(--text-muted)] line-clamp-2">{descripcion}</p>
       <div className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
         <Clock size={12} aria-hidden="true" />
         <span>{leccion.duracion_minutos} {t('educacion.minutos')}</span>

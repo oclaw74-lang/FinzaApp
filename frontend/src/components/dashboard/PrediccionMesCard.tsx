@@ -1,11 +1,11 @@
-import { TrendingDown, TrendingUp, Calendar, Lightbulb } from 'lucide-react'
+﻿import { TrendingDown, TrendingUp, Calendar, Lightbulb } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn, formatMoney } from '@/lib/utils'
 import { usePrediccionMes } from '@/hooks/usePrediccionMes'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export function PrediccionMesCard(): JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { data, isLoading, isError } = usePrediccionMes()
 
   if (isLoading) {
@@ -25,6 +25,28 @@ export function PrediccionMesCard(): JSX.Element {
         {t('common.noData')}
       </div>
     )
+  }
+
+  // Resolve category name based on current language
+  const isEn = i18n.language === 'en'
+  const categoriaNombre = data.categoria_mayor_impacto
+    ? (isEn && data.categoria_mayor_impacto.nombre_en) || data.categoria_mayor_impacto.nombre
+    : null
+
+  // Build suggestion text
+  let sugerenciaText: string
+  if (data.sugerencia_tipo === 'reducir' && data.sugerencia_datos) {
+    const catName = isEn
+      ? (data.sugerencia_datos.categoria_en ?? data.sugerencia_datos.categoria ?? '')
+      : (data.sugerencia_datos.categoria ?? '')
+    sugerenciaText = t('prediccion.sugerenciaReducir', {
+      categoria: catName,
+      monto: data.sugerencia_datos.monto ?? 0,
+    })
+  } else if (data.sugerencia_tipo === 'positivo') {
+    sugerenciaText = t('prediccion.sugerenciaPositiva')
+  } else {
+    sugerenciaText = t('prediccion.sugerenciaNegativa')
   }
 
   return (
@@ -64,7 +86,7 @@ export function PrediccionMesCard(): JSX.Element {
         </div>
       </div>
 
-      {/* Grid de métricas */}
+      {/* Grid de metricas */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         {/* Gasto diario */}
         <div className="bg-surface-raised rounded-lg p-3">
@@ -98,7 +120,7 @@ export function PrediccionMesCard(): JSX.Element {
         </div>
       </div>
 
-      {/* Categoría de mayor impacto */}
+      {/* Categoria de mayor impacto */}
       {data.categoria_mayor_impacto && (
         <div className="mb-3">
           <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
@@ -106,7 +128,7 @@ export function PrediccionMesCard(): JSX.Element {
           </p>
           <div className="flex items-center justify-between bg-surface-raised rounded-lg px-3 py-2">
             <span className="text-sm text-[var(--text-primary)] font-medium">
-              {data.categoria_mayor_impacto.nombre}
+              {categoriaNombre}
             </span>
             <div className="flex items-center gap-2">
               <span className="text-xs text-[var(--text-muted)]">
@@ -123,7 +145,7 @@ export function PrediccionMesCard(): JSX.Element {
       {/* Sugerencia */}
       <div className="flex items-start gap-2 bg-[var(--accent)]/10 rounded-lg px-3 py-2.5">
         <Lightbulb size={14} className="text-[var(--accent)] shrink-0 mt-0.5" />
-        <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{data.sugerencia}</p>
+        <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{sugerenciaText}</p>
       </div>
     </div>
   )

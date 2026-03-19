@@ -1,4 +1,5 @@
-import uuid
+﻿import uuid
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -19,6 +20,7 @@ class CategoriaUpdate(BaseModel):
 class CategoriaResponse(BaseModel):
     id: uuid.UUID
     nombre: str
+    nombre_en: Optional[str] = None
     tipo: str
     icono: str | None
     color: str | None

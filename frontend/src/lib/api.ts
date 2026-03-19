@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { supabase } from './supabase'
+import i18n from '@/i18n'
 
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost/api/v1'
 
@@ -15,6 +16,7 @@ apiClient.interceptors.request.use(async (config) => {
   if (session?.access_token) {
     config.headers.Authorization = `Bearer ${session.access_token}`
   }
+  config.headers['Accept-Language'] = i18n.language || 'es'
   return config
 })
 

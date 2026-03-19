@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, Pencil, Trash2, Tag } from 'lucide-react'
 import { getCategoriaIcon } from '@/lib/iconMap'
@@ -58,7 +58,7 @@ function CategoriaModal({
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault()
     if (!nombre.trim()) {
-      setError('El nombre es requerido')
+      setError(t('categorias.nameRequired'))
       return
     }
     setError(null)
@@ -82,7 +82,7 @@ function CategoriaModal({
             type="button"
             onClick={onClose}
             className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-            aria-label="Cerrar"
+            aria-label={t('common.close')}
           >
             <span className="text-xl leading-none">&times;</span>
           </button>
@@ -92,7 +92,7 @@ function CategoriaModal({
             label={t('categorias.nombre')}
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            placeholder="Ej: Alimentacion"
+            placeholder={t('categorias.namePlaceholder')}
             required
             autoFocus
           />
@@ -231,13 +231,13 @@ export function CategoriasPage(): JSX.Element {
       {/* Error state */}
       {isError && (
         <p className="text-sm text-[var(--text-muted)] text-center py-4 mb-4">
-          El servidor no esta disponible. Las categorias se mostraran cuando el backend responda.
+          {t('categorias.serverError')}
         </p>
       )}
 
       {/* Seccion: Sistema */}
       {!isError && (
-        <section className="mb-8" aria-label="Categorias del sistema">
+        <section className="mb-8" aria-label={t('categorias.systemSection')}>
           <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-3">
             {t('categorias.sistema')}
           </h2>
@@ -275,7 +275,7 @@ export function CategoriasPage(): JSX.Element {
 
       {/* Seccion: Personalizadas */}
       {!isError && (
-        <section aria-label="Categorias personalizadas">
+        <section aria-label={t('categorias.customSection')}>
           <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-3">
             {t('categorias.personalizada')}
           </h2>
@@ -319,7 +319,7 @@ export function CategoriasPage(): JSX.Element {
                     <button
                       type="button"
                       onClick={() => handleOpenEdit(cat)}
-                      aria-label={`Editar ${cat.nombre}`}
+                      aria-label={t('categorias.editLabel', { name: cat.nombre })}
                       className="p-1.5 rounded text-[var(--text-muted)] hover:text-finza-blue hover:bg-blue-50 transition-colors"
                     >
                       <Pencil size={14} />
@@ -327,7 +327,7 @@ export function CategoriasPage(): JSX.Element {
                     <button
                       type="button"
                       onClick={() => handleDelete(cat)}
-                      aria-label={`Eliminar ${cat.nombre}`}
+                      aria-label={t('categorias.deleteLabel', { name: cat.nombre })}
                       className="p-1.5 rounded text-[var(--text-muted)] hover:text-alert-red hover:bg-red-50 transition-colors"
                     >
                       <Trash2 size={14} />

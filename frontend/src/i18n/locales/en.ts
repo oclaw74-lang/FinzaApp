@@ -1,4 +1,4 @@
-const en = {
+﻿const en = {
   nav: {
     dashboard: 'Dashboard', ingresos: 'Income', egresos: 'Expenses',
     prestamos: 'Loans', metas: 'Goals', presupuestos: 'Budgets',
@@ -170,6 +170,19 @@ const en = {
     sugerido: 'Suggested',
     sugerenciasAplicadas: '{{n}} budget(s) applied',
     deleteConfirm: 'Delete this budget?',
+    subtitle: 'Control your spending limits by category',
+    conPresupuesto: 'With budget assigned',
+    sinPresupuesto: 'Without budget',
+    asignarLimite: 'Set limit',
+    noVesCategoria: "Don't see your category?",
+    agregarOtro: 'Add another',
+    nuevoPresupuesto: 'New budget',
+    sugeridoCreado: 'Budget for {{categoria}} created',
+    sugeridoExiste: 'Budget for {{categoria}} already exists',
+    errorExiste: 'A budget for this category already exists',
+    errorCrear: 'Error creating budget. Try again.',
+    errorActualizar: 'Error updating budget. Try again.',
+    serverError: 'Server unavailable. Budgets will appear when the backend responds.',
   },
   categorias: {
     title: 'Categories',
@@ -196,6 +209,12 @@ const en = {
     nameRequired: 'Name is required',
     deleteError: 'Error deleting category',
     systemDeleteError: 'Cannot delete system categories',
+    namePlaceholder: 'E.g.: Food',
+    serverError: 'Server unavailable. Categories will appear when the backend responds.',
+    editLabel: 'Edit {{name}}',
+    deleteLabel: 'Delete {{name}}',
+    systemSection: 'System categories',
+    customSection: 'Custom categories',
   },
   notificaciones: {
     title: 'Notifications',
@@ -254,6 +273,10 @@ const en = {
     gastoDiario: 'Daily spending',
     siPresupuesto: 'If budget respected',
     mayorImpacto: 'Biggest impact',
+    sugerenciaReducir: 'If you reduce {{categoria}} by 20%, you save {{monto}} this month',
+    sugerenciaPositiva: 'Your projected balance is positive. Great pace!',
+    sugerenciaNegativa: 'Your projected spending exceeds your income. Consider reducing expenses.',
+    diasRestantes: '{{dias}} days remaining',
   },
   fondoEmergencia: {
     title: 'Emergency fund',
