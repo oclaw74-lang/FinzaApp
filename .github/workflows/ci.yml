@@ -50,6 +50,6 @@ jobs:
 
       - name: Run tests
         env:
-          VITE_SUPABASE_URL: https://placeholder.supabase.co
-          VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder
+          VITE_SUPABASE_URL: https://omhfdzcrusahvvzoljpf.supabase.co
+          VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9taGZkemNydXNhaHZ2em9sanBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MTAzNzgsImV4cCI6MjA4ODQ4NjM3OH0.Gs2DRBBoY3BJlE8w6VuC2GT5vWfXsPMImT1X0Zg9m6M
         run: npm test -- --run
