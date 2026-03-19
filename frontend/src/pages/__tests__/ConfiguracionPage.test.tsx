@@ -99,8 +99,8 @@ describe('ConfiguracionPage', () => {
     renderPage()
     expect(screen.getByText('settings.profile')).toBeInTheDocument()
     expect(screen.getByText('settings.appearance')).toBeInTheDocument()
-    expect(screen.getByText('settings.language')).toBeInTheDocument()
     expect(screen.getByText('settings.security')).toBeInTheDocument()
+    expect(screen.getByText('settings.categorias')).toBeInTheDocument()
   })
 
   it('shows profile tab content by default', () => {
@@ -123,7 +123,7 @@ describe('ConfiguracionPage', () => {
   it('switches to appearance tab on click', () => {
     renderPage()
     fireEvent.click(screen.getByText('settings.appearance'))
-    expect(screen.getByText('settings.currentTheme')).toBeInTheDocument()
+    expect(screen.getByText('settings.darkModeDesc')).toBeInTheDocument()
   })
 
   it('appearance tab shows light and dark mode cards', () => {
@@ -140,15 +140,15 @@ describe('ConfiguracionPage', () => {
     expect(mockSetTheme).toHaveBeenCalledWith('dark')
   })
 
-  it('switches to language tab on click', () => {
+  it('switches to language section in appearance tab', () => {
     renderPage()
-    fireEvent.click(screen.getByText('settings.language'))
+    fireEvent.click(screen.getByText('settings.appearance'))
     expect(screen.getByText('settings.changeLanguage')).toBeInTheDocument()
   })
 
-  it('language tab shows Espanol and English options', () => {
+  it('appearance tab shows Espanol and English options', () => {
     renderPage()
-    fireEvent.click(screen.getByText('settings.language'))
+    fireEvent.click(screen.getByText('settings.appearance'))
     expect(screen.getByText('Espanol')).toBeInTheDocument()
     expect(screen.getByText('English')).toBeInTheDocument()
   })
@@ -195,8 +195,7 @@ describe('ConfiguracionPage', () => {
 
   it('profile tab shows pais y moneda section', () => {
     renderPage()
-    // Profile tab is active by default
-    expect(screen.getByText('Pais y moneda principal')).toBeInTheDocument()
+    expect(screen.getByText('settings.paisYMoneda')).toBeInTheDocument()
   })
 
   it('profile tab shows current country from metadata', () => {
@@ -206,38 +205,38 @@ describe('ConfiguracionPage', () => {
 
   it('profile tab shows current currency from metadata', () => {
     renderPage()
-    expect(screen.getByText(/Moneda: DOP/)).toBeInTheDocument()
+    expect(screen.getByText(/settings\.moneda.*DOP/)).toBeInTheDocument()
   })
 
   it('profile tab shows "Cambiar" button for pais', () => {
     renderPage()
-    expect(screen.getByRole('button', { name: 'Cambiar' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'settings.cambiar' })).toBeInTheDocument()
   })
 
   it('opens pais modal when "Cambiar" button is clicked', () => {
     renderPage()
-    fireEvent.click(screen.getByRole('button', { name: 'Cambiar' }))
-    expect(screen.getByText('Cambiar pais')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'settings.cambiar' }))
+    expect(screen.getByText('settings.cambiarPais')).toBeInTheDocument()
   })
 
   it('pais modal shows list of countries', () => {
     renderPage()
-    fireEvent.click(screen.getByRole('button', { name: 'Cambiar' }))
+    fireEvent.click(screen.getByRole('button', { name: 'settings.cambiar' }))
     expect(screen.getByText('Republica Dominicana')).toBeInTheDocument()
     expect(screen.getByText('Estados Unidos')).toBeInTheDocument()
   })
 
   it('pais modal closes on cancel', () => {
     renderPage()
-    fireEvent.click(screen.getByRole('button', { name: 'Cambiar' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
-    expect(screen.queryByText('Cambiar pais')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'settings.cambiar' }))
+    fireEvent.click(screen.getByRole('button', { name: 'common.cancel' }))
+    expect(screen.queryByText('settings.cambiarPais')).not.toBeInTheDocument()
   })
 
   it('pais modal closes via X button', () => {
     renderPage()
-    fireEvent.click(screen.getByRole('button', { name: 'Cambiar' }))
+    fireEvent.click(screen.getByRole('button', { name: 'settings.cambiar' }))
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
-    expect(screen.queryByText('Cambiar pais')).not.toBeInTheDocument()
+    expect(screen.queryByText('settings.cambiarPais')).not.toBeInTheDocument()
   })
 })

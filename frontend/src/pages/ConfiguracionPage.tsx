@@ -66,20 +66,15 @@ function getCategoryIcon(icono: string | null): React.FC<{ size?: number; classN
   return Tag as React.FC<{ size?: number; className?: string }>
 }
 
-function getTipoBadge(tipo: CategoriaResponse['tipo']): JSX.Element {
+function getTipoBadge(tipo: CategoriaResponse['tipo'], t: (key: string) => string): JSX.Element {
   const styles: Record<CategoriaResponse['tipo'], string> = {
     ingreso: 'bg-emerald-500/20 text-emerald-400',
     egreso: 'bg-red-500/20 text-red-400',
     ambos: 'bg-blue-500/20 text-blue-400',
   }
-  const labels: Record<CategoriaResponse['tipo'], string> = {
-    ingreso: 'Ingreso',
-    egreso: 'Egreso',
-    ambos: 'Ambos',
-  }
   return (
     <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full', styles[tipo])}>
-      {labels[tipo]}
+      {t(`categorias.${tipo}`)}
     </span>
   )
 }
@@ -115,7 +110,7 @@ function NuevaCategoriaForm({ onDone }: NuevaCategoriaFormProps): JSX.Element {
           type="text"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
-          placeholder="Nombre de la categoria"
+          placeholder={t('categorias.nombre')}
           className="finza-input flex-1 text-sm"
           autoFocus
         />
@@ -124,9 +119,9 @@ function NuevaCategoriaForm({ onDone }: NuevaCategoriaFormProps): JSX.Element {
           onChange={(e) => setTipo(e.target.value as typeof tipo)}
           className="finza-input text-sm xs:w-auto"
         >
-          <option value="egreso">Egreso</option>
-          <option value="ingreso">Ingreso</option>
-          <option value="ambos">Ambos</option>
+          <option value="egreso">{t('categorias.egreso')}</option>
+          <option value="ingreso">{t('categorias.ingreso')}</option>
+          <option value="ambos">{t('categorias.ambos')}</option>
         </select>
       </div>
       <div className="flex gap-2">
@@ -152,7 +147,7 @@ function CategoriasTab({ navigate }: CategoriasTabProps): JSX.Element {
       toast.error(t('categorias.systemDeleteError'))
       return
     }
-    if (window.confirm(`Eliminar categoria "${cat.nombre}"?`)) {
+    if (window.confirm(t('categorias.deleteConfirm'))) {
       try {
         await deleteCategoria.mutateAsync(cat.id)
         toast.success(t('categorias.deleted'))
@@ -221,7 +216,7 @@ function CategoriasTab({ navigate }: CategoriasTabProps): JSX.Element {
                   <IconComp size={15} className="text-[var(--text-muted)]" />
                 </div>
                 <span className="flex-1 text-sm text-[var(--text-primary)] truncate">{cat.nombre}</span>
-                {getTipoBadge(cat.tipo)}
+                {getTipoBadge(cat.tipo, t)}
                 {cat.es_sistema && (
                   <span className="text-[10px] text-[var(--text-muted)] px-1.5 py-0.5 rounded bg-[var(--surface-raised)]">
                     {t('common.system')}

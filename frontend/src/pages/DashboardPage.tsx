@@ -20,29 +20,29 @@ import { PrediccionMesCard } from '@/components/dashboard/PrediccionMesCard'
 import { formatDate, formatMoney, cn } from '@/lib/utils'
 import type { DashboardV2Response } from '@/types/dashboard'
 
-function getGreeting(): string {
+function getGreeting(t: (key: string) => string): string {
   const hour = new Date().getHours()
-  if (hour < 12) return 'Buenos dias'
-  if (hour < 18) return 'Buenas tardes'
-  return 'Buenas noches'
+  if (hour < 12) return t('dashboard.goodMorning')
+  if (hour < 18) return t('dashboard.goodAfternoon')
+  return t('dashboard.goodEvening')
 }
 
-function getWeekContext(): string {
+function getWeekContext(t: (key: string) => string): string {
   const now = new Date()
   const startOfYear = new Date(now.getFullYear(), 0, 1)
   const weekNum = Math.ceil(
     ((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7
   )
-  return `Semana ${weekNum}`
+  return `${t('dashboard.week')} ${weekNum}`
 }
 
-function getFinancialContext(data: DashboardV2Response | undefined): string {
-  if (!data) return 'Cargando datos...'
+function getFinancialContext(data: DashboardV2Response | undefined, t: (key: string) => string): string {
+  if (!data) return t('dashboard.loading')
   const tasa = data.resumen_financiero?.tasa_ahorro ?? 0
-  if (tasa > 20) return 'Excelente ritmo'
-  if (tasa > 10) return 'Todo bajo control'
-  if (tasa > 0) return 'Puedes mejorar'
-  return 'Revisa tus gastos'
+  if (tasa > 20) return t('dashboard.excellentPace')
+  if (tasa > 10) return t('dashboard.underControl')
+  if (tasa > 0) return t('dashboard.canImprove')
+  return t('dashboard.reviewExpenses')
 }
 
 function getInitialPeriod(): { mes: number; year: number } {
@@ -88,7 +88,7 @@ export function DashboardPage(): JSX.Element {
         >
           <AlertCircle size={18} className="flex-shrink-0" />
           <p className="text-sm">
-            {(error as Error)?.message ?? 'Error al cargar el dashboard. Intenta de nuevo.'}
+            {(error as Error)?.message ?? t('dashboard.errorLoading')}
           </p>
         </div>
       )}
@@ -97,10 +97,10 @@ export function DashboardPage(): JSX.Element {
       <div className="flex flex-col gap-4 mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] dark:text-white mb-1 leading-tight" data-testid="dashboard-greeting">
-            {getGreeting()}, {firstName}
+            {getGreeting(t)}, {firstName}
           </h1>
           <p className="text-[var(--text-muted)] dark:text-white/50 text-sm">
-            {getWeekContext()} · {getFinancialContext(data)}
+            {getWeekContext(t)} · {getFinancialContext(data, t)}
           </p>
         </div>
 
