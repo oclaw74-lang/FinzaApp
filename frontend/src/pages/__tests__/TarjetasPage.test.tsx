@@ -23,6 +23,11 @@ vi.mock('@/hooks/useCatalogos', () => ({
   usePaises: vi.fn(),
 }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
+vi.mock('@/store/authStore', () => ({
+  useAuthStore: vi.fn(() => ({
+    user: { user_metadata: { pais_codigo: 'DO' } },
+  })),
+}))
 
 import {
   useTarjetas,
@@ -36,7 +41,7 @@ import {
   useEliminarMovimiento,
 } from '@/hooks/useMovimientosTarjeta'
 import { useCategorias } from '@/hooks/useCategorias'
-import { useBancos } from '@/hooks/useCatalogos'
+import { useBancos, usePaises } from '@/hooks/useCatalogos'
 
 // ─── Mock data ─────────────────────────────────────────────────────────────────
 
@@ -126,6 +131,14 @@ function setupMocks(
     isLoading: false,
     isError: false,
   } as ReturnType<typeof useBancos>)
+  vi.mocked(usePaises).mockReturnValue({
+    data: [
+      { codigo: 'DO', nombre: 'República Dominicana', moneda_codigo: 'DOP', activo: true },
+      { codigo: 'US', nombre: 'Estados Unidos', moneda_codigo: 'USD', activo: true },
+    ],
+    isLoading: false,
+    isError: false,
+  } as ReturnType<typeof usePaises>)
   return { mutateAsync }
 }
 
