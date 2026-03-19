@@ -389,7 +389,7 @@ def test_get_estado_estructura():
         "updated_at": "2026-03-09T00:00:00+00:00",
         "categorias": {"nombre": "Alimentacion"},
     }
-    egreso_rows = [{"monto": "1500.00"}, {"monto": "500.00"}]
+    egreso_rows = [{"monto": "1500.00", "categoria_id": "cat-0001"}, {"monto": "500.00", "categoria_id": "cat-0001"}]
 
     mock_presupuestos_response = MagicMock()
     mock_presupuestos_response.data = [presupuesto_row]
@@ -449,7 +449,7 @@ def test_get_estado_alerta_true_when_porcentaje_gte_80():
         "categorias": {"nombre": "Entretenimiento"},
     }
     # gasto = 900 sobre limite 1000 => 90% => alerta True
-    egreso_rows = [{"monto": "500.00"}, {"monto": "400.00"}]
+    egreso_rows = [{"monto": "500.00", "categoria_id": "cat-0002"}, {"monto": "400.00", "categoria_id": "cat-0002"}]
 
     mock_presupuestos_response = MagicMock()
     mock_presupuestos_response.data = [presupuesto_row]
