@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NotificacionesPage } from '@/pages/NotificacionesPage'
 import type { NotificacionData } from '@/hooks/useNotificaciones'
@@ -49,12 +49,12 @@ function setupMocks(notificaciones: NotificacionData[] = []) {
     data: notificaciones,
     isLoading: false,
     isError: false,
-  } as ReturnType<typeof useNotificaciones>)
+  } as unknown as ReturnType<typeof useNotificaciones>)
 
-  vi.mocked(useMarcarLeida).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useMarcarLeida>)
-  vi.mocked(useMarcarTodasLeidas).mockReturnValue({ mutate, mutateAsync, isPending: false } as ReturnType<typeof useMarcarTodasLeidas>)
-  vi.mocked(useEliminarNotificacion).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useEliminarNotificacion>)
-  vi.mocked(useGenerarNotificaciones).mockReturnValue({ mutate, isPending: false } as ReturnType<typeof useGenerarNotificaciones>)
+  vi.mocked(useMarcarLeida).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useMarcarLeida>)
+  vi.mocked(useMarcarTodasLeidas).mockReturnValue({ mutate, mutateAsync, isPending: false } as unknown as ReturnType<typeof useMarcarTodasLeidas>)
+  vi.mocked(useEliminarNotificacion).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useEliminarNotificacion>)
+  vi.mocked(useGenerarNotificaciones).mockReturnValue({ mutate, isPending: false } as unknown as ReturnType<typeof useGenerarNotificaciones>)
 
   return { mutate, mutateAsync }
 }
@@ -108,11 +108,11 @@ describe('NotificacionesPage', () => {
       data: [],
       isLoading: true,
       isError: false,
-    } as ReturnType<typeof useNotificaciones>)
-    vi.mocked(useMarcarLeida).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as ReturnType<typeof useMarcarLeida>)
-    vi.mocked(useMarcarTodasLeidas).mockReturnValue({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false } as ReturnType<typeof useMarcarTodasLeidas>)
-    vi.mocked(useEliminarNotificacion).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as ReturnType<typeof useEliminarNotificacion>)
-    vi.mocked(useGenerarNotificaciones).mockReturnValue({ mutate: vi.fn(), isPending: false } as ReturnType<typeof useGenerarNotificaciones>)
+    } as unknown as ReturnType<typeof useNotificaciones>)
+    vi.mocked(useMarcarLeida).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as unknown as ReturnType<typeof useMarcarLeida>)
+    vi.mocked(useMarcarTodasLeidas).mockReturnValue({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false } as unknown as ReturnType<typeof useMarcarTodasLeidas>)
+    vi.mocked(useEliminarNotificacion).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as unknown as ReturnType<typeof useEliminarNotificacion>)
+    vi.mocked(useGenerarNotificaciones).mockReturnValue({ mutate: vi.fn(), isPending: false } as unknown as ReturnType<typeof useGenerarNotificaciones>)
 
     render(<NotificacionesPage />)
     // Should not show page content while loading

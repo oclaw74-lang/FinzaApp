@@ -27,12 +27,12 @@ function setupMocks(resumen: Partial<SuscripcionResumen> | null = null, loading 
   vi.mocked(useSuscripcionesResumen).mockReturnValue({
     data: resumen ?? undefined,
     isLoading: loading,
-  } as ReturnType<typeof useSuscripcionesResumen>)
-  vi.mocked(useCreateSuscripcion).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useCreateSuscripcion>)
-  vi.mocked(useUpdateSuscripcion).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useUpdateSuscripcion>)
-  vi.mocked(useDeleteSuscripcion).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useDeleteSuscripcion>)
-  vi.mocked(useDetectarSuscripciones).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useDetectarSuscripciones>)
-  vi.mocked(useConfirmarDetectadas).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useConfirmarDetectadas>)
+  } as unknown as ReturnType<typeof useSuscripcionesResumen>)
+  vi.mocked(useCreateSuscripcion).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useCreateSuscripcion>)
+  vi.mocked(useUpdateSuscripcion).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useUpdateSuscripcion>)
+  vi.mocked(useDeleteSuscripcion).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useDeleteSuscripcion>)
+  vi.mocked(useDetectarSuscripciones).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useDetectarSuscripciones>)
+  vi.mocked(useConfirmarDetectadas).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useConfirmarDetectadas>)
 }
 
 const mockResumen: SuscripcionResumen = {
@@ -46,7 +46,7 @@ const mockResumen: SuscripcionResumen = {
 }
 
 describe('SuscripcionesPage', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('renders page title', () => {
     setupMocks()

@@ -30,7 +30,7 @@ import { useTranslation } from 'react-i18next'
 import i18n from '@/i18n'
 import { Avatar } from '@/components/ui/avatar'
 import { useQuery } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import { apiClient as api } from '@/lib/api'
 
 interface NavItemDef {
   to: string

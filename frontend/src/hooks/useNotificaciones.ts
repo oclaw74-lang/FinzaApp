@@ -3,7 +3,7 @@ import { apiClient } from '@/lib/api'
 
 export interface NotificacionData {
   id: string
-  tipo: 'urgente' | 'informativa' | 'logro'
+  tipo: 'urgente' | 'informativa' | 'logro' | 'advertencia'
   categoria: string
   titulo: string
   mensaje: string

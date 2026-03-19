@@ -21,11 +21,11 @@ import {
 
 function setupMocks(fondo: null | object = null, loading = false) {
   const mutateAsync = vi.fn().mockResolvedValue({})
-  vi.mocked(useFondoEmergencia).mockReturnValue({ data: fondo ?? undefined, isLoading: loading } as ReturnType<typeof useFondoEmergencia>)
-  vi.mocked(useCreateFondoEmergencia).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useCreateFondoEmergencia>)
-  vi.mocked(useUpdateFondoEmergencia).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useUpdateFondoEmergencia>)
-  vi.mocked(useDepositarFondo).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useDepositarFondo>)
-  vi.mocked(useRetirarFondo).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useRetirarFondo>)
+  vi.mocked(useFondoEmergencia).mockReturnValue({ data: fondo ?? undefined, isLoading: loading } as unknown as ReturnType<typeof useFondoEmergencia>)
+  vi.mocked(useCreateFondoEmergencia).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useCreateFondoEmergencia>)
+  vi.mocked(useUpdateFondoEmergencia).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useUpdateFondoEmergencia>)
+  vi.mocked(useDepositarFondo).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useDepositarFondo>)
+  vi.mocked(useRetirarFondo).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useRetirarFondo>)
   return { mutateAsync }
 }
 
@@ -40,7 +40,7 @@ const mockFondo = {
 }
 
 describe('FondoEmergenciaPage', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('renders page title', () => {
     setupMocks()

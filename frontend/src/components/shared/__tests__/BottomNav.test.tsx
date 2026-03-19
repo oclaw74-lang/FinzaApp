@@ -23,7 +23,7 @@ vi.mock('react-router-dom', () => ({
 }))
 
 describe('BottomNav', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('renders the nav element', () => {
     render(<BottomNav />)

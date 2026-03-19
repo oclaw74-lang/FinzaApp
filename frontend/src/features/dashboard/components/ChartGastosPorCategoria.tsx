@@ -53,7 +53,7 @@ export function ChartGastosPorCategoria({ data }: Props): JSX.Element {
               fontSize: '13px',
               color: 'var(--text-primary)',
             }}
-            formatter={(v: number) => [`$${v.toLocaleString('es-DO')}`, 'Total']}
+            formatter={(v) => [`${(v as number)?.toLocaleString('es-DO')}`, 'Total']}
           />
           <Bar dataKey="total" radius={[0, 6, 6, 0]} maxBarSize={28}>
             {chartData.map((entry, index) => (

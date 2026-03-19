@@ -46,8 +46,7 @@ const REDES_PAGO: { value: Tarjeta['red']; label: string }[] = [
   { value: 'otro', label: 'OTRO' },
 ]
 
-// Pais por defecto — República Dominicana
-const DEFAULT_PAIS_CODIGO = 'DO'
+// Pais por defecto — República Dominicana
 
 // ─── Zod schema ────────────────────────────────────────────────────────────────
 

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { StatsBar } from '@/components/shared/StatsBar'
 import type { DashboardV2Response } from '@/types/dashboard'
