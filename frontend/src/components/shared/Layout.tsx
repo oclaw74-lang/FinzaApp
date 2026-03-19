@@ -6,21 +6,18 @@ import { StatsBar } from './StatsBar'
 import { CommandPalette } from './CommandPalette'
 import { BottomNav } from './BottomNav'
 import { useUiStore } from '@/store/uiStore'
-import { useProfile } from '@/hooks/useProfile'
-import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard'
+import { useGenerarNotificaciones } from '@/hooks/useNotificaciones'
 import { cn } from '@/lib/utils'
 
 export function Layout(): JSX.Element {
   const { sidebarCollapsed } = useUiStore()
-  const { data: profile } = useProfile()
-  const [showOnboarding, setShowOnboarding] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  const generarNotificaciones = useGenerarNotificaciones()
 
+  // Evaluate notification triggers once per session on app load
   useEffect(() => {
-    if (profile && profile.onboarding_completed === false) {
-      setShowOnboarding(true)
-    }
-  }, [profile])
+    generarNotificaciones.mutate()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Cursor glow mouse handler
   useEffect(() => {
@@ -81,10 +78,6 @@ export function Layout(): JSX.Element {
         isOpen={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
       />
-
-      {showOnboarding && (
-        <OnboardingWizard onComplete={() => setShowOnboarding(false)} />
-      )}
     </div>
   )
 }

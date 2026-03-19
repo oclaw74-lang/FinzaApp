@@ -300,10 +300,10 @@ const en = {
   onboarding: {
     bienvenido: 'Welcome to Finza!',
     subtitulo: 'We help you manage your finances in minutes',
-    paso1: 'Welcome',
+    paisSubtitulo: 'Select your country to set your currency',
+    paso1: 'Country & currency',
     paso2: 'Your profile',
-    paso3: 'First transaction',
-    paso4: 'Done!',
+    paso3: 'Done!',
     salarioLabel: 'Monthly net salary (optional)',
     salarioHint: 'We use this to calculate how many work hours each expense costs',
     omitir: 'Skip',

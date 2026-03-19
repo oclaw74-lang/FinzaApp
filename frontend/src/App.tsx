@@ -14,6 +14,7 @@ import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+import { OnboardingPage } from '@/pages/OnboardingPage'
 import { IngresosPage } from '@/pages/IngresosPage'
 import { EgresosPage } from '@/pages/EgresosPage'
 import { PrestamosPage } from '@/pages/PrestamosPage'
@@ -91,6 +92,7 @@ export function App(): JSX.Element {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route element={<ProtectedRoute />}>
+              <Route path="/onboarding" element={<OnboardingPage />} />
               <Route element={<Layout />}>
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/ingresos" element={<IngresosPage />} />

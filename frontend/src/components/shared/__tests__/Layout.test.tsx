@@ -23,11 +23,6 @@ vi.mock('@/components/shared/CommandPalette', () => ({
 vi.mock('@/components/shared/BottomNav', () => ({
   BottomNav: () => <div data-testid="bottom-nav" />,
 }))
-vi.mock('@/components/onboarding/OnboardingWizard', () => ({
-  OnboardingWizard: ({ onComplete }: { onComplete: () => void }) => (
-    <div data-testid="onboarding-wizard" onClick={onComplete} />
-  ),
-}))
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom')
   return { ...actual, Outlet: () => <div data-testid="outlet" /> }
@@ -36,19 +31,18 @@ vi.mock('react-router-dom', async () => {
 vi.mock('@/store/uiStore', () => ({
   useUiStore: vi.fn(),
 }))
-vi.mock('@/hooks/useProfile', () => ({
-  useProfile: vi.fn(),
+vi.mock('@/hooks/useNotificaciones', () => ({
+  useGenerarNotificaciones: vi.fn(() => ({
+    mutate: vi.fn(),
+  })),
 }))
 
 import { useUiStore } from '@/store/uiStore'
-import { useProfile } from '@/hooks/useProfile'
 
 function setupMocks({
   sidebarCollapsed = false,
-  profile = null,
 }: {
   sidebarCollapsed?: boolean
-  profile?: { onboarding_completed?: boolean } | null
 } = {}) {
   vi.mocked(useUiStore).mockReturnValue({
     sidebarCollapsed,
@@ -56,12 +50,6 @@ function setupMocks({
     sidebarOpen: false,
     setSidebarOpen: vi.fn(),
   } as ReturnType<typeof useUiStore>)
-
-  vi.mocked(useProfile).mockReturnValue({
-    data: profile,
-    isLoading: false,
-    error: null,
-  } as ReturnType<typeof useProfile>)
 }
 
 function renderLayout() {
@@ -117,16 +105,9 @@ describe('Layout', () => {
     expect(screen.getByTestId('outlet')).toBeInTheDocument()
   })
 
-  it('does not show onboarding when profile is null', () => {
-    setupMocks({ profile: null })
+  it('does not render onboarding wizard (moved to route)', () => {
     renderLayout()
     expect(screen.queryByTestId('onboarding-wizard')).not.toBeInTheDocument()
-  })
-
-  it('shows onboarding when onboarding_completed is false', () => {
-    setupMocks({ profile: { onboarding_completed: false } })
-    renderLayout()
-    expect(screen.getByTestId('onboarding-wizard')).toBeInTheDocument()
   })
 
   it('applies collapsed margin class when sidebarCollapsed is true', () => {
