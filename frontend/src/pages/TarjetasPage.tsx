@@ -112,15 +112,72 @@ function getCardGradient(red: Tarjeta['red'], tipo: Tarjeta['tipo'], color: stri
   return gradients[red]
 }
 
-function getRedLabel(red: Tarjeta['red']): string {
-  const labels: Record<Tarjeta['red'], string> = {
-    visa: 'VISA',
-    mastercard: 'MC',
-    amex: 'AMEX',
-    discover: 'DISC',
-    otro: '',
+function NetworkLogo({ red }: { red: Tarjeta['red'] }): JSX.Element | null {
+  if (red === 'visa') {
+    return (
+      <svg width="52" height="18" viewBox="0 0 52 18" aria-label="Visa" fill="none">
+        <text
+          x="2" y="15"
+          fontFamily="'Times New Roman', Georgia, serif"
+          fontStyle="italic"
+          fontWeight="900"
+          fontSize="18"
+          fill="white"
+          letterSpacing="-0.5"
+        >VISA</text>
+      </svg>
+    )
   }
-  return labels[red]
+  if (red === 'mastercard') {
+    return (
+      <svg width="42" height="26" viewBox="0 0 42 26" aria-label="Mastercard">
+        <circle cx="15" cy="13" r="13" fill="#EB001B" />
+        <circle cx="27" cy="13" r="13" fill="#F79E1B" />
+        <path
+          d="M21 4.8a13 13 0 0 1 0 16.4A13 13 0 0 1 21 4.8z"
+          fill="#FF5F00"
+        />
+      </svg>
+    )
+  }
+  if (red === 'amex') {
+    return (
+      <svg width="62" height="30" viewBox="0 0 62 30" aria-label="American Express" fill="none">
+        <text
+          x="1" y="13"
+          fontFamily="'Arial', sans-serif"
+          fontWeight="700"
+          fontSize="12"
+          fill="white"
+          letterSpacing="0.5"
+        >AMERICAN</text>
+        <text
+          x="1" y="27"
+          fontFamily="'Arial', sans-serif"
+          fontWeight="700"
+          fontSize="12"
+          fill="white"
+          letterSpacing="1.5"
+        >EXPRESS</text>
+      </svg>
+    )
+  }
+  if (red === 'discover') {
+    return (
+      <svg width="72" height="20" viewBox="0 0 72 20" aria-label="Discover" fill="none">
+        <text
+          x="1" y="15"
+          fontFamily="'Arial', sans-serif"
+          fontWeight="700"
+          fontSize="13"
+          fill="white"
+          letterSpacing="0.5"
+        >DISCOVER</text>
+        <circle cx="66" cy="10" r="9" fill="#F76F20" />
+      </svg>
+    )
+  }
+  return null
 }
 
 interface CardVisualProps {
@@ -176,7 +233,7 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
         aria-hidden="true"
       />
 
-      {/* Row 1: Chip (izq) + Red label (der) */}
+      {/* Row 1: Chip (izq) + Red logo (der) */}
       <div className="flex items-start justify-between">
         <svg width="38" height="28" viewBox="0 0 40 30" aria-hidden="true">
           <rect x="2" y="2" width="36" height="26" rx="4" fill="#d4a017" stroke="#b8860b" strokeWidth="0.5" />
@@ -185,23 +242,11 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
           <rect x="8" y="2" width="2" height="26" fill="#b8860b" opacity="0.4" />
           <rect x="30" y="2" width="2" height="26" fill="#b8860b" opacity="0.4" />
         </svg>
-        <div className="text-right">
+        <div className="text-right flex flex-col items-end gap-1">
           <p className="font-semibold" style={{ fontSize: '11px', opacity: 0.9, letterSpacing: '0.05em' }}>
             {isCredit ? 'Credito' : 'Debito'}
           </p>
-          {getRedLabel(tarjeta.red) && (
-            <p
-              className="font-bold tracking-widest"
-              style={{
-                fontSize: tarjeta.red === 'mastercard' ? '9px' : '11px',
-                opacity: 0.85,
-                marginTop: '2px',
-                fontStyle: tarjeta.red === 'visa' ? 'italic' : 'normal',
-              }}
-            >
-              {getRedLabel(tarjeta.red)}
-            </p>
-          )}
+          <NetworkLogo red={tarjeta.red} />
         </div>
       </div>
 
@@ -497,14 +542,22 @@ function RedSelector({ value, onChange }: RedSelectorProps): JSX.Element {
             type="button"
             onClick={() => onChange(red.value)}
             className={cn(
-              'px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-all duration-150',
+              'px-3 py-2 rounded-lg border-2 transition-all duration-150 flex items-center justify-center',
+              'min-w-[64px] min-h-[36px]',
               value === red.value
-                ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]'
-                : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--accent)]/40'
+                ? 'border-[var(--accent)] bg-[var(--accent)]/10'
+                : 'border-[var(--border)] hover:border-[var(--accent)]/40'
             )}
             aria-pressed={value === red.value}
+            title={red.label}
           >
-            {red.label}
+            {red.value !== 'otro' ? (
+              <span style={{ filter: value === red.value ? 'none' : 'grayscale(0.4) opacity(0.7)' }}>
+                <NetworkLogo red={red.value} />
+              </span>
+            ) : (
+              <span className="text-xs font-semibold text-[var(--text-muted)]">OTRO</span>
+            )}
           </button>
         ))}
       </div>
