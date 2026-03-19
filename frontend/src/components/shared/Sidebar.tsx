@@ -20,6 +20,7 @@ import {
   Sun,
   Moon,
   Languages,
+  MessageSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUiStore } from '@/store/uiStore'
@@ -71,6 +72,7 @@ const navGroups: NavGroup[] = [
       { to: '/retos', icon: Trophy, labelKey: 'nav.retos' },
       { to: '/educacion', icon: BookOpen, labelKey: 'nav.educacion' },
       { to: '/configuracion', icon: Settings, labelKey: 'nav.configuracion' },
+      { to: '/survey', icon: MessageSquare, labelKey: 'nav.survey' },
     ],
   },
 ]
@@ -98,9 +100,9 @@ function NavItem({
           'group relative flex items-center gap-3 rounded-xl mb-0.5 text-sm font-medium transition-all duration-150',
           collapsed ? 'justify-center w-11 h-11 mx-auto' : 'px-3 py-2.5',
           isActive
-            ? 'text-white sidebar-item-active dark:text-[#3d8ef8] dark:nav-active'
+            ? 'text-[var(--accent)] sidebar-item-active'
             : [
-                'text-white/45 hover:text-white/90',
+                'text-slate-500 hover:text-slate-700 hover:bg-slate-100',
                 'dark:text-[#657a9e] dark:hover:text-[#e8f0ff] dark:hover:bg-white/[0.05]',
               ].join(' ')
         )
@@ -119,7 +121,7 @@ function NavItem({
           <span
             className={cn(
               'transition-all duration-150 rounded-lg',
-              !isActive && !collapsed && 'dark:bg-white/[0.04] p-1 -m-1'
+              !isActive && !collapsed && 'bg-slate-100 dark:bg-white/[0.04] p-1 -m-1'
             )}
             style={
               isActive
@@ -133,8 +135,7 @@ function NavItem({
           {/* Hover glow */}
           {!isActive && (
             <span
-              className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-              style={{ background: 'rgba(255,255,255,0.04)' }}
+              className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-slate-900/[0.03] dark:bg-white/[0.04]"
             />
           )}
         </>
@@ -181,17 +182,14 @@ export function Sidebar(): JSX.Element {
           'fixed top-0 left-0 h-full z-30 flex flex-col transition-all duration-300 ease-in-out',
           sidebarCollapsed ? 'w-[72px]' : 'w-64',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
-          'dark:backdrop-blur-2xl dark:border-r dark:border-white/[0.06]'
+          'bg-white dark:bg-gradient-to-b dark:from-[#0F1923] dark:via-[#121e2d] dark:to-[#0f1923]',
+          'border-r border-slate-200 dark:border-white/[0.06]',
+          'dark:backdrop-blur-2xl'
         )}
-        style={{
-          background: 'linear-gradient(180deg, #0F1923 0%, #121e2d 60%, #0f1923 100%)',
-          borderRight: '1px solid rgba(255,255,255,0.06)',
-        }}
       >
         {/* Logo area */}
         <div
-          className="flex items-center h-16 px-3 justify-between"
-          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+          className="flex items-center h-16 px-3 justify-between border-b border-slate-200 dark:border-white/[0.06]"
         >
           {/* Logo — clickeable para expandir cuando colapsado */}
           <button
@@ -201,7 +199,7 @@ export function Sidebar(): JSX.Element {
               'flex items-center gap-2.5 min-w-0',
               sidebarCollapsed ? 'cursor-pointer' : 'cursor-default pointer-events-none'
             )}
-            aria-label={sidebarCollapsed ? 'Expandir sidebar' : undefined}
+            aria-label={sidebarCollapsed ? t('nav.expandSidebar') : undefined}
             tabIndex={sidebarCollapsed ? 0 : -1}
           >
             <div className="w-9 h-9 shrink-0 flex items-center justify-center">
@@ -212,15 +210,7 @@ export function Sidebar(): JSX.Element {
               />
             </div>
             {!sidebarCollapsed && (
-              <span
-                className="font-bold text-lg tracking-tight truncate"
-                style={{
-                  background: 'linear-gradient(135deg, #ffffff, #a0b4cc)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
+              <span className="font-bold text-lg tracking-tight truncate text-slate-800 dark:bg-gradient-to-br dark:from-white dark:to-[#a0b4cc] dark:bg-clip-text dark:text-transparent">
                 Finza
               </span>
             )}
@@ -231,8 +221,8 @@ export function Sidebar(): JSX.Element {
             {/* Mobile close */}
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-white/50 hover:text-white transition-colors p-1"
-              aria-label="Cerrar menu"
+              className="lg:hidden text-slate-500 dark:text-white/50 hover:text-slate-800 dark:hover:text-white transition-colors p-1"
+              aria-label={t('nav.closeMenu')}
             >
               <X size={18} />
             </button>
@@ -242,15 +232,15 @@ export function Sidebar(): JSX.Element {
               <button
                 onClick={() => setSidebarCollapsed(true)}
                 className={cn(
-                  'hidden lg:flex items-center justify-center text-white/30 rounded-[7px]',
+                  'hidden lg:flex items-center justify-center rounded-[7px]',
                   'transition-all duration-150',
-                  'hover:text-white/80 hover:bg-white/10',
-                  'dark:bg-white/[0.05] dark:border dark:border-white/[0.06]',
+                  'text-slate-400 hover:text-slate-700 hover:bg-slate-100',
+                  'dark:text-white/30 dark:bg-white/[0.05] dark:border dark:border-white/[0.06]',
                   'dark:hover:bg-[#3d8ef8]/20 dark:hover:text-[#3d8ef8]'
                 )}
                 style={{ width: 26, height: 26 }}
-                aria-label="Colapsar sidebar"
-                title="Colapsar sidebar"
+                aria-label={t('nav.collapseSidebar')}
+                title={t('nav.collapseSidebar')}
               >
                 <ChevronLeft size={15} />
               </button>
@@ -265,7 +255,7 @@ export function Sidebar(): JSX.Element {
               {/* Section label — hidden when collapsed */}
               {!sidebarCollapsed && (
                 <p
-                  className="text-[10px] font-semibold tracking-widest text-white/30 px-3 mt-4 mb-1"
+                  className="text-[10px] font-semibold tracking-widest text-slate-400 dark:text-white/30 px-3 mt-4 mb-1"
                   aria-label={`Seccion ${group.label}`}
                 >
                   {group.label}
@@ -288,8 +278,8 @@ export function Sidebar(): JSX.Element {
         <div className="mx-2 mb-2 flex items-center gap-1.5">
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium text-white/50 hover:text-white/80 hover:bg-white/[0.06] transition-colors"
-            title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 dark:text-white/50 hover:text-slate-800 dark:hover:text-white/80 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+            title={theme === 'dark' ? t('settings.lightMode') : t('settings.darkMode')}
           >
             {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
             {!sidebarCollapsed && <span>{theme === 'dark' ? 'Claro' : 'Oscuro'}</span>}
@@ -300,8 +290,8 @@ export function Sidebar(): JSX.Element {
               setLanguage(newLang)
               i18n.changeLanguage(newLang)
             }}
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium text-white/50 hover:text-white/80 hover:bg-white/[0.06] transition-colors"
-            title="Cambiar idioma"
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 dark:text-white/50 hover:text-slate-800 dark:hover:text-white/80 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+            title={t('settings.changeLanguage')}
           >
             <Languages size={13} />
             {!sidebarCollapsed && <span>{language === 'es' ? 'EN' : 'ES'}</span>}
@@ -311,23 +301,22 @@ export function Sidebar(): JSX.Element {
         {/* User section */}
         <div
           className={cn(
-            'p-3',
+            'p-3 border-t border-slate-200 dark:border-white/[0.06]',
             sidebarCollapsed ? 'flex flex-col items-center gap-2' : ''
           )}
-          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
         >
           {!sidebarCollapsed ? (
             <div className="flex items-center gap-3">
               <Avatar name={userName} size="sm" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white/90 dark:text-[#e8f0ff]/90 truncate">
+                <p className="text-sm font-medium text-slate-800 dark:text-[#e8f0ff]/90 truncate">
                   {userName}
                 </p>
-                <p className="text-xs text-white/40 dark:text-[#657a9e] truncate">{user?.email}</p>
+                <p className="text-xs text-slate-500 dark:text-[#657a9e] truncate">{user?.email}</p>
               </div>
               <button
                 onClick={handleSignOut}
-                className="text-white/30 hover:text-red-400 dark:hover:text-[#ff4060] transition-colors p-1.5 rounded-lg hover:bg-red-500/10 dark:hover:bg-[#ff4060]/10"
+                className="text-slate-400 dark:text-white/30 hover:text-red-500 dark:hover:text-[#ff4060] transition-colors p-1.5 rounded-lg hover:bg-red-500/10 dark:hover:bg-[#ff4060]/10"
                 title={t('auth.logout')}
                 aria-label={t('auth.logout')}
               >
@@ -339,7 +328,7 @@ export function Sidebar(): JSX.Element {
               <Avatar name={userName} size="sm" />
               <button
                 onClick={handleSignOut}
-                className="text-white/30 hover:text-red-400 dark:hover:text-[#ff4060] transition-colors p-1.5 rounded-lg hover:bg-red-500/10 dark:hover:bg-[#ff4060]/10"
+                className="text-slate-400 dark:text-white/30 hover:text-red-500 dark:hover:text-[#ff4060] transition-colors p-1.5 rounded-lg hover:bg-red-500/10 dark:hover:bg-[#ff4060]/10"
                 title={t('auth.logout')}
                 aria-label={t('auth.logout')}
               >

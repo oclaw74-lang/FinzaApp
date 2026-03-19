@@ -124,14 +124,13 @@ export function BottomNav(): JSX.Element {
       <QuickActionSheet isOpen={sheetOpen} onClose={() => setSheetOpen(false)} />
 
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-30 h-16 flex items-center justify-around px-2"
-        style={{
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          background: 'rgba(255,255,255,0.95)',
-          borderTop: '1px solid rgba(0,0,0,0.08)',
-        }}
-        aria-label="Navegacion principal"
+        className={cn(
+          'md:hidden fixed bottom-0 left-0 right-0 z-30 h-16 flex items-center justify-around px-2',
+          'backdrop-blur-xl',
+          'bg-white/95 dark:bg-[rgba(4,8,15,0.95)]',
+          'border-t border-black/[0.08] dark:border-white/[0.06]'
+        )}
+        aria-label={t('nav.mainNav')}
       >
         {/* First two items */}
         {NAV_ITEMS.slice(0, 2).map((item) => (
@@ -208,16 +207,6 @@ export function BottomNav(): JSX.Element {
           </NavLink>
         ))}
       </nav>
-
-      {/* Dark mode bottom nav */}
-      <style>{`
-        @media (max-width: 767px) {
-          .dark nav[aria-label="Navegacion principal"] {
-            background: rgba(4,8,15,0.95) !important;
-            border-top-color: rgba(255,255,255,0.06) !important;
-          }
-        }
-      `}</style>
     </>
   )
 }
