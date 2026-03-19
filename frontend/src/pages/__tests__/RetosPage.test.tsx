@@ -57,17 +57,17 @@ function setupMocks({
     data: misRetos,
     isLoading: loadingMisRetos,
     isError: false,
-  } as ReturnType<typeof useMisRetos>)
+  } as unknown as ReturnType<typeof useMisRetos>)
 
   vi.mocked(useCatalogoRetos).mockReturnValue({
     data: catalogo,
     isLoading: loadingCatalogo,
     isError: false,
-  } as ReturnType<typeof useCatalogoRetos>)
+  } as unknown as ReturnType<typeof useCatalogoRetos>)
 
-  vi.mocked(useAceptarReto).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useAceptarReto>)
-  vi.mocked(useCheckinReto).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useCheckinReto>)
-  vi.mocked(useAbandonarReto).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useAbandonarReto>)
+  vi.mocked(useAceptarReto).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useAceptarReto>)
+  vi.mocked(useCheckinReto).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useCheckinReto>)
+  vi.mocked(useAbandonarReto).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useAbandonarReto>)
 
   return { mutateAsync }
 }

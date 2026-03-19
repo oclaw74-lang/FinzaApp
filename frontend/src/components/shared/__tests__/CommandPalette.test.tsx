@@ -13,7 +13,7 @@ Element.prototype.scrollIntoView = vi.fn()
 describe('CommandPalette', () => {
   const onClose = vi.fn()
 
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('renders nothing when isOpen is false', () => {
     const { container } = render(<CommandPalette isOpen={false} onClose={onClose} />)

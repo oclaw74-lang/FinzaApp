@@ -176,7 +176,7 @@ export function RecurrentesPage(): JSX.Element {
                       {recurrente.descripcion}
                     </p>
                     <Badge
-                      variant="secondary"
+                      variant="neutral"
                       className="text-[10px]"
                       style={{
                         background: recurrente.tipo === 'ingreso' ? 'var(--income)' : 'var(--expense)',
@@ -185,7 +185,7 @@ export function RecurrentesPage(): JSX.Element {
                     >
                       {t(`recurrentes.tipo.${recurrente.tipo}`)}
                     </Badge>
-                    <Badge variant="outline" className="text-[10px]">
+                    <Badge variant="neutral" className="text-[10px]">
                       {t(`recurrentes.frecuencia.${recurrente.frecuencia}`)}
                     </Badge>
                   </div>
@@ -223,7 +223,7 @@ export function RecurrentesPage(): JSX.Element {
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium text-sm text-[var(--text-primary)] truncate">{r.descripcion}</p>
                     <Badge
-                      variant="secondary"
+                      variant="neutral"
                       className="text-[10px]"
                       style={{
                         background: r.tipo === 'ingreso' ? 'var(--income)' : 'var(--expense)',

@@ -31,6 +31,7 @@ export interface RecurrenteCreate {
   dia_del_mes?: number | null
   fecha_inicio: string
   fecha_fin?: string | null
+  activo?: boolean
 }
 
 export type RecurrenteUpdate = Partial<RecurrenteCreate>
