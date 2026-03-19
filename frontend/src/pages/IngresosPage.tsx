@@ -169,7 +169,7 @@ export function IngresosPage(): JSX.Element {
       {/* Table card */}
       <div className="finza-card dark:bg-[rgba(8,15,30,0.6)] dark:backdrop-blur-xl dark:border-white/[0.06] p-0 overflow-hidden">
         {/* Filters bar */}
-        <div className="p-3 sm:p-4 border-b border-[var(--border)] space-y-2 sm:space-y-0">
+        <div className="p-3 sm:p-4 border-b border-[var(--border)] space-y-3">
           {/* Top row: selects + button */}
           <div className="flex flex-wrap items-center gap-2">
             <div>

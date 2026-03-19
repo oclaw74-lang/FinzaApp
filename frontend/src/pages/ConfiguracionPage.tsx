@@ -406,15 +406,30 @@ export function ConfiguracionPage(): JSX.Element {
     toast.success(t('settings.languageSaved'))
   }
 
-  const handleSaveFinances = async () => {
+  const handleSaveAll = async () => {
     try {
+      // Save profile metadata (name, phone, currency, country)
+      const profileData = profileForm.getValues()
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          full_name: profileData.fullName,
+          phone: profileData.phone,
+          currency: profileData.currency,
+          country: profileData.country,
+        },
+      })
+      if (error) {
+        toast.error(error.message)
+        return
+      }
+      // Save finances (salary + work hours)
       await updateProfile.mutateAsync({
         salario_mensual_neto: salarioValue ? parseFloat(salarioValue) : undefined,
         mostrar_horas_trabajo: mostrarHoras,
       })
-      toast.success(t('profile.saved'))
+      toast.success(t('settings.profileSaved'))
     } catch {
-      toast.error('Error al guardar perfil financiero')
+      toast.error(t('common.error'))
     }
   }
 
@@ -506,7 +521,7 @@ export function ConfiguracionPage(): JSX.Element {
             </div>
           </div>
 
-          <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
+          <form className="space-y-4">
             <Input
               label={t('settings.fullName')}
               placeholder="Juan Perez"
@@ -576,13 +591,6 @@ export function ConfiguracionPage(): JSX.Element {
               </div>
             </div>
 
-            <Button
-              type="submit"
-              isLoading={profileForm.formState.isSubmitting}
-              className="w-full"
-            >
-              {t('common.save')}
-            </Button>
           </form>
 
           {/* Finances section (salary + work hours) */}
@@ -631,15 +639,16 @@ export function ConfiguracionPage(): JSX.Element {
                 />
               </button>
             </div>
-
-            <Button
-              onClick={handleSaveFinances}
-              isLoading={updateProfile.isPending}
-              className="w-full"
-            >
-              {t('common.save')}
-            </Button>
           </div>
+
+          {/* Single save button for all profile + finances */}
+          <Button
+            onClick={handleSaveAll}
+            isLoading={profileForm.formState.isSubmitting || updateProfile.isPending}
+            className="w-full"
+          >
+            {t('common.save')}
+          </Button>
         </div>
       )}
 
