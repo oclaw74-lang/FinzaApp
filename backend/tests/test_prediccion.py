@@ -39,11 +39,12 @@ class TestPrediccionMes:
         assert "saldo_proyectado" in result
         assert "saldo_si_presupuesto" in result
         assert "es_negativa" in result
-        assert "sugerencia" in result
+        assert "sugerencia_tipo" in result
         assert "dias_restantes" in result
         assert "gasto_diario_promedio" in result
         assert isinstance(result["es_negativa"], bool)
-        assert isinstance(result["sugerencia"], str)
+        assert isinstance(result["sugerencia_tipo"], str)
+        assert result["sugerencia_tipo"] in ["reducir", "positivo", "negativo"]
 
     @patch("app.services.prediccion.get_user_client")
     def test_negative_projection_when_spending_exceeds_income(

@@ -408,7 +408,7 @@ def test_get_estado_estructura():
         else:
             # egresos
             (
-                m.select.return_value.eq.return_value.gte.return_value.lte.return_value.execute.return_value
+                m.select.return_value.gte.return_value.lte.return_value.execute.return_value
             ) = mock_egresos_response
         return m
 
@@ -467,7 +467,7 @@ def test_get_estado_alerta_true_when_porcentaje_gte_80():
             ) = mock_presupuestos_response
         else:
             (
-                m.select.return_value.eq.return_value.gte.return_value.lte.return_value.execute.return_value
+                m.select.return_value.gte.return_value.lte.return_value.execute.return_value
             ) = mock_egresos_response
         return m
 
