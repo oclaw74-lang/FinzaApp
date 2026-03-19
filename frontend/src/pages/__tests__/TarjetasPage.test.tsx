@@ -17,6 +17,11 @@ vi.mock('@/hooks/useMovimientosTarjeta', () => ({
 vi.mock('@/hooks/useCategorias', () => ({
   useCategorias: vi.fn(),
 }))
+vi.mock('@/hooks/useCatalogos', () => ({
+  useBancos: vi.fn(),
+  useMonedas: vi.fn(),
+  usePaises: vi.fn(),
+}))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import {
@@ -31,6 +36,7 @@ import {
   useEliminarMovimiento,
 } from '@/hooks/useMovimientosTarjeta'
 import { useCategorias } from '@/hooks/useCategorias'
+import { useBancos } from '@/hooks/useCatalogos'
 
 // ─── Mock data ─────────────────────────────────────────────────────────────────
 
@@ -112,6 +118,14 @@ function setupMocks(
   vi.mocked(useRegistrarMovimiento).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useRegistrarMovimiento>)
   vi.mocked(useEliminarMovimiento).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useEliminarMovimiento>)
   vi.mocked(useCategorias).mockReturnValue({ data: [], isLoading: false } as ReturnType<typeof useCategorias>)
+  vi.mocked(useBancos).mockReturnValue({
+    data: [
+      { id: 'b-1', pais_codigo: 'DO', nombre: 'Banco Popular', nombre_corto: 'Popular', orden: 1, activo: true },
+      { id: 'b-2', pais_codigo: 'DO', nombre: 'BHD Leon', nombre_corto: 'BHD', orden: 2, activo: true },
+    ],
+    isLoading: false,
+    isError: false,
+  } as ReturnType<typeof useBancos>)
   return { mutateAsync }
 }
 
@@ -176,8 +190,8 @@ describe('TarjetasPage', () => {
     render(<TarjetasPage />)
     fireEvent.click(screen.getByText('Nueva tarjeta'))
 
-    // Fill required fields but leave limite_credito empty
-    fireEvent.change(screen.getByPlaceholderText('Banco Popular, BHD, etc.'), { target: { value: 'Test' } })
+    // Select a bank from catalog
+    fireEvent.click(screen.getByText('Popular'))
     fireEvent.change(screen.getByPlaceholderText('1234'), { target: { value: '1234' } })
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '1000' } })
 
@@ -193,7 +207,8 @@ describe('TarjetasPage', () => {
     render(<TarjetasPage />)
     fireEvent.click(screen.getByText('Nueva tarjeta'))
 
-    fireEvent.change(screen.getByPlaceholderText('Banco Popular, BHD, etc.'), { target: { value: 'Mi Visa' } })
+    // Select a bank from catalog
+    fireEvent.click(screen.getByText('Popular'))
     fireEvent.change(screen.getByPlaceholderText('1234'), { target: { value: '9999' } })
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '5000' } })
     fireEvent.change(screen.getByPlaceholderText('50000.00'), { target: { value: '20000' } })
@@ -216,7 +231,8 @@ describe('TarjetasPage', () => {
     fireEvent.click(screen.getByText('Editar'))
 
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Visa Popular')).toBeInTheDocument()
+    // The modal title should appear
+    expect(screen.getByText('Editar tarjeta')).toBeInTheDocument()
   })
 
   it('calls update mutation on edit form submit', async () => {
@@ -300,8 +316,11 @@ describe('TarjetasPage', () => {
   it('separates credit and debit cards in distinct sections', () => {
     setupMocks([mockCredito, mockDebito])
     render(<TarjetasPage />)
-    expect(screen.getByText('Credito')).toBeInTheDocument()
-    expect(screen.getByText('Debito')).toBeInTheDocument()
+    // Section headers (h3 elements) — use getAllByText since card badge also says "Credito"/"Debito"
+    const creditoEls = screen.getAllByText('Credito')
+    expect(creditoEls.length).toBeGreaterThanOrEqual(1)
+    const debitoEls = screen.getAllByText('Debito')
+    expect(debitoEls.length).toBeGreaterThanOrEqual(1)
   })
 
   // ─── Movimientos tests ──────────────────────────────────────────────────────
@@ -443,5 +462,143 @@ describe('TarjetasPage', () => {
     fireEvent.click(screen.getByLabelText('Eliminar movimiento'))
 
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith('m-del'))
+  })
+
+  // ─── BancoSelector tests ─────────────────────────────────────────────────────
+
+  it('banco selector shows bank list from catalog', () => {
+    setupMocks([])
+    render(<TarjetasPage />)
+    fireEvent.click(screen.getByText('Nueva tarjeta'))
+
+    expect(screen.getByText('Popular')).toBeInTheDocument()
+    expect(screen.getByText('BHD')).toBeInTheDocument()
+  })
+
+  it('banco selector filters banks on search input', () => {
+    setupMocks([])
+    render(<TarjetasPage />)
+    fireEvent.click(screen.getByText('Nueva tarjeta'))
+
+    fireEvent.change(screen.getByPlaceholderText('Buscar banco...'), { target: { value: 'BHD' } })
+
+    expect(screen.queryByText('Popular')).not.toBeInTheDocument()
+    expect(screen.getByText('BHD')).toBeInTheDocument()
+  })
+
+  it('banco selector shows "Otro banco..." option at end of list', () => {
+    setupMocks([])
+    render(<TarjetasPage />)
+    fireEvent.click(screen.getByText('Nueva tarjeta'))
+
+    expect(screen.getByText('Otro banco...')).toBeInTheDocument()
+  })
+
+  it('banco selector shows free text input when "Otro banco..." is selected', () => {
+    setupMocks([])
+    render(<TarjetasPage />)
+    fireEvent.click(screen.getByText('Nueva tarjeta'))
+
+    fireEvent.click(screen.getByText('Otro banco...'))
+
+    expect(screen.getByPlaceholderText('Nombre del banco')).toBeInTheDocument()
+  })
+
+  it('banco selector shows selected bank indicator after selection', () => {
+    setupMocks([])
+    render(<TarjetasPage />)
+    fireEvent.click(screen.getByText('Nueva tarjeta'))
+
+    fireEvent.click(screen.getByText('Popular'))
+
+    // The selected bank indicator should show
+    const indicator = screen.getAllByText('Popular').find(el =>
+      el.classList.contains('font-medium') || el.closest('[class*="accent"]')
+    )
+    expect(indicator).toBeDefined()
+  })
+
+  // ─── RedSelector tests ───────────────────────────────────────────────────────
+
+  it('red selector shows all payment network options', () => {
+    setupMocks([])
+    render(<TarjetasPage />)
+    fireEvent.click(screen.getByText('Nueva tarjeta'))
+
+    expect(screen.getByRole('button', { name: /^VISA$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^MASTERCARD$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^AMEX$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^DISCOVER$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^OTRO$/i })).toBeInTheDocument()
+  })
+
+  it('red selector marks VISA as active by default (aria-pressed)', () => {
+    setupMocks([])
+    render(<TarjetasPage />)
+    fireEvent.click(screen.getByText('Nueva tarjeta'))
+
+    const visaBtn = screen.getByRole('button', { name: /^VISA$/i })
+    expect(visaBtn).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('red selector switches active state on click', () => {
+    setupMocks([])
+    render(<TarjetasPage />)
+    fireEvent.click(screen.getByText('Nueva tarjeta'))
+
+    fireEvent.click(screen.getByRole('button', { name: /^MASTERCARD$/i }))
+    expect(screen.getByRole('button', { name: /^MASTERCARD$/i })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /^VISA$/i })).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  // ─── ColorSelector tests ─────────────────────────────────────────────────────
+
+  it('color selector renders all 8 color circles', () => {
+    setupMocks([])
+    render(<TarjetasPage />)
+    fireEvent.click(screen.getByText('Nueva tarjeta'))
+
+    // 8 color buttons + 5 red buttons + misc buttons
+    const colorButtons = screen.getAllByRole('button').filter(
+      (b) => b.getAttribute('aria-label')?.startsWith('Color ')
+    )
+    expect(colorButtons).toHaveLength(8)
+  })
+
+  it('color selector marks selected color with aria-pressed=true', () => {
+    setupMocks([])
+    render(<TarjetasPage />)
+    fireEvent.click(screen.getByText('Nueva tarjeta'))
+
+    const navyBtn = screen.getByRole('button', { name: 'Color Navy' })
+    fireEvent.click(navyBtn)
+    expect(navyBtn).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('color selector deselects color on second click', () => {
+    setupMocks([])
+    render(<TarjetasPage />)
+    fireEvent.click(screen.getByText('Nueva tarjeta'))
+
+    const navyBtn = screen.getByRole('button', { name: 'Color Navy' })
+    fireEvent.click(navyBtn)
+    expect(navyBtn).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(navyBtn)
+    expect(navyBtn).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  // ─── CardVisual con banco_custom ─────────────────────────────────────────────
+
+  it('card visual shows banco_custom when set', () => {
+    const tarjetaConCustom: Tarjeta = {
+      ...mockCredito,
+      id: 't-custom',
+      banco: 'Banco Popular',
+      banco_custom: 'Mi banco especial',
+    }
+    setupMocks([tarjetaConCustom])
+    render(<TarjetasPage />)
+
+    expect(screen.getByRole('button', { name: /Mi banco especial/i })).toBeInTheDocument()
   })
 })

@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Plus, CreditCard, Info, Pencil, Trash2, X, ShoppingCart, CreditCard as PayIcon } from 'lucide-react'
-import { useForm } from 'react-hook-form'
+import { Plus, CreditCard, Info, Pencil, Trash2, X, ShoppingCart, CreditCard as PayIcon, Search } from 'lucide-react'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
@@ -21,7 +21,32 @@ import {
   useEliminarMovimiento,
 } from '@/hooks/useMovimientosTarjeta'
 import { useCategorias } from '@/hooks/useCategorias'
+import { useBancos } from '@/hooks/useCatalogos'
 import type { Tarjeta, TarjetaCreate, TarjetaUpdate, MovimientoTarjetaCreate } from '@/types/tarjeta'
+
+// ─── Constants ─────────────────────────────────────────────────────────────────
+
+const CARD_COLORS = [
+  { hex: '#1E3A5F', label: 'Navy' },
+  { hex: '#366092', label: 'Finza Blue' },
+  { hex: '#5B9BD5', label: 'Sky' },
+  { hex: '#7C3AED', label: 'Violet' },
+  { hex: '#059669', label: 'Emerald' },
+  { hex: '#D97706', label: 'Amber' },
+  { hex: '#DC2626', label: 'Ruby' },
+  { hex: '#1F2937', label: 'Slate' },
+]
+
+const REDES_PAGO: { value: Tarjeta['red']; label: string }[] = [
+  { value: 'visa', label: 'VISA' },
+  { value: 'mastercard', label: 'MASTERCARD' },
+  { value: 'amex', label: 'AMEX' },
+  { value: 'discover', label: 'DISCOVER' },
+  { value: 'otro', label: 'OTRO' },
+]
+
+// Pais por defecto — República Dominicana
+const DEFAULT_PAIS_CODIGO = 'DO'
 
 // ─── Zod schema ────────────────────────────────────────────────────────────────
 
@@ -34,6 +59,8 @@ const preprocessNumber = (v: unknown) => {
 const TarjetaSchema = z
   .object({
     banco: z.string().min(1, 'Requerido').max(100),
+    banco_id: z.string().optional().nullable(),
+    banco_custom: z.string().optional().nullable(),
     tipo: z.enum(['credito', 'debito']),
     red: z.enum(['visa', 'mastercard', 'amex', 'discover', 'otro']),
     ultimos_digitos: z
@@ -85,6 +112,17 @@ function getCardGradient(red: Tarjeta['red'], tipo: Tarjeta['tipo'], color: stri
   return gradients[red]
 }
 
+function getRedLabel(red: Tarjeta['red']): string {
+  const labels: Record<Tarjeta['red'], string> = {
+    visa: 'VISA',
+    mastercard: 'MC',
+    amex: 'AMEX',
+    discover: 'DISC',
+    otro: '',
+  }
+  return labels[red]
+}
+
 interface CardVisualProps {
   tarjeta: Tarjeta
   onClick?: () => void
@@ -101,6 +139,9 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
   const pct = tarjeta.limite_credito
     ? Math.min(100, (tarjeta.saldo_actual / tarjeta.limite_credito) * 100)
     : 0
+
+  // Nombre del banco: preferir banco_custom o nombre del catálogo (banco field)
+  const nombreBanco = tarjeta.banco_custom ?? tarjeta.banco
 
   return (
     <button
@@ -123,7 +164,7 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
         flexDirection: 'column',
         gap: '10px',
       }}
-      aria-label={`Tarjeta ${tarjeta.banco}`}
+      aria-label={`Tarjeta ${nombreBanco}`}
     >
       {/* Glare overlay */}
       <div
@@ -135,7 +176,7 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
         aria-hidden="true"
       />
 
-      {/* Row 1: Chip (izq) + Tipo & Red (der) */}
+      {/* Row 1: Chip (izq) + Red label (der) */}
       <div className="flex items-start justify-between">
         <svg width="38" height="28" viewBox="0 0 40 30" aria-hidden="true">
           <rect x="2" y="2" width="36" height="26" rx="4" fill="#d4a017" stroke="#b8860b" strokeWidth="0.5" />
@@ -146,25 +187,35 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
         </svg>
         <div className="text-right">
           <p className="font-semibold" style={{ fontSize: '11px', opacity: 0.9, letterSpacing: '0.05em' }}>
-            {isCredit ? 'Crédito' : 'Débito'}
+            {isCredit ? 'Credito' : 'Debito'}
           </p>
-          <p className="uppercase tracking-widest" style={{ fontSize: '10px', opacity: 0.45, marginTop: '2px' }}>
-            {tarjeta.red}
-          </p>
+          {getRedLabel(tarjeta.red) && (
+            <p
+              className="font-bold tracking-widest"
+              style={{
+                fontSize: tarjeta.red === 'mastercard' ? '9px' : '11px',
+                opacity: 0.85,
+                marginTop: '2px',
+                fontStyle: tarjeta.red === 'visa' ? 'italic' : 'normal',
+              }}
+            >
+              {getRedLabel(tarjeta.red)}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Row 2: Número */}
+      {/* Row 2: Numero */}
       <p
         className="font-mono text-white/90"
         style={{ fontSize: '15px', fontWeight: 600, letterSpacing: '0.2em', marginTop: '4px' }}
       >
-        •••• •••• •••• {tarjeta.ultimos_digitos}
+        &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; {tarjeta.ultimos_digitos}
       </p>
 
       {/* Row 3: Banco */}
       <p className="uppercase tracking-widest text-white/50" style={{ fontSize: '10px' }}>
-        {tarjeta.banco}
+        {nombreBanco}
       </p>
 
       {/* Row 4: Disponible */}
@@ -189,7 +240,7 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
         )}
       </div>
 
-      {/* Row 5: Campos Titular / Corte / Saldo */}
+      {/* Row 5: Titular / Corte / Saldo */}
       <div className="flex gap-4 mt-auto">
         {tarjeta.titular && (
           <div>
@@ -200,7 +251,7 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
         {tarjeta.fecha_corte && (
           <div>
             <p className="text-white/35 uppercase" style={{ fontSize: '9px', letterSpacing: '0.06em' }}>Corte</p>
-            <p className="text-white/75 font-medium" style={{ fontSize: '11px' }}>Día {tarjeta.fecha_corte}</p>
+            <p className="text-white/75 font-medium" style={{ fontSize: '11px' }}>Dia {tarjeta.fecha_corte}</p>
           </div>
         )}
         {isCredit && (
@@ -211,7 +262,7 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
         )}
       </div>
 
-      {/* Row 6: Progress bar de utilización (credit only) */}
+      {/* Row 6: Progress bar (credit only) */}
       {isCredit && tarjeta.limite_credito && (
         <div style={{ marginTop: '4px' }}>
           <div style={{ height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>
@@ -285,6 +336,227 @@ function StatsGrid({ stats }: { stats: StatItem[] }): JSX.Element {
   )
 }
 
+// ─── Bank selector combobox ────────────────────────────────────────────────────
+
+interface BancoSelectorProps {
+  paisCodigo: string
+  value: { banco_id: string | null; banco_custom: string | null; banco: string }
+  onChange: (v: { banco_id: string | null; banco_custom: string | null; banco: string }) => void
+}
+
+function BancoSelector({ paisCodigo, value, onChange }: BancoSelectorProps): JSX.Element {
+  const [search, setSearch] = useState('')
+  const [showOtro, setShowOtro] = useState(value.banco_id === null && !!value.banco_custom)
+
+  const { data: bancos = [], isLoading } = useBancos(paisCodigo)
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return bancos
+    const lower = search.toLowerCase()
+    return bancos.filter(
+      (b) =>
+        b.nombre.toLowerCase().includes(lower) ||
+        (b.nombre_corto ?? '').toLowerCase().includes(lower)
+    )
+  }, [bancos, search])
+
+  const handleSelectBanco = (bancoId: string, bancoNombre: string): void => {
+    setShowOtro(false)
+    onChange({ banco_id: bancoId, banco_custom: null, banco: bancoNombre })
+  }
+
+  const handleSelectOtro = (): void => {
+    setShowOtro(true)
+    onChange({ banco_id: null, banco_custom: value.banco_custom ?? '', banco: value.banco_custom ?? '' })
+  }
+
+  const handleCustomChange = (text: string): void => {
+    onChange({ banco_id: null, banco_custom: text, banco: text })
+  }
+
+  const selectedBanco = value.banco_id ? bancos.find((b) => b.id === value.banco_id) : null
+
+  return (
+    <div className="space-y-2">
+      <label className="block text-xs font-medium text-[var(--text-muted)]">
+        Banco
+      </label>
+
+      {isLoading ? (
+        <Skeleton className="h-9 w-full rounded-lg" />
+      ) : (
+        <>
+          {/* Search input */}
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+            <input
+              type="text"
+              placeholder="Buscar banco..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="finza-input w-full pl-8"
+            />
+          </div>
+
+          {/* Selected indicator */}
+          {selectedBanco && !showOtro && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--accent)]/10 rounded-lg border border-[var(--accent)]/30">
+              <span className="text-xs font-medium text-[var(--accent)]">
+                {selectedBanco.nombre_corto ?? selectedBanco.nombre}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('')
+                  onChange({ banco_id: null, banco_custom: null, banco: '' })
+                }}
+                className="ml-auto text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                aria-label="Limpiar seleccion"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          )}
+
+          {/* Bank list — only show when no bank is selected or user is searching */}
+          {(!selectedBanco || search.trim()) && !showOtro && (
+            <div className="max-h-36 overflow-y-auto rounded-lg border border-[var(--border)] bg-[var(--surface)] divide-y divide-[var(--border)]">
+              {filtered.map((banco) => (
+                <button
+                  key={banco.id}
+                  type="button"
+                  onClick={() => {
+                    setSearch('')
+                    handleSelectBanco(banco.id, banco.nombre)
+                  }}
+                  className={cn(
+                    'w-full text-left px-3 py-2 text-xs hover:bg-[var(--surface-raised)] transition-colors',
+                    value.banco_id === banco.id && 'bg-[var(--accent)]/10 text-[var(--accent)]'
+                  )}
+                >
+                  <span className="font-medium">{banco.nombre_corto ?? banco.nombre}</span>
+                  {banco.nombre_corto && (
+                    <span className="text-[var(--text-muted)] ml-2">{banco.nombre}</span>
+                  )}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={handleSelectOtro}
+                className="w-full text-left px-3 py-2 text-xs text-[var(--text-muted)] hover:bg-[var(--surface-raised)] transition-colors italic"
+              >
+                Otro banco...
+              </button>
+            </div>
+          )}
+
+          {/* Custom bank input */}
+          {showOtro && (
+            <div className="space-y-1">
+              <input
+                type="text"
+                placeholder="Nombre del banco"
+                value={value.banco_custom ?? ''}
+                onChange={(e) => handleCustomChange(e.target.value)}
+                className="finza-input w-full"
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setShowOtro(false)
+                  onChange({ banco_id: null, banco_custom: null, banco: '' })
+                }}
+                className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              >
+                Volver a la lista
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+// ─── Red selector (pill buttons) ──────────────────────────────────────────────
+
+interface RedSelectorProps {
+  value: Tarjeta['red']
+  onChange: (v: Tarjeta['red']) => void
+}
+
+function RedSelector({ value, onChange }: RedSelectorProps): JSX.Element {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">Red de pago</label>
+      <div className="flex flex-wrap gap-2">
+        {REDES_PAGO.map((red) => (
+          <button
+            key={red.value}
+            type="button"
+            onClick={() => onChange(red.value)}
+            className={cn(
+              'px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-all duration-150',
+              value === red.value
+                ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]'
+                : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--accent)]/40'
+            )}
+            aria-pressed={value === red.value}
+          >
+            {red.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Color selector ────────────────────────────────────────────────────────────
+
+interface ColorSelectorProps {
+  value: string | null | undefined
+  onChange: (color: string | null) => void
+}
+
+function ColorSelector({ value, onChange }: ColorSelectorProps): JSX.Element {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">
+        Color de tarjeta (opcional)
+      </label>
+      <div className="flex flex-wrap gap-2">
+        {CARD_COLORS.map((c) => (
+          <button
+            key={c.hex}
+            type="button"
+            onClick={() => onChange(value === c.hex ? null : c.hex)}
+            className={cn(
+              'w-7 h-7 rounded-full border-2 transition-all duration-150',
+              value === c.hex
+                ? 'border-white scale-110 shadow-md'
+                : 'border-transparent hover:scale-105'
+            )}
+            style={{ backgroundColor: c.hex }}
+            aria-label={`Color ${c.label}`}
+            aria-pressed={value === c.hex}
+            title={c.label}
+          />
+        ))}
+        {value && !CARD_COLORS.find((c) => c.hex === value) && (
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            className="w-7 h-7 rounded-full border-2 border-white scale-110 shadow-md"
+            style={{ backgroundColor: value }}
+            aria-label="Color personalizado"
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Form modal ────────────────────────────────────────────────────────────────
 
 interface TarjetaModalProps {
@@ -301,12 +573,16 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
     handleSubmit,
     watch,
     reset,
+    setValue,
+    control,
     formState: { errors },
   } = useForm<TarjetaFormData>({
     resolver: zodResolver(TarjetaSchema),
     defaultValues: tarjeta
       ? {
           banco: tarjeta.banco,
+          banco_id: tarjeta.banco_id ?? null,
+          banco_custom: tarjeta.banco_custom ?? null,
           tipo: tarjeta.tipo,
           red: tarjeta.red,
           ultimos_digitos: tarjeta.ultimos_digitos,
@@ -317,10 +593,12 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
           color: tarjeta.color ?? undefined,
           activa: tarjeta.activa,
         }
-      : { tipo: 'credito', red: 'visa', activa: true },
+      : { tipo: 'credito', red: 'visa', activa: true, banco_id: null, banco_custom: null },
   })
 
   const tipo = watch('tipo')
+  const colorValue = watch('color')
+  const redValue = watch('red')
 
   const handleClose = (): void => {
     reset()
@@ -357,36 +635,56 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-          {/* Banco */}
-          <div>
-            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Banco / Nombre</label>
-            <input
-              {...register('banco')}
-              placeholder="Banco Popular, BHD, etc."
-              className="finza-input w-full"
-            />
-            {errors.banco && <p className="text-xs text-red-500 mt-1">{errors.banco.message}</p>}
-          </div>
+          {/* Banco selector */}
+          <Controller
+            name="banco"
+            control={control}
+            render={() => (
+              <BancoSelector
+                paisCodigo={DEFAULT_PAIS_CODIGO}
+                value={{
+                  banco_id: watch('banco_id') ?? null,
+                  banco_custom: watch('banco_custom') ?? null,
+                  banco: watch('banco') ?? '',
+                }}
+                onChange={(v) => {
+                  setValue('banco', v.banco, { shouldValidate: true })
+                  setValue('banco_id', v.banco_id)
+                  setValue('banco_custom', v.banco_custom)
+                }}
+              />
+            )}
+          />
+          {errors.banco && <p className="text-xs text-red-500 -mt-2">{errors.banco.message}</p>}
 
-          {/* Tipo / Red */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Tipo</label>
-              <select {...register('tipo')} className="finza-input w-full">
-                <option value="credito">Credito</option>
-                <option value="debito">Debito</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Red</label>
-              <select {...register('red')} className="finza-input w-full">
-                <option value="visa">Visa</option>
-                <option value="mastercard">Mastercard</option>
-                <option value="amex">Amex</option>
-                <option value="discover">Discover</option>
-                <option value="otro">Otro</option>
-              </select>
-            </div>
+          {/* Red de pago */}
+          <Controller
+            name="red"
+            control={control}
+            render={({ field }) => (
+              <RedSelector value={redValue ?? field.value} onChange={field.onChange} />
+            )}
+          />
+
+          {/* Color */}
+          <Controller
+            name="color"
+            control={control}
+            render={({ field }) => (
+              <ColorSelector
+                value={colorValue ?? field.value}
+                onChange={field.onChange}
+              />
+            )}
+          />
+
+          {/* Tipo */}
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Tipo</label>
+            <select {...register('tipo')} className="finza-input w-full">
+              <option value="credito">Credito</option>
+              <option value="debito">Debito</option>
+            </select>
           </div>
 
           {/* Ultimos digitos */}
@@ -419,7 +717,7 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
             )}
           </div>
 
-          {/* Limite credito — solo para credito */}
+          {/* Limite credito */}
           {tipo === 'credito' && (
             <div>
               <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Limite de credito</label>
@@ -461,16 +759,6 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
                 className="finza-input w-full"
               />
             </div>
-          </div>
-
-          {/* Color */}
-          <div>
-            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Color (opcional)</label>
-            <input
-              {...register('color')}
-              type="color"
-              className="h-9 w-full rounded-lg border border-[var(--border)] cursor-pointer bg-transparent"
-            />
           </div>
 
           {/* Activa */}
@@ -714,7 +1002,7 @@ function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): 
           <div className="relative bg-white dark:bg-[#0d1520] dark:border dark:border-white/[0.08] rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-[var(--border)]">
-              <h2 className="text-base font-semibold text-[var(--text-primary)]">{tarjeta.banco}</h2>
+              <h2 className="text-base font-semibold text-[var(--text-primary)]">{tarjeta.banco_custom ?? tarjeta.banco}</h2>
               <button
                 type="button"
                 onClick={onClose}
@@ -972,6 +1260,8 @@ export function TarjetasPage(): JSX.Element {
         fecha_corte: data.fecha_corte ?? null,
         fecha_pago: data.fecha_pago ?? null,
         color: data.color ?? null,
+        banco_id: data.banco_id ?? null,
+        banco_custom: data.banco_custom ?? null,
       }
       await createTarjeta.mutateAsync(payload)
       setIsModalOpen(false)
@@ -991,6 +1281,8 @@ export function TarjetasPage(): JSX.Element {
         fecha_corte: data.fecha_corte ?? null,
         fecha_pago: data.fecha_pago ?? null,
         color: data.color ?? null,
+        banco_id: data.banco_id ?? null,
+        banco_custom: data.banco_custom ?? null,
       }
       await updateTarjeta.mutateAsync(payload)
       setTarjetaEditando(null)
