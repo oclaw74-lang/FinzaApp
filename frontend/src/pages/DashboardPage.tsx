@@ -115,9 +115,9 @@ export function DashboardPage(): JSX.Element {
           </div>
         </div>
 
-        {/* Month pills — scrollable row on mobile */}
-        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-          <div className="flex items-center gap-1 bg-[var(--surface-raised)] dark:bg-white/[0.05] rounded-xl p-1 w-max sm:w-auto sm:flex-wrap">
+        {/* Month pills — scrollable row on desktop, select on mobile */}
+        <div className="hidden sm:block overflow-x-auto">
+          <div className="flex items-center gap-1 bg-[var(--surface-raised)] dark:bg-white/[0.05] rounded-xl p-1 flex-wrap">
             {MESES_SHORT.map((m, i) => (
               <button
                 key={i}
@@ -134,6 +134,18 @@ export function DashboardPage(): JSX.Element {
               </button>
             ))}
           </div>
+        </div>
+        <div className="sm:hidden">
+          <select
+            value={mes}
+            onChange={(e) => setMes(Number(e.target.value))}
+            className="finza-input w-full text-sm font-medium"
+            aria-label="Seleccionar mes"
+          >
+            {MESES_SHORT.map((m, i) => (
+              <option key={i} value={i + 1}>{m}</option>
+            ))}
+          </select>
         </div>
       </div>
 

@@ -34,6 +34,13 @@ const QUICK_ACTIONS: QuickAction[] = [
     color: 'bg-amber-500',
   },
   {
+    id: 'metas',
+    label: 'Metas',
+    icon: <PiggyBank size={18} />,
+    path: '/metas',
+    color: 'bg-purple-500',
+  },
+  {
     id: 'tarjetas',
     label: 'Tarjetas',
     icon: <CreditCard size={18} />,
@@ -46,7 +53,7 @@ const NAV_ITEMS = [
   { to: '/dashboard', icon: <BarChart3 size={22} />, label: 'Dashboard', end: true },
   { to: '/ingresos', icon: <TrendingUp size={22} />, label: 'Ingresos', end: false },
   { to: '/egresos', icon: <TrendingDown size={22} />, label: 'Egresos', end: false },
-  { to: '/metas', icon: <PiggyBank size={22} />, label: 'Metas', end: false },
+  { to: '/presupuestos', icon: <Target size={22} />, label: 'Presupuestos', end: false },
 ]
 
 function QuickActionSheet({
@@ -85,14 +92,15 @@ function QuickActionSheet({
           Acciones rapidas
         </p>
         <div className="grid grid-cols-2 gap-2">
-          {QUICK_ACTIONS.map((action) => (
+          {QUICK_ACTIONS.map((action, i) => (
             <button
               key={action.id}
               onClick={() => handleAction(action.path)}
               className={cn(
                 'flex items-center gap-2 px-3 py-2.5 rounded-xl text-white text-sm font-medium',
                 'transition-all duration-150 active:scale-95',
-                action.color
+                action.color,
+                i === QUICK_ACTIONS.length - 1 && QUICK_ACTIONS.length % 2 !== 0 && 'col-span-2'
               )}
             >
               {action.icon}
@@ -196,27 +204,6 @@ export function BottomNav(): JSX.Element {
             )}
           </NavLink>
         ))}
-
-        {/* Presupuestos as last visible item */}
-        <NavLink
-          to="/presupuestos"
-          aria-label="Presupuestos"
-          className={({ isActive }) =>
-            cn(
-              'flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-150',
-              isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'
-            )
-          }
-        >
-          {({ isActive }) => (
-            <>
-              <span className={cn('transition-transform duration-150', isActive ? 'scale-110' : '')}>
-                <Target size={22} />
-              </span>
-              <span className="text-[10px] font-medium leading-none">Presupuestos</span>
-            </>
-          )}
-        </NavLink>
       </nav>
 
       {/* Dark mode bottom nav */}

@@ -383,11 +383,16 @@ html.dark body::after {
 
   /* ===== KPI typography — premium ===== */
   .kpi-value {
-    font-size: 1.75rem;
+    font-size: 1.25rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
     line-height: 1;
+  }
+  @media (min-width: 640px) {
+    .kpi-value {
+      font-size: 1.75rem;
+    }
   }
   .kpi-label {
     font-size: 11px;

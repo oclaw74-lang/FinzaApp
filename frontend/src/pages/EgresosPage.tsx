@@ -106,8 +106,8 @@ export function EgresosPage(): JSX.Element {
   return (
     <div className="animate-fade-in p-4 md:p-6 space-y-6">
       {/* Stats chips */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-5">
-        <div className="card-glass p-5 flex items-center gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-5">
+        <div className="card-glass p-3 sm:p-5 flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 dark:bg-finza-red/10">
             <TrendingDown className="w-4 h-4 dark:text-finza-red" style={{ color: 'var(--danger)' }} />
           </div>
@@ -127,7 +127,7 @@ export function EgresosPage(): JSX.Element {
           </div>
         </div>
 
-        <div className="card-glass p-5 flex items-center gap-3">
+        <div className="card-glass p-3 sm:p-5 flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 dark:bg-finza-blue/10">
             <Hash className="w-4 h-4 dark:text-finza-blue" style={{ color: 'var(--accent)' }} />
           </div>
@@ -147,7 +147,7 @@ export function EgresosPage(): JSX.Element {
           </div>
         </div>
 
-        <div className="card-glass p-5 flex items-center gap-3 col-span-2 md:col-span-1">
+        <div className="card-glass p-3 sm:p-5 flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 dark:bg-finza-yellow/10">
             <BarChart2 className="w-4 h-4 dark:text-finza-yellow" style={{ color: 'var(--warning)' }} />
           </div>

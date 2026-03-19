@@ -371,9 +371,9 @@ function StatsGrid({ stats }: { stats: StatItem[] }): JSX.Element {
     'Tarjetas activas': 'dark:text-finza-blue',
   }
   return (
-    <div className="grid grid-cols-3 gap-3 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
       {stats.map((s) => (
-        <div key={s.label} className="card-glass p-5">
+        <div key={s.label} className="card-glass p-3 sm:p-5">
           <p className="kpi-label dark:text-finza-t2 mb-1">{s.label}</p>
           <p className={`kpi-value mt-2 ${colorMap[s.label] ?? ''}`}>{s.value}</p>
         </div>
@@ -1392,7 +1392,7 @@ export function TarjetasPage(): JSX.Element {
   const renderCardSection = (list: Tarjeta[], title: string): JSX.Element => (
     <div className="mb-6">
       <h3 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">{title}</h3>
-      <div className="flex flex-col gap-4 max-w-[520px] mx-auto">
+      <div className="flex flex-col gap-4 sm:max-w-[520px] sm:mx-auto">
         {list.map((tarjeta) => (
           <div key={tarjeta.id} className="relative group">
             <CardVisual tarjeta={tarjeta} onClick={() => setTarjetaDetalle(tarjeta)} />
