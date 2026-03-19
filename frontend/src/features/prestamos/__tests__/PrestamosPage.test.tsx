@@ -124,7 +124,7 @@ describe('PrestamosPage', () => {
   it('shows empty state when no data and not loading', () => {
     setupMocks({ prestamosData: [] })
     render(<PrestamosPage />)
-    expect(screen.getByText(/no hay prestamos registrados/i)).toBeInTheDocument()
+    expect(screen.getByText(/sin prestamos activos/i)).toBeInTheDocument()
   })
 
   it('renders prestamo rows when data is available', () => {

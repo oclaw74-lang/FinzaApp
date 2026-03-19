@@ -45,7 +45,7 @@ function EmptyState(): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <HandCoins size={40} className="text-[var(--text-muted)] opacity-40 mb-3" aria-hidden="true" />
-      <p className="text-sm font-medium text-[var(--text-primary)]">No hay prestamos registrados</p>
+      <p className="text-sm font-medium text-[var(--text-primary)]">{t('prestamos.noPrestamos')}</p>
       <p className="text-xs text-[var(--text-muted)] mt-1">
         {t('prestamos.noPrestamosDesc')}
       </p>
@@ -110,7 +110,7 @@ export function PrestamosPage(): JSX.Element {
   }
 
   const handleDelete = async (id: string): Promise<void> => {
-    if (window.confirm('Eliminar este prestamo?')) {
+    if (window.confirm(t('prestamos.deleteConfirm'))) {
       try {
         await deletePrestamo.mutateAsync(id)
         setDetailId(null)
@@ -144,7 +144,7 @@ export function PrestamosPage(): JSX.Element {
       <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
         <div className="min-w-0">
           <h1 className="page-title-premium dark:text-[#e8f0ff]">{t('nav.prestamos')}</h1>
-          <p className="text-sm text-[var(--text-muted)] mt-1">Gestiona tus prestamos y cobros</p>
+          <p className="text-sm text-[var(--text-muted)] mt-1">{t('prestamos.subtitle')}</p>
         </div>
         <Button onClick={() => setIsModalOpen(true)} variant="default" size="md"
           className="dark:bg-finza-blue dark:hover:bg-finza-blue/80 shrink-0">
@@ -163,7 +163,7 @@ export function PrestamosPage(): JSX.Element {
         {/* Error state */}
         {isError && (
           <p className="text-sm text-[#657a9e] text-center py-4">
-            El servidor no esta disponible. La lista se mostrara cuando el backend responda.
+            {t('common.serverUnavailable')}
           </p>
         )}
 
@@ -192,7 +192,7 @@ export function PrestamosPage(): JSX.Element {
                   : 'bg-[rgba(255,64,96,0.15)] text-[#ff4060]'
               )}
             >
-              {prestamo.tipo === 'me_deben' ? 'Me deben' : 'Yo debo'}
+              {prestamo.tipo === 'me_deben' ? t('prestamos.theyOweMe') : t('prestamos.iOwe')}
             </span>
             <PrestamoRow
               prestamo={prestamo}

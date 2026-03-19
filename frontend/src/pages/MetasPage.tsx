@@ -103,7 +103,7 @@ export function MetasPage(): JSX.Element {
   }
 
   const handleDelete = async (id: string): Promise<void> => {
-    if (window.confirm('Eliminar esta meta de ahorro?')) {
+    if (window.confirm(t('metas.deleteConfirm'))) {
       try {
         await deleteMeta.mutateAsync(id)
         setDetailId(null)
@@ -137,7 +137,7 @@ export function MetasPage(): JSX.Element {
       <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
         <div className="min-w-0">
           <h1 className="page-title-premium dark:text-[#e8f0ff]">{t('nav.metas')}</h1>
-          <p className="text-sm text-[var(--text-muted)] mt-1">Gestiona tus objetivos financieros</p>
+          <p className="text-sm text-[var(--text-muted)] mt-1">{t('metas.subtitle')}</p>
         </div>
         <Button onClick={() => setIsModalOpen(true)} variant="default" size="md"
           className="dark:bg-finza-blue dark:hover:bg-finza-blue/80 shrink-0">

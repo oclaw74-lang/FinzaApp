@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { BarChart3, TrendingUp, TrendingDown, Target, Plus, X, HandCoins, PiggyBank, CreditCard } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface QuickAction {
   id: string
-  label: string
+  labelKey: string
   icon: JSX.Element
   path: string
   color: string
@@ -14,35 +15,35 @@ interface QuickAction {
 const QUICK_ACTIONS: QuickAction[] = [
   {
     id: 'ingresos',
-    label: 'Nuevo ingreso',
+    labelKey: 'ingresos.newIngreso',
     icon: <TrendingUp size={18} />,
     path: '/ingresos',
     color: 'bg-emerald-500',
   },
   {
     id: 'egresos',
-    label: 'Nuevo egreso',
+    labelKey: 'egresos.newEgreso',
     icon: <TrendingDown size={18} />,
     path: '/egresos',
     color: 'bg-red-500',
   },
   {
     id: 'prestamos',
-    label: 'Nuevo prestamo',
+    labelKey: 'prestamos.newPrestamo',
     icon: <HandCoins size={18} />,
     path: '/prestamos',
     color: 'bg-amber-500',
   },
   {
     id: 'metas',
-    label: 'Metas',
+    labelKey: 'nav.metas',
     icon: <PiggyBank size={18} />,
     path: '/metas',
     color: 'bg-purple-500',
   },
   {
     id: 'tarjetas',
-    label: 'Tarjetas',
+    labelKey: 'nav.tarjetas',
     icon: <CreditCard size={18} />,
     path: '/tarjetas',
     color: 'bg-indigo-500',
@@ -50,10 +51,10 @@ const QUICK_ACTIONS: QuickAction[] = [
 ]
 
 const NAV_ITEMS = [
-  { to: '/dashboard', icon: <BarChart3 size={22} />, label: 'Dashboard', end: true },
-  { to: '/ingresos', icon: <TrendingUp size={22} />, label: 'Ingresos', end: false },
-  { to: '/egresos', icon: <TrendingDown size={22} />, label: 'Egresos', end: false },
-  { to: '/presupuestos', icon: <Target size={22} />, label: 'Presupuestos', end: false },
+  { to: '/dashboard', icon: <BarChart3 size={22} />, labelKey: 'nav.dashboard', end: true },
+  { to: '/ingresos', icon: <TrendingUp size={22} />, labelKey: 'nav.ingresos', end: false },
+  { to: '/egresos', icon: <TrendingDown size={22} />, labelKey: 'nav.egresos', end: false },
+  { to: '/presupuestos', icon: <Target size={22} />, labelKey: 'nav.presupuestos', end: false },
 ]
 
 function QuickActionSheet({
@@ -63,6 +64,7 @@ function QuickActionSheet({
   isOpen: boolean
   onClose: () => void
 }): JSX.Element | null {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   if (!isOpen) return null
 
@@ -86,10 +88,10 @@ function QuickActionSheet({
           'p-4 w-72 shadow-2xl animate-slide-up'
         )}
         role="dialog"
-        aria-label="Acciones rapidas"
+        aria-label={t('bottomNav.quickActions')}
       >
         <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-3">
-          Acciones rapidas
+          {t('bottomNav.quickActions')}
         </p>
         <div className="grid grid-cols-2 gap-2">
           {QUICK_ACTIONS.map((action, i) => (
@@ -104,7 +106,7 @@ function QuickActionSheet({
               )}
             >
               {action.icon}
-              <span>{action.label}</span>
+              <span>{t(action.labelKey)}</span>
             </button>
           ))}
         </div>
@@ -114,6 +116,7 @@ function QuickActionSheet({
 }
 
 export function BottomNav(): JSX.Element {
+  const { t } = useTranslation()
   const [sheetOpen, setSheetOpen] = useState(false)
 
   return (
@@ -136,7 +139,7 @@ export function BottomNav(): JSX.Element {
             key={item.to}
             to={item.to}
             end={item.end}
-            aria-label={item.label}
+            aria-label={t(item.labelKey)}
             className={({ isActive }) =>
               cn(
                 'flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-150',
@@ -149,7 +152,7 @@ export function BottomNav(): JSX.Element {
                 <span className={cn('transition-transform duration-150', isActive ? 'scale-110' : '')}>
                   {item.icon}
                 </span>
-                <span className="text-[10px] font-medium leading-none">{item.label}</span>
+                <span className="text-[10px] font-medium leading-none">{t(item.labelKey)}</span>
               </>
             )}
           </NavLink>
@@ -167,7 +170,7 @@ export function BottomNav(): JSX.Element {
             background: 'linear-gradient(135deg, #366092, #818cf8)',
             boxShadow: '0 4px 20px rgba(54,96,146,0.45)',
           }}
-          aria-label={sheetOpen ? 'Cerrar acciones rapidas' : 'Abrir acciones rapidas'}
+          aria-label={sheetOpen ? t('bottomNav.closeActions') : t('bottomNav.openActions')}
           aria-expanded={sheetOpen}
         >
           <span
@@ -186,7 +189,7 @@ export function BottomNav(): JSX.Element {
             key={item.to}
             to={item.to}
             end={item.end}
-            aria-label={item.label}
+            aria-label={t(item.labelKey)}
             className={({ isActive }) =>
               cn(
                 'flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-150',
@@ -199,7 +202,7 @@ export function BottomNav(): JSX.Element {
                 <span className={cn('transition-transform duration-150', isActive ? 'scale-110' : '')}>
                   {item.icon}
                 </span>
-                <span className="text-[10px] font-medium leading-none">{item.label}</span>
+                <span className="text-[10px] font-medium leading-none">{t(item.labelKey)}</span>
               </>
             )}
           </NavLink>

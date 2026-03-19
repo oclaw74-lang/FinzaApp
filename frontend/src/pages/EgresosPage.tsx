@@ -93,7 +93,7 @@ export function EgresosPage(): JSX.Element {
   }
 
   const handleDelete = async (id: string): Promise<void> => {
-    if (window.confirm('Eliminar este egreso?')) {
+    if (window.confirm(t('egresos.deleteConfirm'))) {
       try {
         await deleteEgreso.mutateAsync(id)
         toast.success(t('egresos.deleted'))
@@ -159,7 +159,7 @@ export function EgresosPage(): JSX.Element {
                 <p className="kpi-value dark:text-finza-t2">
                   {formatCurrency(filteredItems.length ? totalMes / filteredItems.length : 0)}
                 </p>
-                <p className="kpi-label dark:text-finza-t2">Promedio</p>
+                <p className="kpi-label dark:text-finza-t2">{t('common.average')}</p>
               </>
             )}
           </div>
@@ -181,7 +181,7 @@ export function EgresosPage(): JSX.Element {
                 value={mes}
                 onChange={(e) => setMes(Number(e.target.value))}
               >
-                <option value={0}>Todos los meses</option>
+                <option value={0}>{t('common.allMonths')}</option>
                 {MESES.map((nombre, idx) => (
                   <option key={idx + 1} value={idx + 1}>{nombre}</option>
                 ))}
@@ -204,7 +204,7 @@ export function EgresosPage(): JSX.Element {
             <Button onClick={() => setIsModalOpen(true)} variant="default" size="md" className="ml-auto shrink-0">
               <Plus size={16} />
               <span className="hidden xs:inline">{t('egresos.newEgreso')}</span>
-              <span className="xs:hidden">Nuevo</span>
+              <span className="xs:hidden">{t('common.new')}</span>
             </Button>
           </div>
           {/* Second row: search always full width */}

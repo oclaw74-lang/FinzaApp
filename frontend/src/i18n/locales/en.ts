@@ -18,6 +18,9 @@ const en = {
     viewAll: 'View all',
     inProgress: 'In progress',
     system: 'System',
+    average: 'Average',
+    allMonths: 'All months',
+    serverUnavailable: 'Server unavailable. Try again later.',
   },
   auth: {
     login: 'Sign in', logout: 'Sign out', register: 'Sign up',
@@ -84,6 +87,16 @@ const en = {
     expenseDistributionDesc: 'By category this month',
     ofTotalIncome: 'Of total income',
     scorePoints: 'points',
+    goodMorning: 'Good morning',
+    goodAfternoon: 'Good afternoon',
+    goodEvening: 'Good evening',
+    week: 'Week',
+    loading: 'Loading data...',
+    excellentPace: 'Excellent pace',
+    underControl: 'Under control',
+    canImprove: 'Can improve',
+    reviewExpenses: 'Review your expenses',
+    errorLoading: 'Error loading dashboard. Try again.',
   },
   ingresos: {
     title: 'Income', newIngreso: 'New income', editIngreso: 'Edit income',
@@ -91,6 +104,7 @@ const en = {
     noIngresos: 'No income recorded this month',
     noIngresosDesc: 'Record your first income to get started',
     created: 'Income recorded', updated: 'Income updated', deleted: 'Income deleted',
+    deleteConfirm: 'Delete this income?',
   },
   egresos: {
     title: 'Expenses', newEgreso: 'New expense', editEgreso: 'Edit expense',
@@ -98,6 +112,7 @@ const en = {
     noEgresos: 'No expenses recorded this month',
     noEgresosDesc: 'Record your first expense to get started',
     created: 'Expense recorded', updated: 'Expense updated', deleted: 'Expense deleted',
+    deleteConfirm: 'Delete this expense?',
   },
   prestamos: {
     title: 'Loans', newPrestamo: 'New loan',
@@ -118,6 +133,10 @@ const en = {
     proximoPago: 'Next payment',
     pagoHoy: 'Payment due today!',
     pagoEnDias: 'Payment in {{dias}} days',
+    deleteConfirm: 'Delete this loan?',
+    subtitle: 'Manage your loans and collections',
+    theyOweMe: 'They owe me',
+    iOwe: 'I owe',
   },
   metas: {
     title: 'Savings goals', newMeta: 'New goal',
@@ -127,6 +146,8 @@ const en = {
     status: { activa: 'Active', completada: 'Completed', vencida: 'Overdue' },
     created: 'Goal created', updated: 'Goal updated', deleted: 'Goal deleted',
     contributed: 'Contribution recorded',
+    deleteConfirm: 'Delete this savings goal?',
+    subtitle: 'Manage your financial goals',
   },
   presupuestos: {
     title: 'Budgets', newPresupuesto: 'New budget',
@@ -251,6 +272,9 @@ const en = {
     monto: 'Amount',
     metaMeses: 'Goal in months',
     nombre: 'Fund name',
+    mes: 'month',
+    remaining: 'Remaining',
+    notasOpcional: 'Notes (optional)',
   },
   impulso: {
     badge: 'Impulse',
@@ -284,6 +308,17 @@ const en = {
     anual: 'Annual',
     semanal: 'Weekly',
     trimestral: 'Quarterly',
+    noPatterns: 'No recurring patterns detected.',
+  },
+  tarjetas: {
+    title: 'Cards',
+    deleteMovimiento: 'Delete this transaction?',
+    deleteTarjeta: 'Delete this card?',
+  },
+  bottomNav: {
+    quickActions: 'Quick actions',
+    openActions: 'Open quick actions',
+    closeActions: 'Close quick actions',
   },
   profile: {
     title: 'Personal finances',

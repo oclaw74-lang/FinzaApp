@@ -131,7 +131,7 @@ export function FondoEmergenciaPage(): JSX.Element {
 
             {/* Subtitle */}
             <p className="text-sm text-[var(--text-muted)] mb-5">
-              Cobertura para ~{fondo.meta_meses} {fondo.meta_meses === 1 ? 'mes' : 'meses'} de gastos
+              Cobertura para ~{fondo.meta_meses} {fondo.meta_meses === 1 ? t('fondoEmergencia.mes') : t('fondoEmergencia.meses')} de gastos
             </p>
 
             {/* Progress bar */}
@@ -149,7 +149,7 @@ export function FondoEmergenciaPage(): JSX.Element {
             <div className="flex justify-between text-xs text-[var(--text-muted)]">
               <span>{fondo.porcentaje.toFixed(1)}% de la meta</span>
               {fondo.meta_calculada && fondo.meta_calculada > fondo.monto_actual && (
-                <span>Faltan {formatCurrency(fondo.meta_calculada - fondo.monto_actual)}</span>
+                <span>{t('fondoEmergencia.remaining')} {formatCurrency(fondo.meta_calculada - fondo.monto_actual)}</span>
               )}
             </div>
           </div>
@@ -187,7 +187,7 @@ export function FondoEmergenciaPage(): JSX.Element {
                       : 'bg-surface-raised text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                   )}
                 >
-                  {m === 1 ? t('fondoEmergencia.meta1mes') : `${m} meses`}
+                  {m === 1 ? t('fondoEmergencia.meta1mes') : `${m} ${t('fondoEmergencia.meses')}`}
                 </button>
               ))}
             </div>
@@ -229,7 +229,7 @@ export function FondoEmergenciaPage(): JSX.Element {
               <option value={3}>3 meses</option>
               <option value={6}>6 meses</option>
             </select>
-            <label className="block text-xs text-[var(--text-muted)] mb-1">Notas (opcional)</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1">{t('fondoEmergencia.notasOpcional')}</label>
             <input
               type="text"
               value={notas}

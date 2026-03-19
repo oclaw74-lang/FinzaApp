@@ -1057,6 +1057,7 @@ function getNextDayOfMonth(day: number): string {
 }
 
 function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): JSX.Element {
+  const { t } = useTranslation()
   const fmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 })
   const [movTab, setMovTab] = useState<MovimientoTab>('todos')
   const [movModalTipo, setMovModalTipo] = useState<'compra' | 'pago' | null>(null)
@@ -1066,7 +1067,7 @@ function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): 
   const eliminarMovimiento = useEliminarMovimiento(tarjeta.id)
 
   const handleEliminar = async (movimientoId: string): Promise<void> => {
-    if (!window.confirm('Eliminar este movimiento?')) return
+    if (!window.confirm(t('tarjetas.deleteMovimiento'))) return
     try {
       await eliminarMovimiento.mutateAsync(movimientoId)
       toast.success('Movimiento eliminado')
@@ -1379,7 +1380,7 @@ export function TarjetasPage(): JSX.Element {
   }
 
   const handleDelete = async (id: string): Promise<void> => {
-    if (!window.confirm('Eliminar esta tarjeta?')) return
+    if (!window.confirm(t('tarjetas.deleteTarjeta'))) return
     try {
       await deleteTarjeta.mutateAsync(id)
       setTarjetaDetalle(null)

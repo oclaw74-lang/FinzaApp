@@ -197,7 +197,7 @@ export function SuscripcionesPage(): JSX.Element {
           <div className="finza-card p-6 w-full max-w-sm">
             <h2 className="font-bold text-[var(--text-primary)] mb-3">{t('suscripciones.candidatosDetectados')}</h2>
             {candidatos.length === 0 ? (
-              <p className="text-sm text-[var(--text-muted)] mb-4">No se detectaron patrones recurrentes.</p>
+              <p className="text-sm text-[var(--text-muted)] mb-4">{t('suscripciones.noPatterns')}</p>
             ) : (
               <div className="space-y-2 mb-4">
                 {candidatos.map((c) => (

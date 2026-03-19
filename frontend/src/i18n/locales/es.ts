@@ -18,6 +18,9 @@ const es = {
     viewAll: 'Ver todas',
     inProgress: 'En progreso',
     system: 'Sistema',
+    average: 'Promedio',
+    allMonths: 'Todos los meses',
+    serverUnavailable: 'El servidor no esta disponible. Intenta de nuevo mas tarde.',
   },
   auth: {
     login: 'Iniciar sesion', logout: 'Cerrar sesion', register: 'Registrarse',
@@ -85,6 +88,16 @@ const es = {
     expenseDistributionDesc: 'Por categoria este mes',
     ofTotalIncome: 'Del total de ingresos',
     scorePoints: 'puntos',
+    goodMorning: 'Buenos dias',
+    goodAfternoon: 'Buenas tardes',
+    goodEvening: 'Buenas noches',
+    week: 'Semana',
+    loading: 'Cargando datos...',
+    excellentPace: 'Excelente ritmo',
+    underControl: 'Todo bajo control',
+    canImprove: 'Puedes mejorar',
+    reviewExpenses: 'Revisa tus gastos',
+    errorLoading: 'Error al cargar el dashboard. Intenta de nuevo.',
   },
   ingresos: {
     title: 'Ingresos', newIngreso: 'Nuevo ingreso', editIngreso: 'Editar ingreso',
@@ -92,6 +105,7 @@ const es = {
     noIngresos: 'No hay ingresos registrados este mes',
     noIngresosDesc: 'Registra tu primer ingreso para comenzar',
     created: 'Ingreso registrado', updated: 'Ingreso actualizado', deleted: 'Ingreso eliminado',
+    deleteConfirm: 'Eliminar este ingreso?',
   },
   egresos: {
     title: 'Egresos', newEgreso: 'Nuevo egreso', editEgreso: 'Editar egreso',
@@ -99,6 +113,7 @@ const es = {
     noEgresos: 'No hay egresos registrados este mes',
     noEgresosDesc: 'Registra tu primer gasto para comenzar',
     created: 'Gasto registrado', updated: 'Gasto actualizado', deleted: 'Gasto eliminado',
+    deleteConfirm: 'Eliminar este egreso?',
   },
   prestamos: {
     title: 'Prestamos', newPrestamo: 'Nuevo prestamo',
@@ -119,6 +134,10 @@ const es = {
     proximoPago: 'Prox. pago',
     pagoHoy: '¡Pago hoy!',
     pagoEnDias: 'Pago en {{dias}} dias',
+    deleteConfirm: 'Eliminar este prestamo?',
+    subtitle: 'Gestiona tus prestamos y cobros',
+    theyOweMe: 'Me deben',
+    iOwe: 'Yo debo',
   },
   metas: {
     title: 'Metas de ahorro', newMeta: 'Nueva meta',
@@ -128,6 +147,8 @@ const es = {
     status: { activa: 'Activa', completada: 'Completada', vencida: 'Vencida' },
     created: 'Meta creada', updated: 'Meta actualizada', deleted: 'Meta eliminada',
     contributed: 'Aporte registrado',
+    deleteConfirm: 'Eliminar esta meta de ahorro?',
+    subtitle: 'Gestiona tus objetivos financieros',
   },
   presupuestos: {
     title: 'Presupuestos', newPresupuesto: 'Nuevo presupuesto',
@@ -252,6 +273,9 @@ const es = {
     monto: 'Monto',
     metaMeses: 'Meta en meses',
     nombre: 'Nombre del fondo',
+    mes: 'mes',
+    remaining: 'Faltan',
+    notasOpcional: 'Notas (opcional)',
   },
   impulso: {
     badge: 'Impulso',
@@ -285,6 +309,17 @@ const es = {
     anual: 'Anual',
     semanal: 'Semanal',
     trimestral: 'Trimestral',
+    noPatterns: 'No se detectaron patrones recurrentes.',
+  },
+  tarjetas: {
+    title: 'Tarjetas',
+    deleteMovimiento: 'Eliminar este movimiento?',
+    deleteTarjeta: 'Eliminar esta tarjeta?',
+  },
+  bottomNav: {
+    quickActions: 'Acciones rapidas',
+    openActions: 'Abrir acciones rapidas',
+    closeActions: 'Cerrar acciones rapidas',
   },
   profile: {
     title: 'Finanzas personales',
