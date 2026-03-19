@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { Prestamo } from '@/types/prestamo'
+import { useMonedas } from '@/hooks/useCatalogos'
 
 const prestamoSchema = z
   .object({
@@ -58,6 +59,7 @@ export function PrestamoForm({
   onCancel,
   isLoading,
 }: PrestamoFormProps): JSX.Element {
+  const { data: monedas = [] } = useMonedas()
   const {
     register,
     handleSubmit,
@@ -119,8 +121,19 @@ export function PrestamoForm({
             Moneda
           </label>
           <select id="moneda" {...register('moneda')} className="finza-input w-full" aria-label="Moneda">
-            <option value="DOP">DOP</option>
-            <option value="USD">USD</option>
+            {monedas.length > 0
+              ? monedas.map((m) => (
+                  <option key={m.codigo} value={m.codigo}>
+                    {m.simbolo} {m.codigo} — {m.nombre}
+                  </option>
+                ))
+              : (
+                <>
+                  <option value="DOP">RD$ DOP — Peso Dominicano</option>
+                  <option value="USD">$ USD — Dólar Estadounidense</option>
+                </>
+              )
+            }
           </select>
         </div>
       </div>

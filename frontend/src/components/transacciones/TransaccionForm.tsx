@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useCategorias } from '@/hooks/useCategorias'
 import { useTarjetas } from '@/hooks/useTarjetas'
+import { useMonedas } from '@/hooks/useCatalogos'
 
 const ingresoSchema = z.object({
   categoria_id: z.string().uuid('Selecciona una categoria'),
   monto: z
     .number({ invalid_type_error: 'Ingresa un monto valido' })
     .positive('El monto debe ser mayor a 0'),
-  moneda: z.enum(['DOP', 'USD']).default('DOP'),
+  moneda: z.string().default('DOP'),
   descripcion: z.string().optional(),
   fuente: z.string().optional(),
   fecha: z.string().min(1, 'La fecha es requerida'),
@@ -23,7 +24,7 @@ const egresoSchema = z.object({
   monto: z
     .number({ invalid_type_error: 'Ingresa un monto valido' })
     .positive('El monto debe ser mayor a 0'),
-  moneda: z.enum(['DOP', 'USD']).default('DOP'),
+  moneda: z.string().default('DOP'),
   descripcion: z.string().optional(),
   metodo_pago: z
     .enum(['efectivo', 'tarjeta', 'transferencia', 'otro'])
@@ -66,6 +67,7 @@ export function TransaccionForm({
     (c) => c.tipo === tipo || c.tipo === 'ambos'
   )
   const { data: tarjetas = [] } = useTarjetas()
+  const { data: monedas = [] } = useMonedas()
   const tarjetasActivas = tarjetas.filter((t) => t.activa)
 
   const {
@@ -132,8 +134,19 @@ export function TransaccionForm({
             Moneda
           </label>
           <select id="moneda" {...register('moneda')} className="finza-input w-full" aria-label="Moneda">
-            <option value="DOP">DOP</option>
-            <option value="USD">USD</option>
+            {monedas.length > 0
+              ? monedas.map((m) => (
+                  <option key={m.codigo} value={m.codigo}>
+                    {m.simbolo} {m.codigo} — {m.nombre}
+                  </option>
+                ))
+              : (
+                <>
+                  <option value="DOP">RD$ DOP — Peso Dominicano</option>
+                  <option value="USD">$ USD — Dólar Estadounidense</option>
+                </>
+              )
+            }
           </select>
         </div>
       </div>

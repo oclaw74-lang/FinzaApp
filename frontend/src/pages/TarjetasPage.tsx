@@ -21,7 +21,8 @@ import {
   useEliminarMovimiento,
 } from '@/hooks/useMovimientosTarjeta'
 import { useCategorias } from '@/hooks/useCategorias'
-import { useBancos } from '@/hooks/useCatalogos'
+import { useBancos, usePaises } from '@/hooks/useCatalogos'
+import { useAuthStore } from '@/store/authStore'
 import type { Tarjeta, TarjetaCreate, TarjetaUpdate, MovimientoTarjetaCreate } from '@/types/tarjeta'
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
@@ -622,6 +623,10 @@ interface TarjetaModalProps {
 }
 
 function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: TarjetaModalProps): JSX.Element | null {
+  const { user } = useAuthStore()
+  const userPais = (user?.user_metadata?.pais_codigo as string | undefined) ?? 'DO'
+  const [formPaisCodigo, setFormPaisCodigo] = useState(userPais)
+  const { data: paises = [] } = usePaises()
   const {
     register,
     handleSubmit,
@@ -689,13 +694,40 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          {/* País para filtrar bancos */}
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">
+              País del banco
+            </label>
+            <select
+              className="finza-input w-full text-sm"
+              value={formPaisCodigo}
+              onChange={(e) => {
+                setFormPaisCodigo(e.target.value)
+                setValue('banco', '', { shouldValidate: false })
+                setValue('banco_id', null)
+                setValue('banco_custom', null)
+              }}
+              aria-label="País del banco"
+            >
+              {paises.length > 0
+                ? paises.map((p) => (
+                    <option key={p.codigo} value={p.codigo}>
+                      {p.nombre} ({p.moneda_codigo})
+                    </option>
+                  ))
+                : <option value="DO">República Dominicana (DOP)</option>
+              }
+            </select>
+          </div>
+
           {/* Banco selector */}
           <Controller
             name="banco"
             control={control}
             render={() => (
               <BancoSelector
-                paisCodigo={DEFAULT_PAIS_CODIGO}
+                paisCodigo={formPaisCodigo}
                 value={{
                   banco_id: watch('banco_id') ?? null,
                   banco_custom: watch('banco_custom') ?? null,
