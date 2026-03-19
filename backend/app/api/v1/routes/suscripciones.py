@@ -78,6 +78,6 @@ async def confirmar_detectadas(
     token: str = Depends(get_raw_token),
     current_user: dict = Depends(get_current_user),
 ) -> list[dict]:
-    # body.ids are candidate dicts simplified — build minimal dicts
-    candidatos = [{"id": cid, "nombre": cid, "monto": 0, "frecuencia": "mensual", "moneda": "DOP"} for cid in body.ids]
+    # Convert validated candidates to dicts for service layer
+    candidatos = [c.model_dump() for c in body.candidatos]
     return svc.confirmar_detectadas(user_jwt=token, user_id=current_user["user_id"], candidatos=candidatos)

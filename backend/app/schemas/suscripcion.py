@@ -24,8 +24,16 @@ class SuscripcionUpdate(BaseModel):
     notas: Optional[str] = None
 
 
+class CandidatoConfirmado(BaseModel):
+    nombre: str
+    monto: float = Field(gt=0)
+    frecuencia: str = "mensual"
+    moneda: str = "DOP"
+    categoria_id: Optional[str] = None
+
+
 class ConfirmarDetectadasRequest(BaseModel):
-    ids: list[str]
+    candidatos: list[CandidatoConfirmado]
 
 
 class SuscripcionResponse(BaseModel):
@@ -39,6 +47,7 @@ class SuscripcionResponse(BaseModel):
     auto_detectada: bool
     fecha_proximo_cobro: Optional[str]
     notas: Optional[str]
+    categoria_id: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

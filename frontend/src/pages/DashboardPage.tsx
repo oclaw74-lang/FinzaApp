@@ -1,12 +1,17 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   AlertCircle,
   CreditCard,
   CalendarClock,
+  ChevronRight,
+  TrendingUp,
+  AlertTriangle,
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDashboardV2 } from '@/hooks/useDashboardV2'
+import { useScore } from '@/hooks/useScore'
 import { useAuthStore } from '@/store/authStore'
 import { MetaProgressItem } from '@/features/dashboard/components/v2/MetaProgressItem'
 import { BudgetProgressBar } from '@/features/presupuestos/components/BudgetProgressBar'
@@ -48,14 +53,23 @@ function getInitialPeriod(): { mes: number; year: number } {
 
 const MESES_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
+function getScoreColor(score: number): string {
+  if (score <= 40) return 'var(--danger)'
+  if (score <= 65) return '#F5C542'
+  if (score <= 80) return 'var(--success)'
+  return '#00d060'
+}
+
 export function DashboardPage(): JSX.Element {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { user } = useAuthStore()
 
   const [mes, setMes] = useState<number>(getInitialPeriod().mes)
   const [year, setYear] = useState<number>(getInitialPeriod().year)
 
   const { data, isLoading, isError, error } = useDashboardV2({ mes, year })
+  const { data: scoreData, isLoading: scoreLoading } = useScore()
 
   const ingresos = data?.resumen_financiero.ingresos_mes ?? 0
   const egresos = data?.resumen_financiero.egresos_mes ?? 0
@@ -238,10 +252,77 @@ export function DashboardPage(): JSX.Element {
         )}
       </div>
 
-      {/* Prediccion */}
-      <div className="mb-6">
+      {/* Prediccion + Score row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <PrediccionMesCard />
+
+        {/* Score card */}
+        {scoreLoading ? (
+          <Skeleton className="h-[140px] rounded-2xl" />
+        ) : scoreData ? (
+          <div
+            className="card-glass rounded-2xl p-5 cursor-pointer hover:ring-1 hover:ring-[var(--accent)]/30 transition-all"
+            onClick={() => navigate('/score')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter') navigate('/score') }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <TrendingUp size={14} className="text-[var(--text-muted)]" />
+                <h3 className="text-xs uppercase tracking-widest text-[var(--text-muted)] dark:text-white/40">
+                  {t('score.title')}
+                </h3>
+              </div>
+              <ChevronRight size={14} className="text-[var(--text-muted)]" />
+            </div>
+            <div className="flex items-center gap-4 mb-4">
+              <span className="text-3xl font-bold tabular-nums" style={{ color: getScoreColor(scoreData.score) }}>
+                {scoreData.score}
+              </span>
+              <div>
+                <span
+                  className="text-xs font-bold px-2 py-0.5 rounded-full"
+                  style={{
+                    color: getScoreColor(scoreData.score),
+                    backgroundColor: `${getScoreColor(scoreData.score)}22`,
+                  }}
+                >
+                  {t(`score.${scoreData.estado}`)}
+                </span>
+                <p className="text-[10px] text-[var(--text-muted)] mt-1">/100 puntos</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {Object.entries(scoreData.breakdown).map(([key, val]) => (
+                <div key={key} className="text-center">
+                  <div className="w-full h-1.5 rounded-full bg-[var(--border)] dark:bg-white/10 mb-1">
+                    <div
+                      className="h-full rounded-full"
+                      style={{ width: `${(val / 25) * 100}%`, backgroundColor: getScoreColor(val * 4) }}
+                    />
+                  </div>
+                  <span className="text-[9px] text-[var(--text-muted)] capitalize">{key}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
+
+      {/* Budget alerts */}
+      {!isLoading && (data?.presupuestos_estado ?? []).some((p) => p.alerta) && (
+        <div className="flex items-start gap-3 p-3 mb-4 bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-xl">
+          <AlertTriangle size={16} className="flex-shrink-0 mt-0.5 text-[var(--warning)]" />
+          <div className="text-xs text-[var(--text-primary)]">
+            <span className="font-semibold">Presupuestos al limite: </span>
+            {(data?.presupuestos_estado ?? [])
+              .filter((p) => p.alerta)
+              .map((p) => `${p.categoria} (${p.porcentaje_usado.toFixed(0)}%)`)
+              .join(', ')}
+          </div>
+        </div>
+      )}
 
       {/* Charts row: flujo mensual + distribucion egresos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">

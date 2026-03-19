@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { DashboardPage } from '@/pages/DashboardPage'
 import type { DashboardV2Response } from '@/types/dashboard'
@@ -9,6 +10,13 @@ vi.mock('@/hooks/useDashboardV2', () => ({
 
 vi.mock('@/hooks/usePrediccionMes', () => ({
   usePrediccionMes: vi.fn(() => ({ data: undefined, isLoading: false })),
+}))
+
+vi.mock('@/hooks/useScore', () => ({
+  useScore: vi.fn(() => ({
+    data: { score: 72, estado: 'bueno', breakdown: { ahorro: 20, presupuesto: 18, deuda: 22, emergencia: 12 } },
+    isLoading: false,
+  })),
 }))
 
 vi.mock('@/store/authStore', () => ({
@@ -120,6 +128,8 @@ function setupAuthMock(fullName?: string, email = 'test@example.com') {
 }
 
 describe('DashboardPage', () => {
+  const renderDashboard = () => render(<MemoryRouter><DashboardPage /></MemoryRouter>)
+
   beforeEach(() => {
     vi.clearAllMocks()
     setupMock()
@@ -127,76 +137,76 @@ describe('DashboardPage', () => {
   })
 
   it('renders page title', () => {
-    render(<DashboardPage />)
+    renderDashboard()
     // Title is rendered by the shared Header component (not duplicated in page body)
     // Verify the dashboard KPI section renders instead
     expect(screen.getByText('Tasa de ahorro')).toBeInTheDocument()
   })
 
   it('renders month selector', () => {
-    render(<DashboardPage />)
+    renderDashboard()
     // Month is now selected via pill buttons (Ene, Feb, ... Dic) in the greeting header
     expect(screen.getByRole('button', { name: 'Ene' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Dic' })).toBeInTheDocument()
   })
 
   it('renders year selector', () => {
-    render(<DashboardPage />)
+    renderDashboard()
     expect(screen.getByLabelText('Ano anterior')).toBeInTheDocument()
   })
 
   it('shows loading skeleton state with 4 KPI cards', () => {
     setupMock({ isLoading: true, data: undefined })
-    render(<DashboardPage />)
+    renderDashboard()
     const pulsingElements = document.querySelectorAll('.animate-pulse')
     expect(pulsingElements.length).toBeGreaterThan(0)
   })
 
   it('shows error alert when isError is true', () => {
     setupMock({ isError: true, error: new Error('Network error'), data: undefined })
-    render(<DashboardPage />)
+    renderDashboard()
     expect(screen.getByRole('alert')).toBeInTheDocument()
     expect(screen.getByText('Network error')).toBeInTheDocument()
   })
 
   it('shows fallback error message when error has no message', () => {
     setupMock({ isError: true, error: null, data: undefined })
-    render(<DashboardPage />)
+    renderDashboard()
     expect(screen.getByRole('alert')).toBeInTheDocument()
     expect(screen.getByText(/error al cargar el dashboard/i)).toBeInTheDocument()
   })
 
   it('renders ingresos KPI with data', () => {
-    render(<DashboardPage />)
+    renderDashboard()
     expect(screen.getByText('Ingresos')).toBeInTheDocument()
     expect(screen.getAllByText(/50,000/).length).toBeGreaterThan(0)
   })
 
   it('renders egresos KPI with data', () => {
-    render(<DashboardPage />)
+    renderDashboard()
     expect(screen.getByText('Egresos')).toBeInTheDocument()
   })
 
   it('renders greeting header instead of balance hero card', () => {
-    render(<DashboardPage />)
+    renderDashboard()
     // The old hero balance card has been replaced by a greeting header
     expect(screen.getByTestId('dashboard-greeting')).toBeInTheDocument()
   })
 
   it('renders tasa de ahorro KPI', () => {
-    render(<DashboardPage />)
+    renderDashboard()
     expect(screen.getByText('Tasa de ahorro')).toBeInTheDocument()
     expect(screen.getByText('40.0%')).toBeInTheDocument()
   })
 
   it('renders recent transactions', () => {
-    render(<DashboardPage />)
+    renderDashboard()
     expect(screen.getByText('Salario')).toBeInTheDocument()
     expect(screen.getByText('Supermercado')).toBeInTheDocument()
   })
 
   it('renders category breakdown charts', () => {
-    render(<DashboardPage />)
+    renderDashboard()
     // Alimentacion appears in presupuestos_estado AND in the mocked distribution chart
     expect(screen.getAllByText('Alimentacion').length).toBeGreaterThan(0)
     // Transporte appears in the mocked ChartDistribucionEgresos
@@ -204,19 +214,19 @@ describe('DashboardPage', () => {
   })
 
   it('renders presupuestos section', () => {
-    render(<DashboardPage />)
+    renderDashboard()
     expect(screen.getByText('Presupuestos activos')).toBeInTheDocument()
   })
 
   it('renders metas activas section', () => {
-    render(<DashboardPage />)
+    renderDashboard()
     // 'Metas activas' appears in both the KPI card and the section header
     expect(screen.getAllByText('Metas activas').length).toBeGreaterThan(0)
     expect(screen.getByText('Fondo de emergencia')).toBeInTheDocument()
   })
 
   it('renders prestamos activos with deuda total', () => {
-    render(<DashboardPage />)
+    renderDashboard()
     expect(screen.getByText('Prestamos activos')).toBeInTheDocument()
     expect(screen.getByText(/150,000/)).toBeInTheDocument()
   })
@@ -228,24 +238,24 @@ describe('DashboardPage', () => {
         prestamos_activos: { total_deuda: 0, count: 0, proximo_vencimiento: null },
       },
     })
-    render(<DashboardPage />)
+    renderDashboard()
     expect(screen.getByText('Sin prestamos activos')).toBeInTheDocument()
   })
 
   it('shows empty state for transactions when list is empty', () => {
     setupMock({ data: { ...mockData, ultimas_transacciones: [] } })
-    render(<DashboardPage />)
+    renderDashboard()
     expect(screen.getAllByText(/sin transacciones este mes/i).length).toBeGreaterThan(0)
   })
 
   it('shows empty state for metas when list is empty', () => {
     setupMock({ data: { ...mockData, metas_activas: [] } })
-    render(<DashboardPage />)
+    renderDashboard()
     expect(screen.getAllByText(/sin datos/i).length).toBeGreaterThan(0)
   })
 
   it('changes mes when month button is clicked', () => {
-    render(<DashboardPage />)
+    renderDashboard()
     // Month is now selected via pill buttons in the greeting header
     const junButton = screen.getByRole('button', { name: 'Jun' })
     fireEvent.click(junButton)
@@ -254,7 +264,7 @@ describe('DashboardPage', () => {
   })
 
   it('changes year when selector changes', () => {
-    render(<DashboardPage />)
+    renderDashboard()
     const currentYear = new Date().getFullYear()
     expect(screen.getByText(String(currentYear))).toBeInTheDocument()
     const nextYearBtn = screen.getByLabelText('Ano siguiente')
@@ -263,13 +273,13 @@ describe('DashboardPage', () => {
   })
 
   it('does not show error alert when isError is false', () => {
-    render(<DashboardPage />)
+    renderDashboard()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
   it('renders greeting with user first name', () => {
     setupAuthMock('Jorge Martinez')
-    render(<DashboardPage />)
+    renderDashboard()
     const greeting = screen.getByTestId('dashboard-greeting')
     expect(greeting).toBeInTheDocument()
     expect(greeting.textContent).toContain('Jorge')
@@ -285,7 +295,7 @@ describe('DashboardPage', () => {
     } as typeof Date
     globalThis.Date = mockDate
 
-    render(<DashboardPage />)
+    renderDashboard()
     const greeting = screen.getByTestId('dashboard-greeting')
     expect(greeting.textContent).toContain('Buenos dias')
 
@@ -294,7 +304,7 @@ describe('DashboardPage', () => {
 
   it('shows fallback name when user has no full_name', () => {
     setupAuthMock(undefined, 'jorge@example.com')
-    render(<DashboardPage />)
+    renderDashboard()
     const greeting = screen.getByTestId('dashboard-greeting')
     expect(greeting.textContent).toContain('jorge')
   })

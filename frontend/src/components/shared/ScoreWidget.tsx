@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { useScore } from '@/hooks/useScore'
@@ -27,6 +28,7 @@ interface ScoreWidgetProps {
 
 export function ScoreWidget({ collapsed = false }: ScoreWidgetProps): JSX.Element {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { data, isLoading } = useScore()
   const [showTooltip, setShowTooltip] = useState(false)
 
@@ -46,11 +48,15 @@ export function ScoreWidget({ collapsed = false }: ScoreWidgetProps): JSX.Elemen
   return (
     <div
       className={cn(
-        'relative mx-2 mb-2 rounded-xl border border-white/10 bg-white/5 cursor-default',
+        'relative mx-2 mb-2 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors',
         collapsed ? 'p-2 flex justify-center' : 'px-3 py-2.5'
       )}
+      onClick={() => navigate('/score')}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter') navigate('/score') }}
     >
       {collapsed ? (
         /* Collapsed: just the number */

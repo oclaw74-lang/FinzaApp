@@ -28,6 +28,7 @@ import { ConfiguracionPage } from '@/pages/ConfiguracionPage'
 import { RetosPage } from '@/pages/RetosPage'
 import { EducacionPage } from '@/pages/EducacionPage'
 import { RecurrentesPage } from '@/pages/RecurrentesPage'
+import { ScorePage } from '@/pages/ScorePage'
 import { TarjetasPage } from '@/pages/TarjetasPage'
 
 const queryClient = new QueryClient({
@@ -110,6 +111,7 @@ export function App(): JSX.Element {
                 <Route path="/educacion" element={<EducacionPage />} />
                 <Route path="/recurrentes" element={<RecurrentesPage />} />
                 <Route path="/tarjetas" element={<TarjetasPage />} />
+                <Route path="/score" element={<ScorePage />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFoundPage />} />

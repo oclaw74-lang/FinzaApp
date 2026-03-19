@@ -67,7 +67,13 @@ export function useConfirmarDetectadas() {
   return useMutation({
     mutationFn: async (candidatos: SuscripcionData[]) => {
       const { data } = await apiClient.post('/suscripciones/confirmar-detectadas', {
-        ids: candidatos.map((c) => c.id),
+        candidatos: candidatos.map((c) => ({
+          nombre: c.nombre,
+          monto: c.monto,
+          frecuencia: c.frecuencia,
+          moneda: c.moneda,
+          categoria_id: c.categoria_id ?? undefined,
+        })),
       })
       return data as SuscripcionData[]
     },
