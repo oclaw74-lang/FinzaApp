@@ -1,0 +1,24 @@
+Estado actual encontrado
+Onboarding
+No existe flujo dedicado. Es solo la página de Configuración. No hay validación de "completado" — el perfil se crea con defaults automáticamente. No hay redirect para nuevos usuarios.
+
+Notificaciones
+Ya están implementados 15 triggers en el backend (préstamos vencidos, presupuesto al 80%/100%, score crítico, tarjeta al límite, meta sin aportes, etc.). El problema es que solo se evalúan cuando el usuario abre la página de notificaciones. El badge del bell en la StatsBar no está conectado al conteo real.
+
+Deuda técnica
+GET /categorias/{id} — el servicio existe (get_categoria()) pero no está expuesto en el router. Son 3 líneas.
+N+1 en get_estado_presupuestos — hace 1 query de presupuestos + 1 query por cada presupuesto para sumar egresos. Se puede resolver con 1 solo query de egresos y grouping en Python.
+Paginación — ya está implementada correctamente en ingresos y egresos. No hay nada que hacer.
+Lo que voy a implementar
+Deuda técnica:
+
+Agregar GET /categorias/{id} al router (exponer lo que ya existe)
+Optimizar get_estado_presupuestos — un solo query de egresos + aggregation en memoria
+Notificaciones:
+3. Llamar POST /notificaciones/generar al cargar el Dashboard (no solo al abrir la página de notificaciones)
+4. Conectar el badge del bell en StatsBar al conteo real de notificaciones no leídas
+
+Onboarding:
+5. Crear OnboardingPage.tsx — wizard de 3 pasos (país/moneda → salario → listo)
+6. Agregar ruta /onboarding en App.tsx
+7. Redirect automático post-login si onboarding_completado = false

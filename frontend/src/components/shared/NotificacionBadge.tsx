@@ -7,7 +7,6 @@ import {
   useNotificaciones,
   useMarcarLeida,
   useMarcarTodasLeidas,
-  useGenerarNotificaciones,
 } from '@/hooks/useNotificaciones'
 
 const TIPO_COLOR: Record<string, string> = {
@@ -25,16 +24,10 @@ export function NotificacionBadge(): JSX.Element {
   const { data: notificaciones = [] } = useNotificaciones()
   const marcarLeida = useMarcarLeida()
   const marcarTodas = useMarcarTodasLeidas()
-  const generarNotificaciones = useGenerarNotificaciones()
 
   const noLeidas = notificaciones.filter((n) => !n.leida)
   const count = noLeidas.length
   const recientes = notificaciones.slice(0, 5)
-
-  // Generate notifications on mount
-  useEffect(() => {
-    generarNotificaciones.mutate()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Close on outside click
   useEffect(() => {

@@ -1,5 +1,6 @@
 import { Menu } from 'lucide-react'
 import { useUiStore } from '@/store/uiStore'
+import { NotificacionBadge } from './NotificacionBadge'
 import { cn } from '@/lib/utils'
 
 export function Header(): JSX.Element {
@@ -36,8 +37,8 @@ export function Header(): JSX.Element {
         </span>
       </div>
 
-      {/* Spacer to keep hamburger left-aligned and logo truly centered */}
-      <div className="w-8" aria-hidden="true" />
+      {/* Notification bell — visible on mobile */}
+      <NotificacionBadge />
     </header>
   )
 }

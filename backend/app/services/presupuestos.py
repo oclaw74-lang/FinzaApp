@@ -269,7 +269,13 @@ def get_sugeridos(user_jwt: str, user_id: str, mes: int, year: int) -> list[dict
 
 
 def get_estado_presupuestos(user_jwt: str, mes: int, year: int) -> list[dict]:
-    """Retorna presupuestos del mes con gasto_actual calculado desde egresos."""
+    """Retorna presupuestos del mes con gasto_actual calculado desde egresos.
+
+    Uses 2 queries total regardless of how many budgets the user has,
+    replacing the previous N+1 pattern (1 per presupuesto).
+    """
+    from collections import defaultdict
+
     client = get_user_client(user_jwt)
     try:
         presupuestos_response = (
@@ -280,24 +286,32 @@ def get_estado_presupuestos(user_jwt: str, mes: int, year: int) -> list[dict]:
             .execute()
         )
         presupuestos = presupuestos_response.data or []
+        if not presupuestos:
+            return []
 
         last_day = calendar.monthrange(year, mes)[1]
         fecha_inicio = f"{year}-{mes:02d}-01"
         fecha_fin = f"{year}-{mes:02d}-{last_day:02d}"
 
+        # Single query for all egresos in the month (RLS scopes to current user)
+        egresos_response = (
+            client.table("egresos")
+            .select("categoria_id,monto")
+            .gte("fecha", fecha_inicio)
+            .lte("fecha", fecha_fin)
+            .execute()
+        )
+
+        # Aggregate by categoria_id in Python — O(egresos) instead of O(N * queries)
+        gastos: dict[str, float] = defaultdict(float)
+        for e in egresos_response.data or []:
+            cat_id = e.get("categoria_id")
+            if cat_id:
+                gastos[cat_id] += float(e["monto"])
+
         resultado = []
         for p in presupuestos:
-            egresos_response = (
-                client.table("egresos")
-                .select("monto")
-                .eq("categoria_id", p["categoria_id"])
-                .gte("fecha", fecha_inicio)
-                .lte("fecha", fecha_fin)
-                .execute()
-            )
-            gasto_actual = sum(
-                float(e["monto"]) for e in (egresos_response.data or [])
-            )
+            gasto_actual = round(gastos.get(p["categoria_id"], 0.0), 2)
             monto_limite = float(p["monto_limite"])
             porcentaje = (
                 round(gasto_actual / monto_limite * 100, 2) if monto_limite > 0 else 0.0
@@ -317,7 +331,7 @@ def get_estado_presupuestos(user_jwt: str, mes: int, year: int) -> list[dict]:
                     "mes": p["mes"],
                     "year": p["year"],
                     "monto_limite": monto_limite,
-                    "gasto_actual": round(gasto_actual, 2),
+                    "gasto_actual": gasto_actual,
                     "porcentaje_usado": porcentaje,
                     "alerta": porcentaje >= 80,
                 }
