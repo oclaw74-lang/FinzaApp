@@ -549,6 +549,7 @@ function RedSelector({ value, onChange }: RedSelectorProps): JSX.Element {
                 : 'border-[var(--border)] hover:border-[var(--accent)]/40'
             )}
             aria-pressed={value === red.value}
+            aria-label={red.label}
             title={red.label}
           >
             {red.value !== 'otro' ? (
