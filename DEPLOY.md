@@ -315,6 +315,57 @@ docker compose restart nginx
 
 ## Resolución de problemas
 
+### `curl: (7) Failed to connect to finza.online port 443`
+
+Diagnóstico paso a paso en el VPS:
+
+```bash
+# 1. ¿Están corriendo los contenedores?
+cd /opt/finza
+docker compose ps
+# Si no aparecen todos → ir al paso 2
+
+# 2. ¿Está escuchando alguien en el puerto 443?
+ss -tlnp | grep -E '80|443'
+# Si no hay nada → nginx no está corriendo
+
+# 3. Ver logs de nginx para saber por qué falló
+docker compose logs --tail=50 nginx
+
+# 4. ¿Existen los certificados SSL?
+ls data/certbot/conf/live/finza.online/
+# Si no existen → correr init-letsencrypt.sh primero
+
+# 5. ¿Está abierto el firewall?
+sudo ufw status
+# Si 443 no aparece como ALLOW → abrirlo:
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw allow 22/tcp   # ← No olvidar SSH
+sudo ufw reload
+```
+
+**Causa más común**: No se corrió `init-letsencrypt.sh` antes del deploy.
+nginx no puede arrancar si los certificados SSL no existen en `data/certbot/conf/live/finza.online/`.
+
+**Solución completa si es primera vez**:
+```bash
+cd /opt/finza
+
+# 1. Abrir puertos del firewall
+sudo ufw allow 80/tcp && sudo ufw allow 443/tcp && sudo ufw allow 22/tcp && sudo ufw reload
+
+# 2. Obtener certificados SSL
+bash scripts/init-letsencrypt.sh
+
+# 3. Levantar stack completo
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+# 4. Verificar
+docker compose ps
+curl https://finza.online/api/v1/health
+```
+
 ### La app no carga después del deploy
 
 ```bash
@@ -330,7 +381,7 @@ docker compose logs --tail=50 nginx
 ls data/certbot/conf/live/finza.online/
 
 # Si no existen, volver a correr:
-./scripts/init-letsencrypt.sh
+bash scripts/init-letsencrypt.sh
 ```
 
 ### Puerto 80/443 bloqueado
@@ -340,6 +391,7 @@ sudo ufw status
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw allow 22/tcp   # ← NO olvidar SSH
+sudo ufw reload
 ```
 
 ### GitHub Actions falla en "Deploy via SSH"
