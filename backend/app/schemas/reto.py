@@ -5,7 +5,9 @@ from typing import Optional
 class RetoBase(BaseModel):
     id: str
     titulo: str
+    titulo_en: Optional[str] = None
     descripcion: str
+    descripcion_en: Optional[str] = None
     tipo: str
     ahorro_estimado: Optional[float] = None
     icono: Optional[str] = None
@@ -15,7 +17,9 @@ class UserRetoResponse(BaseModel):
     id: str
     reto_id: str
     titulo: str
+    titulo_en: Optional[str] = None
     descripcion: str
+    descripcion_en: Optional[str] = None
     tipo: str
     ahorro_estimado: Optional[float] = None
     icono: Optional[str] = None

@@ -55,7 +55,10 @@ function UserRetoCard({
   isCheckinLoading,
   isAbandonarLoading,
 }: UserRetoCardProps): JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isEn = i18n.language === 'en'
+  const displayTitulo = isEn ? (reto.titulo_en || reto.titulo) : reto.titulo
+  const displayDescripcion = isEn ? (reto.descripcion_en || reto.descripcion) : reto.descripcion
 
   return (
     <div className="finza-card p-4 space-y-3">
@@ -70,8 +73,8 @@ function UserRetoCard({
             <Trophy size={20} className="text-[var(--text-muted)] shrink-0 mt-0.5" aria-hidden="true" />
           )}
           <div className="min-w-0">
-            <p className="font-medium text-sm text-[var(--text-primary)] truncate">{reto.titulo}</p>
-            <p className="text-xs text-[var(--text-muted)] mt-0.5 line-clamp-2">{reto.descripcion}</p>
+            <p className="font-medium text-sm text-[var(--text-primary)] truncate">{displayTitulo}</p>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5 line-clamp-2">{displayDescripcion}</p>
           </div>
         </div>
         <TipoBadge tipo={reto.tipo} />
@@ -131,7 +134,10 @@ interface CatalogoRetoCardProps {
 }
 
 function CatalogoRetoCard({ reto, onAceptar, isLoading }: CatalogoRetoCardProps): JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isEn = i18n.language === 'en'
+  const displayTitulo = isEn ? (reto.titulo_en || reto.titulo) : reto.titulo
+  const displayDescripcion = isEn ? (reto.descripcion_en || reto.descripcion) : reto.descripcion
 
   return (
     <div className="finza-card finza-card-hover p-4 space-y-3">
@@ -146,10 +152,10 @@ function CatalogoRetoCard({ reto, onAceptar, isLoading }: CatalogoRetoCardProps)
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-medium text-sm text-[var(--text-primary)]">{reto.titulo}</p>
+            <p className="font-medium text-sm text-[var(--text-primary)]">{displayTitulo}</p>
             <TipoBadge tipo={reto.tipo} />
           </div>
-          <p className="text-xs text-[var(--text-muted)] mt-1 line-clamp-2">{reto.descripcion}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1 line-clamp-2">{displayDescripcion}</p>
         </div>
       </div>
 

@@ -9,7 +9,7 @@ from app.services.base import _handle_api_error
 def get_catalogo(user_jwt: str) -> list[dict]:
     client = get_user_client(user_jwt)
     try:
-        r = client.table("retos").select("*").order("tipo").execute()
+        r = client.table("retos").select("id, titulo, titulo_en, descripcion, descripcion_en, tipo, ahorro_estimado, icono").order("tipo").execute()
         return r.data or []
     except Exception as e:
         _handle_api_error(e)
@@ -20,7 +20,7 @@ def get_mis_retos(user_jwt: str, user_id: str) -> list[dict]:
     try:
         r = (
             client.table("user_retos")
-            .select("*, retos(titulo, descripcion, tipo, ahorro_estimado, icono)")
+            .select("*, retos(titulo, titulo_en, descripcion, descripcion_en, tipo, ahorro_estimado, icono)")
             .eq("user_id", user_id)
             .eq("estado", "activo")
             .execute()
@@ -34,7 +34,9 @@ def get_mis_retos(user_jwt: str, user_id: str) -> list[dict]:
                     "id": ur["id"],
                     "reto_id": ur["reto_id"],
                     "titulo": reto.get("titulo", ""),
+                    "titulo_en": reto.get("titulo_en"),
                     "descripcion": reto.get("descripcion", ""),
+                    "descripcion_en": reto.get("descripcion_en"),
                     "tipo": reto.get("tipo", ""),
                     "ahorro_estimado": float(reto.get("ahorro_estimado") or 0),
                     "icono": reto.get("icono"),
