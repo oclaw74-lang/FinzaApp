@@ -30,6 +30,7 @@ import { EducacionPage } from '@/pages/EducacionPage'
 import { RecurrentesPage } from '@/pages/RecurrentesPage'
 import { ScorePage } from '@/pages/ScorePage'
 import { TarjetasPage } from '@/pages/TarjetasPage'
+import { PwaInstallPrompt } from '@/components/shared/PwaInstallPrompt'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -118,6 +119,7 @@ export function App(): JSX.Element {
           </Routes>
         </BrowserRouter>
         <Toaster position="top-right" richColors closeButton />
+        <PwaInstallPrompt />
       </QueryClientProvider>
     </I18nextProvider>
   )

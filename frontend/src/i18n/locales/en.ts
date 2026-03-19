@@ -320,6 +320,11 @@ const en = {
     openActions: 'Open quick actions',
     closeActions: 'Close quick actions',
   },
+  pwa: {
+    installTitle: 'Install Finza',
+    installDesc: 'Add the app to your home screen',
+    install: 'Install',
+  },
   profile: {
     title: 'Personal finances',
     salario: 'Monthly net salary',

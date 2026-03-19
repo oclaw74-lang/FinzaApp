@@ -321,6 +321,11 @@ const es = {
     openActions: 'Abrir acciones rapidas',
     closeActions: 'Cerrar acciones rapidas',
   },
+  pwa: {
+    installTitle: 'Instalar Finza',
+    installDesc: 'Agrega la app a tu pantalla de inicio',
+    install: 'Instalar',
+  },
   profile: {
     title: 'Finanzas personales',
     salario: 'Salario mensual neto',
