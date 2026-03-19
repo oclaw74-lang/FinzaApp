@@ -4,7 +4,7 @@ import { Plus, Pencil, Trash2, Zap, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
-import { cn, formatCurrency } from '@/lib/utils'
+import { formatCurrency } from '@/lib/utils'
 import { getApiErrorMessage } from '@/lib/apiError'
 import {
   useSuscripcionesResumen,
@@ -147,7 +147,7 @@ export function SuscripcionesPage(): JSX.Element {
                 <div className="flex items-center gap-2">
                   <p className="font-medium text-sm text-[var(--text-primary)] truncate">{s.nombre}</p>
                   {s.auto_detectada && (
-                    <Badge variant="secondary" className="text-[10px]">{t('suscripciones.autoDetectada')}</Badge>
+                    <Badge variant="neutral" className="text-[10px]">{t('suscripciones.autoDetectada')}</Badge>
                   )}
                 </div>
                 <p className="text-xs text-[var(--text-muted)]">{t(`suscripciones.${s.frecuencia}`)} · {s.fecha_proximo_cobro ?? '—'}</p>

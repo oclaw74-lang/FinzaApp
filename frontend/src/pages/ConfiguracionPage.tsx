@@ -372,23 +372,7 @@ export function ConfiguracionPage(): JSX.Element {
     reader.readAsDataURL(file)
   }
 
-  const onProfileSubmit = async (data: ProfileForm): Promise<void> => {
-    const { error } = await supabase.auth.updateUser({
-      data: {
-        full_name: data.fullName,
-        phone: data.phone,
-        currency: data.currency,
-        country: data.country,
-      },
-    })
-    if (error) {
-      toast.error(error.message)
-      return
-    }
-    toast.success(t('settings.profileSaved'))
-  }
-
-  const onPasswordSubmit = async (data: PasswordForm): Promise<void> => {
+  const onPasswordSubmit= async (data: PasswordForm): Promise<void> => {
     setPasswordError(null)
     const { error } = await supabase.auth.updateUser({ password: data.newPassword })
     if (error) {

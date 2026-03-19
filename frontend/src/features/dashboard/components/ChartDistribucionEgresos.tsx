@@ -89,7 +89,7 @@ export function ChartDistribucionEgresos({ data }: Props): JSX.Element {
           outerRadius={85}
           paddingAngle={3}
           dataKey="total"
-          label={({ porcentaje }) => `${porcentaje.toFixed(0)}%`}
+          label={(props) => `${((props as { porcentaje?: number }).porcentaje ?? 0).toFixed(0)}%`}
           labelLine={false}
         >
           {chartData.map((entry, index) => (

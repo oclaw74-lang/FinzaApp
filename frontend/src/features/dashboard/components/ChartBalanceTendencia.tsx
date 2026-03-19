@@ -58,7 +58,7 @@ export function ChartBalanceTendencia({ ingresos, egresos, mes }: Props): JSX.El
               fontSize: '13px',
               color: 'var(--text-primary)',
             }}
-            formatter={(v: number) => [`$${v.toLocaleString('es-DO')}`, '']}
+            formatter={(v) => [`${(v as number)?.toLocaleString('es-DO')}`, '']}
           />
           <Area
             type="monotone"

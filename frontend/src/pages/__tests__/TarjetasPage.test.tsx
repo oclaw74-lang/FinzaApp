@@ -59,6 +59,7 @@ const mockCredito: Tarjeta = {
   fecha_pago: 5,
   color: null,
   activa: true,
+  titular: 'Test User',
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
 }
@@ -77,6 +78,7 @@ const mockDebito: Tarjeta = {
   fecha_pago: null,
   color: null,
   activa: true,
+  titular: 'Test User',
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
 }
@@ -111,18 +113,18 @@ function setupMocks(
     data: tarjetas,
     isLoading: loading,
     isError: error,
-  } as ReturnType<typeof useTarjetas>)
-  vi.mocked(useCreateTarjeta).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useCreateTarjeta>)
-  vi.mocked(useUpdateTarjeta).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useUpdateTarjeta>)
-  vi.mocked(useDeleteTarjeta).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useDeleteTarjeta>)
+  } as unknown as ReturnType<typeof useTarjetas>)
+  vi.mocked(useCreateTarjeta).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useCreateTarjeta>)
+  vi.mocked(useUpdateTarjeta).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useUpdateTarjeta>)
+  vi.mocked(useDeleteTarjeta).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useDeleteTarjeta>)
   vi.mocked(useMovimientosTarjeta).mockReturnValue({
     data: [],
     isLoading: false,
     isError: false,
-  } as ReturnType<typeof useMovimientosTarjeta>)
-  vi.mocked(useRegistrarMovimiento).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useRegistrarMovimiento>)
-  vi.mocked(useEliminarMovimiento).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useEliminarMovimiento>)
-  vi.mocked(useCategorias).mockReturnValue({ data: [], isLoading: false } as ReturnType<typeof useCategorias>)
+  } as unknown as ReturnType<typeof useMovimientosTarjeta>)
+  vi.mocked(useRegistrarMovimiento).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useRegistrarMovimiento>)
+  vi.mocked(useEliminarMovimiento).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useEliminarMovimiento>)
+  vi.mocked(useCategorias).mockReturnValue({ data: [], isLoading: false } as unknown as ReturnType<typeof useCategorias>)
   vi.mocked(useBancos).mockReturnValue({
     data: [
       { id: 'b-1', pais_codigo: 'DO', nombre: 'Banco Popular', nombre_corto: 'Popular', orden: 1, activo: true },
@@ -130,7 +132,7 @@ function setupMocks(
     ],
     isLoading: false,
     isError: false,
-  } as ReturnType<typeof useBancos>)
+  } as unknown as ReturnType<typeof useBancos>)
   vi.mocked(usePaises).mockReturnValue({
     data: [
       { codigo: 'DO', nombre: 'República Dominicana', moneda_codigo: 'DOP', activo: true },
@@ -138,14 +140,14 @@ function setupMocks(
     ],
     isLoading: false,
     isError: false,
-  } as ReturnType<typeof usePaises>)
+  } as unknown as ReturnType<typeof usePaises>)
   return { mutateAsync }
 }
 
 // ─── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('TarjetasPage', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('renders empty state when no cards exist', () => {
     setupMocks([])
@@ -375,7 +377,7 @@ describe('TarjetasPage', () => {
       ],
       isLoading: false,
       isError: false,
-    } as ReturnType<typeof useMovimientosTarjeta>)
+    } as unknown as ReturnType<typeof useMovimientosTarjeta>)
 
     render(<TarjetasPage />)
 
@@ -390,7 +392,7 @@ describe('TarjetasPage', () => {
       data: undefined,
       isLoading: true,
       isError: false,
-    } as ReturnType<typeof useMovimientosTarjeta>)
+    } as unknown as ReturnType<typeof useMovimientosTarjeta>)
 
     render(<TarjetasPage />)
 
@@ -465,8 +467,8 @@ describe('TarjetasPage', () => {
       ],
       isLoading: false,
       isError: false,
-    } as ReturnType<typeof useMovimientosTarjeta>)
-    vi.mocked(useEliminarMovimiento).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useEliminarMovimiento>)
+    } as unknown as ReturnType<typeof useMovimientosTarjeta>)
+    vi.mocked(useEliminarMovimiento).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useEliminarMovimiento>)
     vi.spyOn(window, 'confirm').mockReturnValue(true)
 
     render(<TarjetasPage />)

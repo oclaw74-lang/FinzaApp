@@ -50,7 +50,7 @@ const mockBancos = [
 ]
 
 describe('useCatalogos', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   describe('useMonedas', () => {
     it('fetches monedas correctly and returns data', async () => {

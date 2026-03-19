@@ -67,19 +67,19 @@ function setupMocks(
   vi.mocked(useRecurrentes).mockReturnValue({
     data: recurrentes,
     isLoading: loadingRec,
-  } as ReturnType<typeof useRecurrentes>)
+  } as unknown as ReturnType<typeof useRecurrentes>)
   vi.mocked(useProximosVencimientos).mockReturnValue({
     data: proximos,
     isLoading: loadingProx,
-  } as ReturnType<typeof useProximosVencimientos>)
-  vi.mocked(useCreateRecurrente).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useCreateRecurrente>)
-  vi.mocked(useUpdateRecurrente).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useUpdateRecurrente>)
-  vi.mocked(useDeleteRecurrente).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useDeleteRecurrente>)
+  } as unknown as ReturnType<typeof useProximosVencimientos>)
+  vi.mocked(useCreateRecurrente).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useCreateRecurrente>)
+  vi.mocked(useUpdateRecurrente).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useUpdateRecurrente>)
+  vi.mocked(useDeleteRecurrente).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useDeleteRecurrente>)
   return { mutateAsync }
 }
 
 describe('RecurrentesPage', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('renders page title', () => {
     setupMocks()

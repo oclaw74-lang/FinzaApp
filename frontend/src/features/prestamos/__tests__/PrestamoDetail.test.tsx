@@ -92,14 +92,14 @@ function setupMocks(
     data: prestamo,
     isLoading: false,
     isError: false,
-  } as ReturnType<typeof usePrestamoDetalle>)
-  vi.mocked(useRegistrarPago).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useRegistrarPago>)
-  vi.mocked(useDeletePago).mockReturnValue({ mutateAsync, isPending: false } as ReturnType<typeof useDeletePago>)
+  } as unknown as ReturnType<typeof usePrestamoDetalle>)
+  vi.mocked(useRegistrarPago).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useRegistrarPago>)
+  vi.mocked(useDeletePago).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useDeletePago>)
   vi.mocked(useTablaAmortizacion).mockReturnValue({
     data: amortizacion,
     isLoading: loadingAmortizacion,
     isError: false,
-  } as ReturnType<typeof useTablaAmortizacion>)
+  } as unknown as ReturnType<typeof useTablaAmortizacion>)
   return { mutateAsync }
 }
 
@@ -113,7 +113,7 @@ const defaultProps = {
 // ─── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('PrestamoDetail', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('renders correctly with prestamo data', () => {
     setupMocks()
@@ -128,14 +128,14 @@ describe('PrestamoDetail', () => {
       data: undefined,
       isLoading: true,
       isError: false,
-    } as ReturnType<typeof usePrestamoDetalle>)
+    } as unknown as ReturnType<typeof usePrestamoDetalle>)
     vi.mocked(useTablaAmortizacion).mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: false,
-    } as ReturnType<typeof useTablaAmortizacion>)
-    vi.mocked(useRegistrarPago).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as ReturnType<typeof useRegistrarPago>)
-    vi.mocked(useDeletePago).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as ReturnType<typeof useDeletePago>)
+    } as unknown as ReturnType<typeof useTablaAmortizacion>)
+    vi.mocked(useRegistrarPago).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as unknown as ReturnType<typeof useRegistrarPago>)
+    vi.mocked(useDeletePago).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as unknown as ReturnType<typeof useDeletePago>)
 
     render(<PrestamoDetail {...defaultProps} />)
     // Loading state shows an animated container
@@ -147,14 +147,14 @@ describe('PrestamoDetail', () => {
       data: undefined,
       isLoading: false,
       isError: true,
-    } as ReturnType<typeof usePrestamoDetalle>)
+    } as unknown as ReturnType<typeof usePrestamoDetalle>)
     vi.mocked(useTablaAmortizacion).mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: false,
-    } as ReturnType<typeof useTablaAmortizacion>)
-    vi.mocked(useRegistrarPago).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as ReturnType<typeof useRegistrarPago>)
-    vi.mocked(useDeletePago).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as ReturnType<typeof useDeletePago>)
+    } as unknown as ReturnType<typeof useTablaAmortizacion>)
+    vi.mocked(useRegistrarPago).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as unknown as ReturnType<typeof useRegistrarPago>)
+    vi.mocked(useDeletePago).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as unknown as ReturnType<typeof useDeletePago>)
 
     render(<PrestamoDetail {...defaultProps} />)
     expect(screen.getByText(/No se pudo cargar/i)).toBeInTheDocument()

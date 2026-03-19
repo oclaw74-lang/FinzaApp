@@ -70,12 +70,12 @@ function setupMocks({
     data: lecciones,
     isLoading,
     isError: false,
-  } as ReturnType<typeof useLecciones>)
+  } as unknown as ReturnType<typeof useLecciones>)
 
   vi.mocked(useCompletarLeccion).mockReturnValue({
     mutateAsync,
     isPending: false,
-  } as ReturnType<typeof useCompletarLeccion>)
+  } as unknown as ReturnType<typeof useCompletarLeccion>)
 
   return { mutateAsync }
 }
