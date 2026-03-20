@@ -99,6 +99,9 @@ def update_tarjeta(
         payload["saldo_actual"] = str(payload["saldo_actual"])
     if "limite_credito" in payload and payload["limite_credito"] is not None:
         payload["limite_credito"] = str(payload["limite_credito"])
+    # Convert UUID banco_id to string (or keep None to clear)
+    if "banco_id" in payload and payload["banco_id"] is not None:
+        payload["banco_id"] = str(payload["banco_id"])
 
     try:
         response = (
@@ -133,5 +136,27 @@ def delete_tarjeta(user_jwt: str, user_id: str, tarjeta_id: str) -> None:
             raise HTTPException(status_code=404, detail="Tarjeta no encontrada.")
     except HTTPException:
         raise
+
+
+def toggle_bloquear_tarjeta(user_jwt: str, user_id: str, tarjeta_id: str) -> dict | None:
+    """Toggle the bloqueada flag for a tarjeta and return the updated record."""
+    tarjeta = get_tarjeta(user_jwt, user_id, tarjeta_id)
+    if not tarjeta:
+        return None
+
+    nuevo_estado = not tarjeta.get("bloqueada", False)
+    client = get_user_client(user_jwt)
+    try:
+        response = (
+            client.table("tarjetas")
+            .update({"bloqueada": nuevo_estado})
+            .eq("id", tarjeta_id)
+            .eq("user_id", user_id)
+            .execute()
+        )
+        if not response.data:
+            return None
+        return _enrich_tarjeta(response.data[0])
     except APIError as e:
         _handle_api_error(e)
+    return None

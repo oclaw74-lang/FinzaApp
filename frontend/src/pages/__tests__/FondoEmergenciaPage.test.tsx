@@ -33,7 +33,7 @@ const mockFondo = {
   id: 'fondo-1',
   user_id: 'user-1',
   monto_actual: 5000,
-  meta_meses: 3 as 1 | 3 | 6,
+  meta_meses: 3 as 3 | 6 | 12,
   meta_calculada: 15000,
   porcentaje: 33.33,
   notas: null,

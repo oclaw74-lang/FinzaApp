@@ -1,0 +1,25 @@
+1. en el formulario de prestamos colocar el select de los bancos. colocar un swicht o algo para que el usuario diga si le debe a una persona o a un banco y sepas si va el textbox o el select o diseña una manera para esto.
+2. modificar todos los campos de fecha, el cuadro de select date no me gusta.
+3. En el formulario de prestamos calcular la fecha de vencimiento por el plazo que coloquen.
+4. Si es un prestamo viejo, que no tenga fecha del mes en curso activar un textbox para colocar cuanto ha pagado.
+5. algunas informaciones en el formulario de edit del prestamo no llegan aunque estan como el intereses y las cuotas.
+6. agregar una categoria de prestamo para que en los egresos cuando se paguen lleguen con esa categoria. Tambien otro que se puede es en el formulario de prestamos colocar las categorias, pero en egresos deben llegar con su categoria.
+7. las metas de ahorro y el fondo de emergencia cuando se realiza un pago o un desembolso a ellas deben quitarle dinero de los ingresos, mas no agregarlo como egresos porque no lo son. lo que pienso es agregar ahorro y sumar todo lo ahorrado aqui.
+8. En los prestamos me debe cuando me realizan un pago se coloca como egresos, estos deben colocarse como ingreso porque me estan dando dinero, igual debe llegar con su categoria a los ingresos.
+9. Cuando escribes un banco en tajeta no puedes quitarlo.
+10. no esta tomando en cuenta los decimales de la tarjeta en algunos lugares.
+11. agregar un boton de bloquear en tarjeta
+12. agregar mas bancos dominicanos, si se puede a todos los bancos dominicanos ponerles su logo para que salgan en la tarjeta.
+13. las tarjetas deben organizarse horizontal.
+14. En algunas partes hay un campo de emoji, pero estos no salen para seleccionarlos.
+15. el fondo de emergencia no esta tomando en cuenta bien los egresos, los prestamos que tienes y los cambios que ocurren entre ello.
+16. el fondo de emergencia debe crearse por defecto para tres meses, ya que la persona elija si quiere mas.
+17. en el fondo de emergencia quitar 1 mes y colocar 12 meses, quedaria 3 meses, 6 meses, 12 meses.
+18. en configuracion donde pide el salario, colocar el salario neto y bruto y si le descuentan algo adicional, que coloque si le pagan quincenal, bisemanal o mensual, que pueda configurar automaticamente que cantidad de su salario se va a cada meta y al fondo de emergencia, opcional.
+19. Las predicciones no esta tomando en cuenta todo los datos del usuario, el sueldo, los egresos que hace, los prestamos que tiene, debe tomar en cuenta todo y si ve en cualquier egreso que no va a llegar bien le notifique.
+20. tener mas notificaciones en el sistema, cuando este acercando la fecha de cobro una notificacion de que recuerde pasar por la app a dejar el ingreso de que cobro para poder debitar los ahoroos si tiene esta opcion activada. notificaciones de la prediccion de que esta haciendo muchas comprar y no llegara a fin de mes y otras notificaciones que entiendas necesarias.
+21. las notificaiones deben llegar al telefono del usuario.
+22. en modo telefono el boton de mas que esta en el bottom el modal que sale cuando le das esta en lateral izquierdo y no se visualiza bien, debe estar arriba del boton.
+23. mejorar el diseño de los botones d theme y language tanto en el sidebar como en configuracion.
+24. Revisar las traducciones de todo el sistema, todo debe quedar con traducciones, cero texto hardcode.
+25. asi como descubri todos estas mejoras, analiza que otra cosa se pudo haber escapado para corregirla y no llegue a produccion nuevamente.

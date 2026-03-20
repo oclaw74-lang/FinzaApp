@@ -22,9 +22,12 @@ export function PrestamoModal({
 
   const title = prestamo ? 'Editar prestamo' : 'Nuevo prestamo'
 
+  // Fix #5 — Ensure all fields (including tasa_interes, cuota_mensual, plazo_meses, acreedor_tipo)
+  // are pre-populated when opening in edit mode
   const defaultValues: Partial<PrestamoFormData> | undefined = prestamo
     ? ({
         tipo: prestamo.tipo,
+        acreedor_tipo: prestamo.acreedor_tipo ?? 'persona',
         persona: prestamo.persona,
         monto_original: prestamo.monto_original,
         moneda: prestamo.moneda,
@@ -32,6 +35,9 @@ export function PrestamoModal({
         fecha_vencimiento: prestamo.fecha_vencimiento ?? '',
         descripcion: prestamo.descripcion ?? '',
         notas: prestamo.notas ?? '',
+        tasa_interes: prestamo.tasa_interes ?? null,
+        plazo_meses: prestamo.plazo_meses ?? null,
+        monto_ya_pagado: prestamo.monto_ya_pagado ?? 0,
       } as Partial<PrestamoFormData>)
     : undefined
 

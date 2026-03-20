@@ -88,6 +88,22 @@ async def delete_tarjeta(
     )
 
 
+@router.patch("/{tarjeta_id}/bloquear", response_model=TarjetaResponse)
+async def toggle_bloquear_tarjeta(
+    tarjeta_id: UUID,
+    token: str = Depends(get_raw_token),
+    current_user: dict = Depends(get_current_user),
+) -> dict:
+    result = svc.toggle_bloquear_tarjeta(
+        user_jwt=token,
+        user_id=current_user["user_id"],
+        tarjeta_id=str(tarjeta_id),
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Tarjeta no encontrada.")
+    return result
+
+
 # ---------------------------------------------------------------------------
 # Movimientos de tarjeta (compras y pagos)
 # ---------------------------------------------------------------------------
