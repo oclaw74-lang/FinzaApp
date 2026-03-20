@@ -666,6 +666,7 @@ interface TarjetaModalProps {
 }
 
 function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: TarjetaModalProps): JSX.Element | null {
+  const { t } = useTranslation()
   const { user } = useAuthStore()
   const userPais = (user?.user_metadata?.pais_codigo as string | undefined) ?? 'DO'
   const [formPaisCodigo, setFormPaisCodigo] = useState(userPais)
