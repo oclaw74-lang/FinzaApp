@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/DatePicker'
 
 interface ContribucionFormProps {
   montoActual: number
@@ -107,9 +108,8 @@ export function ContribucionForm({
       </div>
 
       {/* Fecha */}
-      <Input
+      <DatePicker
         label="Fecha"
-        type="date"
         error={errors.fecha?.message}
         {...register('fecha')}
       />

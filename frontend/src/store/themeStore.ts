@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import i18n from '../i18n'
 
-type Theme = 'light' | 'dark'
+type Theme = 'light' | 'dark' | 'system'
 type Language = 'es' | 'en'
 
 interface ThemeStore {
@@ -15,10 +15,18 @@ interface ThemeStore {
 const savedTheme = (localStorage.getItem('finza-theme') as Theme) ?? 'dark'
 const savedLang = (localStorage.getItem('finza-lang') as Language) ?? 'es'
 
-// Apply theme on load
-if (savedTheme === 'dark') {
-  document.documentElement.classList.add('dark')
+/** Aplica el tema al <html> element. 'system' sigue prefers-color-scheme. */
+function applyTheme(theme: Theme): void {
+  if (theme === 'system') {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    document.documentElement.classList.toggle('dark', prefersDark)
+  } else {
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+  }
 }
+
+// Apply theme on load
+applyTheme(savedTheme)
 
 export const useThemeStore = create<ThemeStore>((set) => ({
   theme: savedTheme,
@@ -27,12 +35,12 @@ export const useThemeStore = create<ThemeStore>((set) => ({
     set((state) => {
       const newTheme: Theme = state.theme === 'light' ? 'dark' : 'light'
       localStorage.setItem('finza-theme', newTheme)
-      document.documentElement.classList.toggle('dark', newTheme === 'dark')
+      applyTheme(newTheme)
       return { theme: newTheme }
     }),
   setTheme: (theme) => {
     localStorage.setItem('finza-theme', theme)
-    document.documentElement.classList.toggle('dark', theme === 'dark')
+    applyTheme(theme)
     set({ theme })
   },
   setLanguage: (language) => {

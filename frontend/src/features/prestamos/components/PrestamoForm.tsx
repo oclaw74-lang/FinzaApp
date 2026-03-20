@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/DatePicker'
 import type { Prestamo } from '@/types/prestamo'
 import { useMonedas } from '@/hooks/useCatalogos'
 
@@ -139,17 +140,15 @@ export function PrestamoForm({
       </div>
 
       {/* Fecha prestamo */}
-      <Input
+      <DatePicker
         label="Fecha del prestamo"
-        type="date"
         error={errors.fecha_prestamo?.message}
         {...register('fecha_prestamo')}
       />
 
       {/* Fecha vencimiento */}
-      <Input
+      <DatePicker
         label="Fecha de vencimiento (opcional)"
-        type="date"
         error={errors.fecha_vencimiento?.message}
         {...register('fecha_vencimiento')}
       />

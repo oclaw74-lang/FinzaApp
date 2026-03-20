@@ -57,71 +57,27 @@ const NAV_ITEMS = [
   { to: '/presupuestos', icon: <Target size={22} />, labelKey: 'nav.presupuestos', end: false },
 ]
 
-function QuickActionSheet({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean
-  onClose: () => void
-}): JSX.Element | null {
+export function BottomNav(): JSX.Element {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  if (!isOpen) return null
+  const [sheetOpen, setSheetOpen] = useState(false)
 
-  const handleAction = (path: string) => {
+  const handleAction = (path: string): void => {
     navigate(path)
-    onClose()
+    setSheetOpen(false)
   }
 
   return (
     <>
-      <div
-        className="fixed inset-0 z-40"
-        style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      <div
-        className={cn(
-          'fixed bottom-20 left-1/2 -translate-x-1/2 z-50',
-          'bg-[var(--surface)] border border-[var(--border)] rounded-2xl',
-          'p-4 w-72 shadow-2xl animate-slide-up'
-        )}
-        role="dialog"
-        aria-label={t('bottomNav.quickActions')}
-      >
-        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-3">
-          {t('bottomNav.quickActions')}
-        </p>
-        <div className="grid grid-cols-2 gap-2">
-          {QUICK_ACTIONS.map((action, i) => (
-            <button
-              key={action.id}
-              onClick={() => handleAction(action.path)}
-              className={cn(
-                'flex items-center gap-2 px-3 py-2.5 rounded-xl text-white text-sm font-medium',
-                'transition-all duration-150 active:scale-95',
-                action.color,
-                i === QUICK_ACTIONS.length - 1 && QUICK_ACTIONS.length % 2 !== 0 && 'col-span-2'
-              )}
-            >
-              {action.icon}
-              <span>{t(action.labelKey)}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </>
-  )
-}
-
-export function BottomNav(): JSX.Element {
-  const { t } = useTranslation()
-  const [sheetOpen, setSheetOpen] = useState(false)
-
-  return (
-    <>
-      <QuickActionSheet isOpen={sheetOpen} onClose={() => setSheetOpen(false)} />
+      {/* Backdrop — fixed cubre toda la pantalla cuando el menú está abierto */}
+      {sheetOpen && (
+        <div
+          className="fixed inset-0 z-40"
+          style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setSheetOpen(false)}
+          aria-hidden="true"
+        />
+      )}
 
       <nav
         className={cn(
@@ -157,30 +113,66 @@ export function BottomNav(): JSX.Element {
           </NavLink>
         ))}
 
-        {/* FAB center */}
-        <button
-          onClick={() => setSheetOpen((v) => !v)}
-          className={cn(
-            'relative flex items-center justify-center w-14 h-14 rounded-full shadow-lg',
-            'transition-all duration-200 active:scale-90',
-            '-mt-8'
-          )}
-          style={{
-            background: 'linear-gradient(135deg, #366092, #818cf8)',
-            boxShadow: '0 4px 20px rgba(54,96,146,0.45)',
-          }}
-          aria-label={sheetOpen ? t('bottomNav.closeActions') : t('bottomNav.openActions')}
-          aria-expanded={sheetOpen}
-        >
-          <span
+        {/* FAB center — wrapper relative para posicionar el menú sobre él */}
+        <div className="relative flex items-center justify-center -mt-8">
+          <button
+            onClick={() => setSheetOpen((v) => !v)}
             className={cn(
-              'transition-transform duration-200',
-              sheetOpen ? 'rotate-45' : 'rotate-0'
+              'flex items-center justify-center w-14 h-14 rounded-full shadow-lg',
+              'transition-all duration-200 active:scale-90'
             )}
+            style={{
+              background: 'linear-gradient(135deg, #366092, #818cf8)',
+              boxShadow: '0 4px 20px rgba(54,96,146,0.45)',
+            }}
+            aria-label={sheetOpen ? t('bottomNav.closeActions') : t('bottomNav.openActions')}
+            aria-expanded={sheetOpen}
+            aria-haspopup="dialog"
           >
-            {sheetOpen ? <X size={22} color="white" /> : <Plus size={22} color="white" />}
-          </span>
-        </button>
+            <span
+              className={cn(
+                'transition-transform duration-200',
+                sheetOpen ? 'rotate-45' : 'rotate-0'
+              )}
+            >
+              {sheetOpen ? <X size={22} color="white" /> : <Plus size={22} color="white" />}
+            </span>
+          </button>
+
+          {/* Speed-dial — posicionado ENCIMA del FAB con absolute */}
+          {sheetOpen && (
+            <div
+              className={cn(
+                'absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50',
+                'bg-[var(--surface)] border border-[var(--border)] rounded-2xl',
+                'p-4 w-72 shadow-2xl animate-slide-up'
+              )}
+              role="dialog"
+              aria-label={t('bottomNav.quickActions')}
+            >
+              <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-3">
+                {t('bottomNav.quickActions')}
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {QUICK_ACTIONS.map((action, i) => (
+                  <button
+                    key={action.id}
+                    onClick={() => handleAction(action.path)}
+                    className={cn(
+                      'flex items-center gap-2 px-3 py-2.5 rounded-xl text-white text-sm font-medium',
+                      'transition-all duration-150 active:scale-95',
+                      action.color,
+                      i === QUICK_ACTIONS.length - 1 && QUICK_ACTIONS.length % 2 !== 0 && 'col-span-2'
+                    )}
+                  >
+                    {action.icon}
+                    <span>{t(action.labelKey)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Last two items */}
         {NAV_ITEMS.slice(2).map((item) => (
