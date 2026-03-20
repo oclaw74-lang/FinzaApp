@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { useCategorias } from '@/hooks/useCategorias'
 import { useTarjetas } from '@/hooks/useTarjetas'
 import { useMonedas } from '@/hooks/useCatalogos'
@@ -152,9 +153,8 @@ export function TransaccionForm({
       </div>
 
       {/* Fecha */}
-      <Input
+      <DatePicker
         label="Fecha"
-        type="date"
         error={errors.fecha?.message as string | undefined}
         {...register('fecha')}
       />

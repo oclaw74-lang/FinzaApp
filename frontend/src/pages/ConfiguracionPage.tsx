@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Camera, DollarSign, Clock, Tag, Trash2, Plus, Globe, X, AlertTriangle, Zap } from 'lucide-react'
+import { Camera, DollarSign, Clock, Tag, Trash2, Plus, Globe, X, AlertTriangle, Zap, Sun, Moon, Monitor } from 'lucide-react'
 import * as Icons from 'lucide-react'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ToggleGroup } from '@/components/ui/toggle-group'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/i18n'
@@ -843,86 +844,64 @@ export function ConfiguracionPage(): JSX.Element {
       {/* Tab: Appearance (theme + language) */}
       {activeTab === 'appearance' && (
         <div className="space-y-4">
-          <div
-            className="rounded-[20px] overflow-hidden card-glass"
-          >
-            {/* Row: Modo oscuro */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
-              <div>
-                <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
-                  {t('settings.darkMode')}
-                </h4>
-                <p className="text-[12px] text-[var(--text-muted)]">{t('settings.darkModeDesc')}</p>
-              </div>
-              <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className={cn(
-                  'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
-                  theme === 'dark' ? 'bg-[#3d8ef8]' : 'bg-[var(--border-strong)]'
-                )}
-                aria-label="Toggle modo oscuro"
-              >
-                <span
-                  className={cn(
-                    'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200',
-                    theme === 'dark' ? 'left-[21px]' : 'left-[3px]'
-                  )}
-                />
-              </button>
+          {/* Theme ToggleGroup */}
+          <div className="card-glass p-6 space-y-4">
+            <div>
+              <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
+                {t('settings.theme')}
+              </h4>
+              <p className="text-[12px] text-[var(--text-muted)] mt-0.5">
+                {t('settings.themeDesc')}
+              </p>
             </div>
-
-            {/* Row: Modo claro */}
-            <div className="flex items-center justify-between px-5 py-4">
-              <div>
-                <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
-                  {t('settings.lightMode')}
-                </h4>
-                <p className="text-[12px] text-[#657a9e]">{t('settings.lightModeDesc')}</p>
-              </div>
-              <button
-                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-                className={cn(
-                  'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
-                  theme === 'light' ? 'bg-[#3d8ef8]' : 'bg-[var(--border-strong)]'
-                )}
-                aria-label="Toggle modo claro"
-              >
-                <span
-                  className={cn(
-                    'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200',
-                    theme === 'light' ? 'left-[21px]' : 'left-[3px]'
-                  )}
-                />
-              </button>
-            </div>
+            <ToggleGroup
+              value={theme}
+              onValueChange={(val) => setTheme(val as 'light' | 'dark' | 'system')}
+              options={[
+                {
+                  value: 'light',
+                  label: t('settings.lightMode'),
+                  icon: <Sun size={15} />,
+                  title: t('settings.lightMode'),
+                },
+                {
+                  value: 'dark',
+                  label: t('settings.darkMode'),
+                  icon: <Moon size={15} />,
+                  title: t('settings.darkMode'),
+                },
+                {
+                  value: 'system',
+                  label: t('settings.systemMode'),
+                  icon: <Monitor size={15} />,
+                  title: t('settings.systemMode'),
+                },
+              ]}
+              className="w-full"
+              size="md"
+            />
           </div>
 
-          {/* Language selector */}
+          {/* Language ToggleGroup */}
           <div className="card-glass p-6 space-y-4">
-            <p className="text-sm text-[var(--text-muted)]">{t('settings.changeLanguage')}</p>
-            <div className="space-y-3">
-              {[
-                { code: 'es', label: 'Espanol', flag: 'ES' },
-                { code: 'en', label: 'English', flag: 'EN' },
-              ].map(({ code, label, flag }) => (
-                <button
-                  key={code}
-                  onClick={() => handleLangChange(code as 'es' | 'en')}
-                  className={cn(
-                    'w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200',
-                    language === code
-                      ? 'border-finza-blue bg-finza-blue/5'
-                      : 'border-border hover:border-finza-blue/40'
-                  )}
-                >
-                  <span className="text-xl font-bold text-[var(--text-muted)] w-8">{flag}</span>
-                  <span className="font-medium text-[var(--text-primary)]">{label}</span>
-                  {language === code && (
-                    <div className="ml-auto w-2 h-2 rounded-full bg-finza-blue" />
-                  )}
-                </button>
-              ))}
+            <div>
+              <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
+                {t('settings.changeLanguage')}
+              </h4>
+              <p className="text-[12px] text-[var(--text-muted)] mt-0.5">
+                {t('settings.changeLanguageDesc')}
+              </p>
             </div>
+            <ToggleGroup
+              value={language}
+              onValueChange={(val) => handleLangChange(val as 'es' | 'en')}
+              options={[
+                { value: 'es', label: 'Español', title: 'Español' },
+                { value: 'en', label: 'English', title: 'English' },
+              ]}
+              className="w-full"
+              size="md"
+            />
           </div>
         </div>
       )}

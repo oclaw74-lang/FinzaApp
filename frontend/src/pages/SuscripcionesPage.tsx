@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, Zap, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { formatCurrency } from '@/lib/utils'
 import { getApiErrorMessage } from '@/lib/apiError'
 import {
@@ -180,8 +181,11 @@ export function SuscripcionesPage(): JSX.Element {
               className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-[var(--surface)] text-[var(--text-primary)]">
               {FRECUENCIAS.map((f) => <option key={f} value={f}>{t(`suscripciones.${f}`)}</option>)}
             </select>
-            <input type="date" value={form.fecha_proximo_cobro} onChange={(e) => setForm((f) => ({ ...f, fecha_proximo_cobro: e.target.value }))}
-              className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-[var(--surface)] text-[var(--text-primary)]" />
+            <DatePicker
+              value={form.fecha_proximo_cobro}
+              onChange={(e) => setForm((f) => ({ ...f, fecha_proximo_cobro: e.target.value }))}
+              placeholder="Próximo cobro"
+            />
             <div className="flex gap-2 pt-1">
               <button onClick={() => { setModal(null); setEditando(null) }} className="flex-1 py-2 rounded-xl border border-[var(--border)] text-sm text-[var(--text-muted)]">{t('common.cancel')}</button>
               <button onClick={modal === 'crear' ? handleCrear : handleActualizar} disabled={crear.isPending || actualizar.isPending}

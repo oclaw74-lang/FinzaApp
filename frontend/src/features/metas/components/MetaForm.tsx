@@ -1,8 +1,10 @@
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/DatePicker'
+import { EmojiPicker } from '@/components/ui/EmojiPicker'
 import type { MetaAhorro } from '@/types/meta_ahorro'
 
 const metaSchema = z
@@ -50,6 +52,7 @@ export function MetaForm({
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<MetaFormData>({
     resolver: zodResolver(metaSchema),
@@ -107,15 +110,13 @@ export function MetaForm({
 
       {/* Fechas */}
       <div className="grid grid-cols-2 gap-4">
-        <Input
+        <DatePicker
           label="Fecha de inicio"
-          type="date"
           error={errors.fecha_inicio?.message}
           {...register('fecha_inicio')}
         />
-        <Input
+        <DatePicker
           label="Fecha objetivo (opcional)"
-          type="date"
           error={errors.fecha_objetivo?.message}
           {...register('fecha_objetivo')}
         />
@@ -138,11 +139,16 @@ export function MetaForm({
             aria-label="Color de la meta"
           />
         </div>
-        <Input
-          label="Icono (emoji, opcional)"
-          type="text"
-          placeholder="Ej: 🏦"
-          {...register('icono')}
+        <Controller
+          name="icono"
+          control={control}
+          render={({ field }) => (
+            <EmojiPicker
+              value={field.value ?? ''}
+              onChange={field.onChange}
+              label="Icono (emoji, opcional)"
+            />
+          )}
         />
       </div>
 

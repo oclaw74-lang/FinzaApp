@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { cn, formatMoney, formatDate } from '@/lib/utils'
 import {
   useTarjetas,
@@ -1021,8 +1022,10 @@ function MovimientoModal({ tarjetaId, tipoInicial, onClose }: MovimientoModalPro
 
           <div>
             <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Fecha</label>
-            <input {...register('fecha')} type="date" className="finza-input w-full" />
-            {errors.fecha && <p className="text-xs text-red-500 mt-1">{errors.fecha.message}</p>}
+            <DatePicker
+              {...register('fecha')}
+              error={errors.fecha?.message}
+            />
           </div>
 
           <div>
