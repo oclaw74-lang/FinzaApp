@@ -233,6 +233,177 @@ def test_registrar_pago_completo_estado_pagado():
     assert result["estado"] == "pagado"
 
 
+def test_registrar_pago_yo_debo_creates_egreso_with_prestamo_category():
+    """For yo_debo loans, registrar_pago must create an egreso (not an ingreso)
+    using the 'Pago de Préstamo' system category."""
+    from app.schemas.prestamo import PagoPrestamoCreate
+    from app.services.prestamos import registrar_pago
+
+    rpc_result = {"pago_id": "pago-yo-debo", "monto_pendiente": 700.0, "estado": "activo"}
+    mock_rpc_response = MagicMock()
+    mock_rpc_response.data = rpc_result
+
+    mock_client = MagicMock()
+    mock_client.rpc.return_value.execute.return_value = mock_rpc_response
+
+    # Table-specific mocks
+    prestamo_mock = MagicMock()
+    prestamo_mock.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = {
+        "tipo": "yo_debo",
+        "persona": "Pedro",
+        "descripcion": "Deuda personal",
+    }
+
+    cat_mock = MagicMock()
+    cat_mock.select.return_value.eq.return_value.is_.return_value.limit.return_value.execute.return_value.data = [
+        {"id": "cat-pago-prestamo-id"}
+    ]
+
+    egreso_mock = MagicMock()
+    ingreso_mock = MagicMock()
+
+    def table_side_effect(name: str):
+        if name == "prestamos":
+            return prestamo_mock
+        if name == "categorias":
+            return cat_mock
+        if name == "egresos":
+            return egreso_mock
+        if name == "ingresos":
+            return ingreso_mock
+        return MagicMock()
+
+    mock_client.table.side_effect = table_side_effect
+
+    data = PagoPrestamoCreate(monto=Decimal("300.00"), fecha="2026-03-09")
+
+    with patch("app.services.prestamos.get_user_client", return_value=mock_client):
+        result = registrar_pago("fake-jwt", "u1", "prestamo-id", data)
+
+    assert result["monto_pendiente"] == 700.0
+    # yo_debo → debe crear egreso, NO ingreso
+    egreso_mock.insert.assert_called_once()
+    ingreso_mock.insert.assert_not_called()
+
+    # Verificar payload del egreso
+    egreso_insert_payload = egreso_mock.insert.call_args[0][0]
+    assert egreso_insert_payload["user_id"] == "u1"
+    assert egreso_insert_payload["monto"] == "300.00"
+    assert egreso_insert_payload["categoria_id"] == "cat-pago-prestamo-id"
+    assert "Pedro" in egreso_insert_payload["descripcion"]
+
+
+def test_registrar_pago_me_deben_creates_ingreso_with_cobro_category():
+    """For me_deben loans, registrar_pago must create an ingreso (not an egreso)
+    using the 'Cobro de Préstamo' system category."""
+    from app.schemas.prestamo import PagoPrestamoCreate
+    from app.services.prestamos import registrar_pago
+
+    rpc_result = {"pago_id": "pago-me-deben", "monto_pendiente": 500.0, "estado": "activo"}
+    mock_rpc_response = MagicMock()
+    mock_rpc_response.data = rpc_result
+
+    mock_client = MagicMock()
+    mock_client.rpc.return_value.execute.return_value = mock_rpc_response
+
+    prestamo_mock = MagicMock()
+    prestamo_mock.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = {
+        "tipo": "me_deben",
+        "persona": "Juan",
+        "descripcion": "Préstamo de oficina",
+    }
+
+    cat_mock = MagicMock()
+    cat_mock.select.return_value.eq.return_value.is_.return_value.limit.return_value.execute.return_value.data = [
+        {"id": "cat-cobro-prestamo-id"}
+    ]
+
+    egreso_mock = MagicMock()
+    ingreso_mock = MagicMock()
+
+    def table_side_effect(name: str):
+        if name == "prestamos":
+            return prestamo_mock
+        if name == "categorias":
+            return cat_mock
+        if name == "egresos":
+            return egreso_mock
+        if name == "ingresos":
+            return ingreso_mock
+        return MagicMock()
+
+    mock_client.table.side_effect = table_side_effect
+
+    data = PagoPrestamoCreate(monto=Decimal("200.00"), fecha="2026-03-10")
+
+    with patch("app.services.prestamos.get_user_client", return_value=mock_client):
+        result = registrar_pago("fake-jwt", "u1", "prestamo-id-me-deben", data)
+
+    assert result["monto_pendiente"] == 500.0
+    # me_deben → debe crear ingreso, NO egreso
+    ingreso_mock.insert.assert_called_once()
+    egreso_mock.insert.assert_not_called()
+
+    # Verificar payload del ingreso
+    ingreso_insert_payload = ingreso_mock.insert.call_args[0][0]
+    assert ingreso_insert_payload["user_id"] == "u1"
+    assert ingreso_insert_payload["monto"] == "200.00"
+    assert ingreso_insert_payload["categoria_id"] == "cat-cobro-prestamo-id"
+    assert "Juan" in ingreso_insert_payload["descripcion"]
+    assert "Préstamo de oficina" in ingreso_insert_payload["descripcion"]
+    # ingreso no debe tener metodo_pago ni pago_prestamo_id
+    assert "metodo_pago" not in ingreso_insert_payload
+
+
+def test_registrar_pago_me_deben_sin_descripcion_no_falla():
+    """me_deben payment with no descripcion should still create ingreso successfully."""
+    from app.schemas.prestamo import PagoPrestamoCreate
+    from app.services.prestamos import registrar_pago
+
+    rpc_result = {"pago_id": "pago-p", "monto_pendiente": 0.0, "estado": "pagado"}
+    mock_rpc_response = MagicMock()
+    mock_rpc_response.data = rpc_result
+
+    mock_client = MagicMock()
+    mock_client.rpc.return_value.execute.return_value = mock_rpc_response
+
+    prestamo_mock = MagicMock()
+    prestamo_mock.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = {
+        "tipo": "me_deben",
+        "persona": "Maria",
+        "descripcion": None,  # sin descripcion
+    }
+
+    cat_mock = MagicMock()
+    cat_mock.select.return_value.eq.return_value.is_.return_value.limit.return_value.execute.return_value.data = [
+        {"id": "cat-cobro-id"}
+    ]
+
+    ingreso_mock = MagicMock()
+
+    def table_side_effect(name: str):
+        if name == "prestamos":
+            return prestamo_mock
+        if name == "categorias":
+            return cat_mock
+        if name == "ingresos":
+            return ingreso_mock
+        return MagicMock()
+
+    mock_client.table.side_effect = table_side_effect
+
+    data = PagoPrestamoCreate(monto=Decimal("100.00"), fecha="2026-03-11")
+
+    with patch("app.services.prestamos.get_user_client", return_value=mock_client):
+        result = registrar_pago("fake-jwt", "u1", "prestamo-sin-desc", data)
+
+    assert result["estado"] == "pagado"
+    ingreso_mock.insert.assert_called_once()
+    ingreso_payload = ingreso_mock.insert.call_args[0][0]
+    # sin descripcion → solo "Pago recibido: Maria" sin el "—"
+    assert ingreso_payload["descripcion"] == "Pago recibido: Maria"
+
+
 def test_registrar_pago_excede_pendiente_raises_400():
     """registrar_pago raises 400 when the RPC signals monto exceeds monto_pendiente."""
     from app.schemas.prestamo import PagoPrestamoCreate
@@ -573,3 +744,293 @@ def test_create_prestamo_with_interest_fields():
     assert insert_payload.get("tasa_interes") == "18.5"
     assert insert_payload.get("plazo_meses") == 24
     assert result["id"] == "aaaa-9999"
+
+
+# ---------------------------------------------------------------------------
+# acreedor_tipo and monto_ya_pagado tests
+# ---------------------------------------------------------------------------
+
+
+def test_crear_prestamo_con_acreedor_tipo_banco():
+    """Creating a loan with acreedor_tipo='banco' persists the field correctly."""
+    from app.schemas.prestamo import PrestamoCreate
+    from app.services.prestamos import create_prestamo
+
+    inserted_row = {
+        "id": "bbbb-1001",
+        "user_id": "u1",
+        "tipo": "yo_debo",
+        "acreedor_tipo": "banco",
+        "persona": "Banco Popular",
+        "monto_original": "15000.00",
+        "monto_pendiente": "15000.00",
+        "monto_ya_pagado": "0",
+        "moneda": "DOP",
+        "fecha_prestamo": "2026-01-15",
+        "fecha_vencimiento": None,
+        "descripcion": None,
+        "estado": "activo",
+        "notas": None,
+        "created_at": "2026-01-15T00:00:00+00:00",
+        "updated_at": "2026-01-15T00:00:00+00:00",
+        "deleted_at": None,
+    }
+    mock_response = MagicMock()
+    mock_response.data = [inserted_row]
+
+    mock_client = MagicMock()
+    mock_client.table.return_value.insert.return_value.execute.return_value = (
+        mock_response
+    )
+
+    data = PrestamoCreate(
+        tipo="yo_debo",
+        acreedor_tipo="banco",
+        persona="Banco Popular",
+        monto_original=Decimal("15000.00"),
+        fecha_prestamo="2026-01-15",
+    )
+
+    with patch("app.services.prestamos.get_user_client", return_value=mock_client):
+        result = create_prestamo("fake-jwt", "u1", data)
+
+    insert_payload = mock_client.table.return_value.insert.call_args[0][0]
+    assert insert_payload.get("acreedor_tipo") == "banco"
+    assert result["acreedor_tipo"] == "banco"
+
+
+def test_crear_prestamo_con_acreedor_tipo_persona():
+    """Creating a loan with acreedor_tipo='persona' persists the field correctly."""
+    from app.schemas.prestamo import PrestamoCreate
+    from app.services.prestamos import create_prestamo
+
+    inserted_row = {
+        "id": "cccc-1002",
+        "user_id": "u1",
+        "tipo": "me_deben",
+        "acreedor_tipo": "persona",
+        "persona": "Luis García",
+        "monto_original": "3000.00",
+        "monto_pendiente": "3000.00",
+        "monto_ya_pagado": "0",
+        "moneda": "DOP",
+        "fecha_prestamo": "2026-02-01",
+        "fecha_vencimiento": None,
+        "descripcion": None,
+        "estado": "activo",
+        "notas": None,
+        "created_at": "2026-02-01T00:00:00+00:00",
+        "updated_at": "2026-02-01T00:00:00+00:00",
+        "deleted_at": None,
+    }
+    mock_response = MagicMock()
+    mock_response.data = [inserted_row]
+
+    mock_client = MagicMock()
+    mock_client.table.return_value.insert.return_value.execute.return_value = (
+        mock_response
+    )
+
+    data = PrestamoCreate(
+        tipo="me_deben",
+        acreedor_tipo="persona",
+        persona="Luis García",
+        monto_original=Decimal("3000.00"),
+        fecha_prestamo="2026-02-01",
+    )
+
+    with patch("app.services.prestamos.get_user_client", return_value=mock_client):
+        result = create_prestamo("fake-jwt", "u1", data)
+
+    insert_payload = mock_client.table.return_value.insert.call_args[0][0]
+    assert insert_payload.get("acreedor_tipo") == "persona"
+    assert result["acreedor_tipo"] == "persona"
+
+
+def test_crear_prestamo_historico_con_monto_ya_pagado():
+    """Creating a historical loan with monto_ya_pagado=5000 persists the value."""
+    from app.schemas.prestamo import PrestamoCreate
+    from app.services.prestamos import create_prestamo
+
+    inserted_row = {
+        "id": "dddd-1003",
+        "user_id": "u1",
+        "tipo": "yo_debo",
+        "acreedor_tipo": "banco",
+        "persona": "BHD León",
+        "monto_original": "20000.00",
+        "monto_pendiente": "15000.00",
+        "monto_ya_pagado": "5000",
+        "moneda": "DOP",
+        "fecha_prestamo": "2025-06-01",
+        "fecha_vencimiento": None,
+        "descripcion": "Préstamo histórico",
+        "estado": "activo",
+        "notas": None,
+        "created_at": "2025-06-01T00:00:00+00:00",
+        "updated_at": "2025-06-01T00:00:00+00:00",
+        "deleted_at": None,
+    }
+    mock_response = MagicMock()
+    mock_response.data = [inserted_row]
+
+    mock_client = MagicMock()
+    mock_client.table.return_value.insert.return_value.execute.return_value = (
+        mock_response
+    )
+
+    data = PrestamoCreate(
+        tipo="yo_debo",
+        acreedor_tipo="banco",
+        persona="BHD León",
+        monto_original=Decimal("20000.00"),
+        fecha_prestamo="2025-06-01",
+        descripcion="Préstamo histórico",
+        monto_ya_pagado=Decimal("5000"),
+    )
+
+    with patch("app.services.prestamos.get_user_client", return_value=mock_client):
+        result = create_prestamo("fake-jwt", "u1", data)
+
+    insert_payload = mock_client.table.return_value.insert.call_args[0][0]
+    assert insert_payload.get("monto_ya_pagado") == "5000"
+    assert result["monto_ya_pagado"] == "5000"
+
+
+def test_saldo_pendiente_descuenta_monto_ya_pagado():
+    """monto_pendiente = monto_original - monto_ya_pagado when creating a historical loan."""
+    from app.schemas.prestamo import PrestamoCreate
+    from app.services.prestamos import create_prestamo
+
+    inserted_row = {
+        "id": "eeee-1004",
+        "user_id": "u1",
+        "tipo": "yo_debo",
+        "acreedor_tipo": "banco",
+        "persona": "BanReservas",
+        "monto_original": "10000.00",
+        "monto_pendiente": "7000.00",
+        "monto_ya_pagado": "3000",
+        "moneda": "DOP",
+        "fecha_prestamo": "2025-01-01",
+        "fecha_vencimiento": None,
+        "descripcion": None,
+        "estado": "activo",
+        "notas": None,
+        "created_at": "2025-01-01T00:00:00+00:00",
+        "updated_at": "2025-01-01T00:00:00+00:00",
+        "deleted_at": None,
+    }
+    mock_response = MagicMock()
+    mock_response.data = [inserted_row]
+
+    mock_client = MagicMock()
+    mock_client.table.return_value.insert.return_value.execute.return_value = (
+        mock_response
+    )
+
+    data = PrestamoCreate(
+        tipo="yo_debo",
+        acreedor_tipo="banco",
+        persona="BanReservas",
+        monto_original=Decimal("10000.00"),
+        fecha_prestamo="2025-01-01",
+        monto_ya_pagado=Decimal("3000"),
+    )
+
+    with patch("app.services.prestamos.get_user_client", return_value=mock_client):
+        create_prestamo("fake-jwt", "u1", data)
+
+    insert_payload = mock_client.table.return_value.insert.call_args[0][0]
+    # saldo_pendiente = monto_original - monto_ya_pagado = 10000 - 3000 = 7000
+    assert Decimal(insert_payload["monto_pendiente"]) == Decimal("7000")
+    assert Decimal(insert_payload["monto_original"]) == Decimal("10000")
+    assert Decimal(insert_payload["monto_ya_pagado"]) == Decimal("3000")
+
+
+def test_get_prestamo_retorna_tasa_interes_y_cuota():
+    """PrestamoResponse includes tasa_interes, cuota_mensual and plazo_meses (not None)."""
+    from app.schemas.prestamo import PrestamoResponse
+
+    data = {
+        "id": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+        "user_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "tipo": "yo_debo",
+        "acreedor_tipo": "banco",
+        "persona": "Banco Popular",
+        "monto_original": Decimal("12000.00"),
+        "monto_pendiente": Decimal("10000.00"),
+        "monto_ya_pagado": Decimal("2000.00"),
+        "moneda": "DOP",
+        "fecha_prestamo": date(2026, 1, 1),
+        "fecha_vencimiento": None,
+        "descripcion": None,
+        "estado": "activo",
+        "notas": None,
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "updated_at": "2026-01-01T00:00:00+00:00",
+        "pagos": [],
+        "tasa_interes": Decimal("18.5"),
+        "plazo_meses": 24,
+        "cuota_mensual": 1066.19,
+        "total_intereses": 1588.56,
+        "proximo_pago": date(2026, 2, 1),
+    }
+
+    prestamo = PrestamoResponse(**data)
+
+    assert prestamo.tasa_interes is not None
+    assert prestamo.cuota_mensual is not None
+    assert prestamo.plazo_meses is not None
+    assert float(prestamo.tasa_interes) == 18.5
+    assert prestamo.cuota_mensual == 1066.19
+    assert prestamo.plazo_meses == 24
+
+
+def test_acreedor_tipo_default_persona():
+    """When acreedor_tipo is not specified, it defaults to 'persona'."""
+    from app.schemas.prestamo import PrestamoCreate
+    from app.services.prestamos import create_prestamo
+
+    inserted_row = {
+        "id": "gggg-1006",
+        "user_id": "u1",
+        "tipo": "me_deben",
+        "acreedor_tipo": "persona",
+        "persona": "María López",
+        "monto_original": "500.00",
+        "monto_pendiente": "500.00",
+        "monto_ya_pagado": "0",
+        "moneda": "DOP",
+        "fecha_prestamo": "2026-03-01",
+        "fecha_vencimiento": None,
+        "descripcion": None,
+        "estado": "activo",
+        "notas": None,
+        "created_at": "2026-03-01T00:00:00+00:00",
+        "updated_at": "2026-03-01T00:00:00+00:00",
+        "deleted_at": None,
+    }
+    mock_response = MagicMock()
+    mock_response.data = [inserted_row]
+
+    mock_client = MagicMock()
+    mock_client.table.return_value.insert.return_value.execute.return_value = (
+        mock_response
+    )
+
+    # No acreedor_tipo specified — should default to "persona"
+    data = PrestamoCreate(
+        tipo="me_deben",
+        persona="María López",
+        monto_original=Decimal("500.00"),
+        fecha_prestamo="2026-03-01",
+    )
+
+    assert data.acreedor_tipo == "persona"
+
+    with patch("app.services.prestamos.get_user_client", return_value=mock_client):
+        create_prestamo("fake-jwt", "u1", data)
+
+    insert_payload = mock_client.table.return_value.insert.call_args[0][0]
+    assert insert_payload.get("acreedor_tipo") == "persona"

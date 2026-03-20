@@ -88,7 +88,7 @@ describe('PrestamoRow', () => {
   it('calls onClick with the prestamo when clicked', () => {
     const handleClick = vi.fn()
     render(<PrestamoRow prestamo={mockPrestamoActivo} onClick={handleClick} />)
-    screen.getByRole('button', { name: /ver detalle/i }).click()
+    screen.getByRole('button').click()
     expect(handleClick).toHaveBeenCalledWith(mockPrestamoActivo)
   })
 

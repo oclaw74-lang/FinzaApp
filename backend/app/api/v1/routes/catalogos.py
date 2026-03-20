@@ -20,6 +20,19 @@ def get_paises() -> list[dict]:
     return res.data
 
 
+@router.get("/bancos", response_model=list[BancoOut])
+def get_bancos() -> list[dict]:
+    client = get_admin_client()
+    res = (
+        client.table("bancos")
+        .select("*")
+        .eq("activo", True)
+        .order("nombre")
+        .execute()
+    )
+    return res.data
+
+
 @router.get("/paises/{codigo}/bancos", response_model=list[BancoOut])
 def get_bancos_por_pais(codigo: str) -> list[dict]:
     client = get_admin_client()

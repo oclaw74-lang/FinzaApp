@@ -91,4 +91,21 @@ describe('BottomNav', () => {
     render(<BottomNav />)
     expect(screen.getByRole('link', { name: /presupuestos/i })).toBeInTheDocument()
   })
+
+  it('FAB menu appears above button', () => {
+    render(<BottomNav />)
+    fireEvent.click(screen.getByRole('button', { name: /abrir acciones rapidas/i }))
+    const dialog = screen.getByRole('dialog')
+    expect(dialog.className).toContain('bottom-full')
+  })
+
+  it('FAB menu closes when clicking outside', () => {
+    render(<BottomNav />)
+    fireEvent.click(screen.getByRole('button', { name: /abrir acciones rapidas/i }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    // The backdrop covers the full screen and represents "outside" — clicking it closes the menu
+    const backdrop = document.querySelector('div[aria-hidden="true"]')!
+    fireEvent.click(backdrop)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
 })

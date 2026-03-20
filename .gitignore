@@ -6,3 +6,6 @@
 .env.production
 .env.local
 .env.*.local
+
+# Git worktrees (local development only)
+.claude/worktrees/

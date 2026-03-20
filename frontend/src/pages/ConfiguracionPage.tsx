@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Camera, DollarSign, Clock, Tag, Trash2, Plus, Globe, X } from 'lucide-react'
+import { Camera, DollarSign, Clock, Tag, Trash2, Plus, Globe, X, AlertTriangle, Zap, Sun, Moon, Monitor } from 'lucide-react'
 import * as Icons from 'lucide-react'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -14,6 +14,8 @@ import {
   useCreateCategoria,
   useDeleteCategoria,
 } from '@/hooks/useCategorias'
+import { useMetas } from '@/hooks/useMetas'
+import { useFondoEmergencia } from '@/hooks/useFondoEmergencia'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
 import { useThemeStore } from '@/store/themeStore'
@@ -21,10 +23,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ToggleGroup } from '@/components/ui/toggle-group'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/i18n'
 import type { CategoriaResponse } from '@/types/transacciones'
+import type { FrecuenciaPago } from '@/types/profile'
 
 type Tab = 'profile' | 'appearance' | 'security' | 'categorias'
 
@@ -337,12 +341,32 @@ export function ConfiguracionPage(): JSX.Element {
   const [mostrarHoras, setMostrarHoras] = useState(false)
   const [paisModalOpen, setPaisModalOpen] = useState(false)
   const [savingPais, setSavingPais] = useState(false)
+  // Extended salary fields
+  const [salarioBruto, setSalarioBruto] = useState('')
+  const [salarioNeto, setSalarioNeto] = useState('')
+  const [descuentosAdicionales, setDescuentosAdicionales] = useState('')
+  const [frecuenciaPago, setFrecuenciaPago] = useState<FrecuenciaPago>('mensual')
+  // Auto savings fields
+  const [asignacionActiva, setAsignacionActiva] = useState(false)
+  const [pctMetas, setPctMetas] = useState('')
+  const [pctFondo, setPctFondo] = useState('')
+
+  const { data: metas = [] } = useMetas()
+  const { data: fondo } = useFondoEmergencia()
+  const tieneSavingsTarget = metas.some((m) => m.estado === 'activa') || !!fondo
 
   // Sync profile data when loaded (useEffect avoids stale state from render-time mutation)
   useEffect(() => {
     if (profile) {
       setSalarioValue(profile.salario_mensual_neto != null ? String(profile.salario_mensual_neto) : '')
       setMostrarHoras(profile.mostrar_horas_trabajo ?? false)
+      setSalarioBruto(profile.salario_bruto != null ? String(profile.salario_bruto) : '')
+      setSalarioNeto(profile.salario_neto != null ? String(profile.salario_neto) : '')
+      setDescuentosAdicionales(profile.descuentos_adicionales != null ? String(profile.descuentos_adicionales) : '')
+      setFrecuenciaPago(profile.frecuencia_pago ?? 'mensual')
+      setAsignacionActiva(profile.asignacion_automatica_activa ?? false)
+      setPctMetas(profile.porcentaje_ahorro_metas != null ? String(profile.porcentaje_ahorro_metas) : '')
+      setPctFondo(profile.porcentaje_ahorro_fondo != null ? String(profile.porcentaje_ahorro_fondo) : '')
     }
   }, [profile])
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
@@ -410,6 +434,13 @@ export function ConfiguracionPage(): JSX.Element {
       await updateProfile.mutateAsync({
         salario_mensual_neto: salarioValue ? parseFloat(salarioValue) : undefined,
         mostrar_horas_trabajo: mostrarHoras,
+        salario_bruto: salarioBruto ? parseFloat(salarioBruto) : undefined,
+        salario_neto: salarioNeto ? parseFloat(salarioNeto) : undefined,
+        descuentos_adicionales: descuentosAdicionales ? parseFloat(descuentosAdicionales) : undefined,
+        frecuencia_pago: frecuenciaPago,
+        asignacion_automatica_activa: asignacionActiva,
+        porcentaje_ahorro_metas: pctMetas ? parseFloat(pctMetas) : undefined,
+        porcentaje_ahorro_fondo: pctFondo ? parseFloat(pctFondo) : undefined,
       })
       toast.success(t('settings.profileSaved'))
     } catch {
@@ -543,9 +574,9 @@ export function ConfiguracionPage(): JSX.Element {
                 className="finza-input w-full"
                 {...profileForm.register('currency')}
               >
-                <option value="DOP">Peso Dominicano (RD$)</option>
-                <option value="USD">Dolar Americano ($)</option>
-                <option value="EUR">Euro (EUR)</option>
+                <option value="DOP">{t('settings.currencyDOP')}</option>
+                <option value="USD">{t('settings.currencyUSD')}</option>
+                <option value="EUR">{t('settings.currencyEUR')}</option>
               </select>
             </div>
 
@@ -625,6 +656,170 @@ export function ConfiguracionPage(): JSX.Element {
             </div>
           </div>
 
+          {/* Salary information section */}
+          <div className="border-t border-[var(--border)] pt-6 space-y-4">
+            <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-2">
+              <DollarSign size={13} className="text-[var(--accent)]" />
+              {t('profile.infoSalarial')}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-[var(--text-primary)]">
+                  {t('profile.salarioBruto')}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={salarioBruto}
+                  onChange={(e) => setSalarioBruto(e.target.value)}
+                  className="finza-input w-full"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-[var(--text-primary)]">
+                  {t('profile.salarioNeto')}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={salarioNeto}
+                  onChange={(e) => setSalarioNeto(e.target.value)}
+                  className="finza-input w-full"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-[var(--text-primary)]">
+                  {t('profile.descuentosAdicionales')}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={descuentosAdicionales}
+                  onChange={(e) => setDescuentosAdicionales(e.target.value)}
+                  className="finza-input w-full"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-[var(--text-primary)]">
+                  {t('profile.frecuenciaPago')}
+                </label>
+                <select
+                  value={frecuenciaPago}
+                  onChange={(e) => setFrecuenciaPago(e.target.value as FrecuenciaPago)}
+                  className="finza-input w-full"
+                >
+                  <option value="mensual">{t('profile.frecMensual')}</option>
+                  <option value="quincenal">{t('profile.frecQuincenal')}</option>
+                  <option value="bisemanal">{t('profile.frecBisemanal')}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Auto savings allocation section — only shown when user has active goals or emergency fund */}
+          {tieneSavingsTarget && (
+            <div className="border-t border-[var(--border)] pt-6 space-y-4">
+              <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-2">
+                <Zap size={13} className="text-[var(--accent)]" />
+                {t('profile.asignacionAutomatica')}
+              </p>
+
+              {/* Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-xl border border-[var(--border)] dark:border-white/[0.08] dark:bg-white/[0.05]">
+                <div>
+                  <p className="text-sm font-medium text-[var(--text-primary)]">{t('profile.asignacionActivar')}</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5 max-w-xs">{t('profile.asignacionDesc')}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAsignacionActiva((v) => !v)}
+                  className={cn(
+                    'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
+                    asignacionActiva ? 'bg-[#3d8ef8]' : 'bg-[var(--border-strong)]'
+                  )}
+                  aria-label="Toggle asignacion automatica"
+                >
+                  <span
+                    className={cn(
+                      'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200',
+                      asignacionActiva ? 'left-[21px]' : 'left-[3px]'
+                    )}
+                  />
+                </button>
+              </div>
+
+              {/* Percentage inputs, only shown when active */}
+              {asignacionActiva && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-[var(--text-primary)]">
+                        {t('profile.pctAhorroMetas')}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          placeholder="0"
+                          value={pctMetas}
+                          onChange={(e) => setPctMetas(e.target.value)}
+                          className="finza-input w-full pr-8"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-muted)]">%</span>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-[var(--text-primary)]">
+                        {t('profile.pctAhorroFondo')}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          placeholder="0"
+                          value={pctFondo}
+                          onChange={(e) => setPctFondo(e.target.value)}
+                          className="finza-input w-full pr-8"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-muted)]">%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Total summary */}
+                  {(() => {
+                    const total = (parseFloat(pctMetas) || 0) + (parseFloat(pctFondo) || 0)
+                    const excede = total > 100
+                    return (
+                      <div className={cn(
+                        'flex items-center gap-2 px-3 py-2 rounded-lg text-sm',
+                        excede
+                          ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                          : 'bg-[var(--surface-raised)] text-[var(--text-muted)]'
+                      )}>
+                        {excede && <AlertTriangle size={14} className="flex-shrink-0" />}
+                        <span>
+                          {t('profile.totalAhorro')}: <strong>{total.toFixed(1)}%</strong>
+                          {excede && ` — ${t('profile.advertenciaPct')}`}
+                        </span>
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Single save button for all profile + finances */}
           <Button
             onClick={handleSaveAll}
@@ -649,86 +844,64 @@ export function ConfiguracionPage(): JSX.Element {
       {/* Tab: Appearance (theme + language) */}
       {activeTab === 'appearance' && (
         <div className="space-y-4">
-          <div
-            className="rounded-[20px] overflow-hidden card-glass"
-          >
-            {/* Row: Modo oscuro */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
-              <div>
-                <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
-                  {t('settings.darkMode')}
-                </h4>
-                <p className="text-[12px] text-[var(--text-muted)]">{t('settings.darkModeDesc')}</p>
-              </div>
-              <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className={cn(
-                  'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
-                  theme === 'dark' ? 'bg-[#3d8ef8]' : 'bg-[var(--border-strong)]'
-                )}
-                aria-label="Toggle modo oscuro"
-              >
-                <span
-                  className={cn(
-                    'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200',
-                    theme === 'dark' ? 'left-[21px]' : 'left-[3px]'
-                  )}
-                />
-              </button>
+          {/* Theme ToggleGroup */}
+          <div className="card-glass p-6 space-y-4">
+            <div>
+              <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
+                {t('settings.theme')}
+              </h4>
+              <p className="text-[12px] text-[var(--text-muted)] mt-0.5">
+                {t('settings.themeDesc')}
+              </p>
             </div>
-
-            {/* Row: Modo claro */}
-            <div className="flex items-center justify-between px-5 py-4">
-              <div>
-                <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
-                  {t('settings.lightMode')}
-                </h4>
-                <p className="text-[12px] text-[#657a9e]">{t('settings.lightModeDesc')}</p>
-              </div>
-              <button
-                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-                className={cn(
-                  'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
-                  theme === 'light' ? 'bg-[#3d8ef8]' : 'bg-[var(--border-strong)]'
-                )}
-                aria-label="Toggle modo claro"
-              >
-                <span
-                  className={cn(
-                    'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200',
-                    theme === 'light' ? 'left-[21px]' : 'left-[3px]'
-                  )}
-                />
-              </button>
-            </div>
+            <ToggleGroup
+              value={theme}
+              onValueChange={(val) => setTheme(val as 'light' | 'dark' | 'system')}
+              options={[
+                {
+                  value: 'light',
+                  label: t('settings.lightMode'),
+                  icon: <Sun size={15} />,
+                  title: t('settings.lightMode'),
+                },
+                {
+                  value: 'dark',
+                  label: t('settings.darkMode'),
+                  icon: <Moon size={15} />,
+                  title: t('settings.darkMode'),
+                },
+                {
+                  value: 'system',
+                  label: t('settings.systemMode'),
+                  icon: <Monitor size={15} />,
+                  title: t('settings.systemMode'),
+                },
+              ]}
+              className="w-full"
+              size="md"
+            />
           </div>
 
-          {/* Language selector */}
+          {/* Language ToggleGroup */}
           <div className="card-glass p-6 space-y-4">
-            <p className="text-sm text-[var(--text-muted)]">{t('settings.changeLanguage')}</p>
-            <div className="space-y-3">
-              {[
-                { code: 'es', label: 'Espanol', flag: 'ES' },
-                { code: 'en', label: 'English', flag: 'EN' },
-              ].map(({ code, label, flag }) => (
-                <button
-                  key={code}
-                  onClick={() => handleLangChange(code as 'es' | 'en')}
-                  className={cn(
-                    'w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200',
-                    language === code
-                      ? 'border-finza-blue bg-finza-blue/5'
-                      : 'border-border hover:border-finza-blue/40'
-                  )}
-                >
-                  <span className="text-xl font-bold text-[var(--text-muted)] w-8">{flag}</span>
-                  <span className="font-medium text-[var(--text-primary)]">{label}</span>
-                  {language === code && (
-                    <div className="ml-auto w-2 h-2 rounded-full bg-finza-blue" />
-                  )}
-                </button>
-              ))}
+            <div>
+              <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
+                {t('settings.changeLanguage')}
+              </h4>
+              <p className="text-[12px] text-[var(--text-muted)] mt-0.5">
+                {t('settings.changeLanguageDesc')}
+              </p>
             </div>
+            <ToggleGroup
+              value={language}
+              onValueChange={(val) => handleLangChange(val as 'es' | 'en')}
+              options={[
+                { value: 'es', label: 'Español', title: 'Español' },
+                { value: 'en', label: 'English', title: 'English' },
+              ]}
+              className="w-full"
+              size="md"
+            />
           </div>
         </div>
       )}

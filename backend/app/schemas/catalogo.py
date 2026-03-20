@@ -20,5 +20,8 @@ class PaisOut(BaseModel):
 class BancoOut(BaseModel):
     id: str
     nombre: str
+    nombre_corto: Optional[str] = None
     pais_codigo: str
     activo: bool
+    codigo: Optional[str] = None
+    logo_url: Optional[str] = None

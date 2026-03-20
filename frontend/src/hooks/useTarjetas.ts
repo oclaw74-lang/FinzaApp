@@ -68,3 +68,17 @@ export function useDeleteTarjeta() {
     },
   })
 }
+
+export function useBloquearTarjeta() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string): Promise<Tarjeta> => {
+      const { data } = await apiClient.patch<Tarjeta>(`/tarjetas/${id}/bloquear`)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tarjetas'] })
+      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
+    },
+  })
+}

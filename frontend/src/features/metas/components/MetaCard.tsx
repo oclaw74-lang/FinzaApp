@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { formatMoney, formatDate, cn } from '@/lib/utils'
 import { ProgressBar } from './ProgressBar'
 import type { MetaAhorro, EstadoMeta } from '@/types/meta_ahorro'
@@ -5,15 +6,6 @@ import type { MetaAhorro, EstadoMeta } from '@/types/meta_ahorro'
 interface MetaCardProps {
   meta: MetaAhorro
   onClick: (meta: MetaAhorro) => void
-}
-
-function estadoLabel(estado: EstadoMeta): string {
-  const map: Record<EstadoMeta, string> = {
-    activa: 'Activa',
-    completada: 'Completada',
-    cancelada: 'Cancelada',
-  }
-  return map[estado]
 }
 
 function estadoBadgeClasses(estado: EstadoMeta): string {
@@ -26,6 +18,8 @@ function estadoBadgeClasses(estado: EstadoMeta): string {
 }
 
 export function MetaCard({ meta, onClick }: MetaCardProps): JSX.Element {
+  const { t } = useTranslation()
+
   const porcentaje =
     meta.monto_objetivo > 0
       ? Math.min(100, (meta.monto_actual / meta.monto_objetivo) * 100)
@@ -33,6 +27,11 @@ export function MetaCard({ meta, onClick }: MetaCardProps): JSX.Element {
 
   const isCompletada = porcentaje >= 100 || meta.estado === 'completada'
   const colorMeta = meta.color ?? '#366092'
+
+  const estadoLabel = (estado: EstadoMeta): string => {
+    const key = `metas.status.${estado}` as const
+    return t(key)
+  }
 
   return (
     <button
@@ -42,7 +41,7 @@ export function MetaCard({ meta, onClick }: MetaCardProps): JSX.Element {
         'finza-card text-left w-full transition-all hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-finza-blue',
         meta.estado === 'cancelada' && 'opacity-60'
       )}
-      aria-label={`Ver detalle de meta: ${meta.nombre}`}
+      aria-label={`${t('metas.detail.ahorrado')} ${meta.nombre}`}
     >
       {/* Header: icono prominente + nombre + badge */}
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -78,7 +77,7 @@ export function MetaCard({ meta, onClick }: MetaCardProps): JSX.Element {
         {/* Badge estado */}
         {isCompletada ? (
           <span className="flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full bg-[var(--success-muted)] text-[var(--success)] whitespace-nowrap">
-            Completada
+            {t('metas.card.completada')}
           </span>
         ) : (
           <span
@@ -95,7 +94,7 @@ export function MetaCard({ meta, onClick }: MetaCardProps): JSX.Element {
       {/* Montos */}
       <div className="flex items-end justify-between mb-2">
         <div>
-          <p className="text-xs text-[var(--text-muted)]">Ahorrado</p>
+          <p className="text-xs text-[var(--text-muted)]">{t('metas.card.ahorrado')}</p>
           <p
             className="text-lg font-bold font-mono"
             style={{ color: colorMeta }}
@@ -104,7 +103,7 @@ export function MetaCard({ meta, onClick }: MetaCardProps): JSX.Element {
           </p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-[var(--text-muted)]">Objetivo</p>
+          <p className="text-xs text-[var(--text-muted)]">{t('metas.card.objetivo')}</p>
           <p className="text-sm font-semibold text-[var(--text-primary)]">
             {formatMoney(meta.monto_objetivo)}
           </p>
@@ -115,19 +114,20 @@ export function MetaCard({ meta, onClick }: MetaCardProps): JSX.Element {
       <ProgressBar
         porcentaje={porcentaje}
         color={colorMeta}
-        aria-label={`${Math.round(porcentaje)}% de la meta ${meta.nombre}`}
+        aria-label={t('metas.card.porcentaje', { pct: Math.round(porcentaje) })}
       />
       <p className="text-xs text-[var(--text-muted)] mt-1">
-        {Math.round(porcentaje)}% completado
+        {t('metas.card.porcentaje', { pct: Math.round(porcentaje) })}
       </p>
 
       {/* Fecha objetivo */}
       {meta.fecha_objetivo && (
         <p className="text-xs text-[var(--text-muted)] mt-2">
-          Objetivo:{' '}
+          {t('metas.card.objetivoFecha')}{' '}
           <span className="text-[var(--text-primary)]">{formatDate(meta.fecha_objetivo)}</span>
         </p>
       )}
     </button>
   )
 }
+

@@ -41,7 +41,7 @@ describe('themeStore', () => {
 
   it('applies dark class to documentElement on load when default is dark', async () => {
     await import('@/store/themeStore')
-    expect(classListMock.add).toHaveBeenCalledWith('dark')
+    expect(classListMock.toggle).toHaveBeenCalledWith('dark', true)
   })
 
   it('defaults to "es" language when no localStorage value', async () => {

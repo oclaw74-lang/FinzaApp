@@ -8,6 +8,7 @@ vi.mock('@/hooks/useTarjetas', () => ({
   useCreateTarjeta: vi.fn(),
   useUpdateTarjeta: vi.fn(),
   useDeleteTarjeta: vi.fn(),
+  useBloquearTarjeta: vi.fn(),
 }))
 vi.mock('@/hooks/useMovimientosTarjeta', () => ({
   useMovimientosTarjeta: vi.fn(),
@@ -34,6 +35,7 @@ import {
   useCreateTarjeta,
   useUpdateTarjeta,
   useDeleteTarjeta,
+  useBloquearTarjeta,
 } from '@/hooks/useTarjetas'
 import {
   useMovimientosTarjeta,
@@ -117,6 +119,7 @@ function setupMocks(
   vi.mocked(useCreateTarjeta).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useCreateTarjeta>)
   vi.mocked(useUpdateTarjeta).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useUpdateTarjeta>)
   vi.mocked(useDeleteTarjeta).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useDeleteTarjeta>)
+  vi.mocked(useBloquearTarjeta).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useBloquearTarjeta>)
   vi.mocked(useMovimientosTarjeta).mockReturnValue({
     data: [],
     isLoading: false,

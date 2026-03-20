@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, RefreshCw, Calendar, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { formatCurrency } from '@/lib/utils'
 import { getApiErrorMessage } from '@/lib/apiError'
 import {
@@ -379,26 +380,18 @@ export function RecurrentesPage(): JSX.Element {
               )}
 
               {/* Fecha inicio */}
-              <div>
-                <label className="block text-xs text-[var(--text-muted)] mb-1">{t('recurrentes.form.fechaInicio')}</label>
-                <input
-                  type="date"
-                  value={form.fecha_inicio}
-                  onChange={(e) => setForm((f) => ({ ...f, fecha_inicio: e.target.value }))}
-                  className="w-full border border-[var(--border)] rounded-xl px-3 py-2.5 text-sm bg-[var(--surface)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-colors"
-                />
-              </div>
+              <DatePicker
+                label={t('recurrentes.form.fechaInicio')}
+                value={form.fecha_inicio}
+                onChange={(e) => setForm((f) => ({ ...f, fecha_inicio: e.target.value }))}
+              />
 
               {/* Fecha fin */}
-              <div>
-                <label className="block text-xs text-[var(--text-muted)] mb-1">{t('recurrentes.form.fechaFin')}</label>
-                <input
-                  type="date"
-                  value={form.fecha_fin}
-                  onChange={(e) => setForm((f) => ({ ...f, fecha_fin: e.target.value }))}
-                  className="w-full border border-[var(--border)] rounded-xl px-3 py-2.5 text-sm bg-[var(--surface)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-colors"
-                />
-              </div>
+              <DatePicker
+                label={t('recurrentes.form.fechaFin')}
+                value={form.fecha_fin}
+                onChange={(e) => setForm((f) => ({ ...f, fecha_fin: e.target.value }))}
+              />
 
               <div className="flex gap-2 pt-1">
                 <button

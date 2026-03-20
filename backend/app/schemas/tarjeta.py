@@ -23,6 +23,7 @@ class TarjetaCreate(BaseModel):
     fecha_pago: Optional[int] = Field(default=None, ge=1, le=31)
     color: Optional[str] = None
     activa: bool = True
+    bloqueada: bool = False
 
     @field_validator("banco")
     @classmethod
@@ -62,7 +63,7 @@ class TarjetaCreate(BaseModel):
 
 class TarjetaUpdate(BaseModel):
     banco: Optional[str] = None
-    banco_id: Optional[str] = None
+    banco_id: Optional[uuid.UUID] = None
     banco_custom: Optional[str] = None
     titular: Optional[str] = None
     tipo: Optional[TipoTarjeta] = None
@@ -73,11 +74,13 @@ class TarjetaUpdate(BaseModel):
     fecha_pago: Optional[int] = Field(default=None, ge=1, le=31)
     color: Optional[str] = None
     activa: Optional[bool] = None
+    bloqueada: Optional[bool] = None
 
+    # Allow clearing banco by passing null banco_id; allow empty-string banco in updates
     @field_validator("banco")
     @classmethod
     def banco_not_empty(cls, v: Optional[str]) -> Optional[str]:
-        if v is not None and not v.strip():
+        if v is not None and v.strip() == "" and v != "":
             raise ValueError("El banco no puede estar vacio.")
         return v.strip() if v else v
 
@@ -142,6 +145,7 @@ class TarjetaResponse(BaseModel):
     fecha_pago: Optional[int] = None
     color: Optional[str] = None
     activa: bool
+    bloqueada: bool = False
     disponible: Optional[float] = None  # computed: limite_credito - saldo_actual
 
     model_config = {"from_attributes": True}
