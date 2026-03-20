@@ -574,9 +574,9 @@ export function ConfiguracionPage(): JSX.Element {
                 className="finza-input w-full"
                 {...profileForm.register('currency')}
               >
-                <option value="DOP">Peso Dominicano (RD$)</option>
-                <option value="USD">Dolar Americano ($)</option>
-                <option value="EUR">Euro (EUR)</option>
+                <option value="DOP">{t('settings.currencyDOP')}</option>
+                <option value="USD">{t('settings.currencyUSD')}</option>
+                <option value="EUR">{t('settings.currencyEUR')}</option>
               </select>
             </div>
 

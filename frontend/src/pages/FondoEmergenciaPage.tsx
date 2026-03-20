@@ -131,7 +131,10 @@ export function FondoEmergenciaPage(): JSX.Element {
 
             {/* Subtitle */}
             <p className="text-sm text-[var(--text-muted)] mb-5">
-              Cobertura para ~{fondo.meta_meses} {fondo.meta_meses === 1 ? t('fondoEmergencia.mes') : t('fondoEmergencia.meses')} de gastos
+              {t('fondoEmergencia.coberturaDesc', {
+                meses: fondo.meta_meses,
+                unidad: fondo.meta_meses === 1 ? t('fondoEmergencia.mes') : t('fondoEmergencia.mesesShort'),
+              })}
             </p>
 
             {/* Progress bar */}
@@ -147,7 +150,7 @@ export function FondoEmergenciaPage(): JSX.Element {
 
             {/* Meta row */}
             <div className="flex justify-between text-xs text-[var(--text-muted)]">
-              <span>{fondo.porcentaje.toFixed(1)}% de la meta</span>
+              <span>{t('fondoEmergencia.porcentajeMeta', { pct: (fondo.porcentaje ?? 0).toFixed(1) })}</span>
               {fondo.meta_calculada && fondo.meta_calculada > fondo.monto_actual && (
                 <span>{t('fondoEmergencia.remaining')} {formatCurrency(fondo.meta_calculada - fondo.monto_actual)}</span>
               )}

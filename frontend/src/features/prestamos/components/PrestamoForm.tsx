@@ -3,6 +3,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DatePicker } from '@/components/ui/DatePicker'
@@ -96,6 +97,7 @@ export function PrestamoForm({
   onCancel,
   isLoading,
 }: PrestamoFormProps): JSX.Element {
+  const { t } = useTranslation()
   const { data: monedas = [] } = useMonedas()
   const { data: bancos = [] } = useBancosAll()
 
@@ -138,16 +140,16 @@ export function PrestamoForm({
       {/* Tipo */}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="tipo" className="text-sm font-medium text-gray-700">
-          Tipo de prestamo
+          {t('prestamos.form.tipoPrestamo')}
         </label>
         <select
           id="tipo"
           {...register('tipo')}
           className="finza-input w-full"
-          aria-label="Tipo de prestamo"
+          aria-label={t('prestamos.form.tipoPrestamo')}
         >
-          <option value="me_deben">Me deben (preste dinero)</option>
-          <option value="yo_debo">Yo debo (me prestaron)</option>
+          <option value="me_deben">{t('prestamos.form.meDeben')}</option>
+          <option value="yo_debo">{t('prestamos.form.yoDebo')}</option>
         </select>
         {errors.tipo && (
           <p className="text-xs text-alert-red" role="alert">{errors.tipo.message}</p>
@@ -226,7 +228,7 @@ export function PrestamoForm({
       {/* Monto + Moneda */}
       <div className="grid grid-cols-2 gap-4">
         <Input
-          label="Monto original"
+          label={t('prestamos.form.montoOriginal')}
           type="number"
           step="0.01"
           placeholder="0.00"
@@ -235,9 +237,9 @@ export function PrestamoForm({
         />
         <div className="flex flex-col gap-1.5">
           <label htmlFor="moneda" className="text-sm font-medium text-gray-700">
-            Moneda
+            {t('prestamos.form.moneda')}
           </label>
-          <select id="moneda" {...register('moneda')} className="finza-input w-full" aria-label="Moneda">
+          <select id="moneda" {...register('moneda')} className="finza-input w-full" aria-label={t('prestamos.form.moneda')}>
             {monedas.length > 0
               ? monedas.map((m) => (
                   <option key={m.codigo} value={m.codigo}>
@@ -285,9 +287,9 @@ export function PrestamoForm({
 
       {/* Descripcion */}
       <Input
-        label="Descripcion (opcional)"
+        label={t('prestamos.form.descripcion')}
         type="text"
-        placeholder="Ej: Prestamo para reparar carro"
+        placeholder={t('prestamos.form.descripcionPlaceholder')}
         {...register('descripcion')}
       />
 
@@ -295,7 +297,7 @@ export function PrestamoForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="tasa_interes" className="text-sm font-medium text-gray-700">
-            Tasa de interes (%)
+            {t('prestamos.form.tasaInteres')}
           </label>
           <Input
             id="tasa_interes"
@@ -305,11 +307,11 @@ export function PrestamoForm({
             error={errors.tasa_interes?.message}
             {...register('tasa_interes', { valueAsNumber: true, setValueAs: (v) => v === '' ? null : Number(v) })}
           />
-          <p className="text-xs text-gray-400">Opcional — tasa anual en %</p>
+          <p className="text-xs text-gray-400">{t('prestamos.form.tasaInteresHint')}</p>
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="plazo_meses" className="text-sm font-medium text-gray-700">
-            Plazo (meses)
+            {t('prestamos.form.plazoMeses')}
           </label>
           <Input
             id="plazo_meses"
@@ -319,7 +321,7 @@ export function PrestamoForm({
             error={errors.plazo_meses?.message}
             {...register('plazo_meses', { valueAsNumber: true, setValueAs: (v) => v === '' ? null : Number(v) })}
           />
-          <p className="text-xs text-gray-400">Opcional — numero de cuotas</p>
+          <p className="text-xs text-gray-400">{t('prestamos.form.plazoMesesHint')}</p>
         </div>
       </div>
 
@@ -346,25 +348,26 @@ export function PrestamoForm({
       {/* Notas */}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="notas" className="text-sm font-medium text-gray-700">
-          Notas (opcional)
+          {t('prestamos.form.notas')}
         </label>
         <textarea
           id="notas"
           {...register('notas')}
           rows={2}
-          placeholder="Notas adicionales..."
+          placeholder={t('prestamos.form.notasPlaceholder')}
           className="finza-input w-full resize-none"
         />
       </div>
 
       <div className="flex gap-3 justify-end mt-2">
         <Button type="button" variant="secondary" onClick={onCancel}>
-          Cancelar
+          {t('common.cancel')}
         </Button>
         <Button type="submit" variant="default" isLoading={isLoading}>
-          Guardar prestamo
+          {t('prestamos.form.guardar')}
         </Button>
       </div>
     </form>
   )
 }
+

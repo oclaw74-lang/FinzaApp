@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { X, Pencil, Trash2, Plus, ArrowDown, ArrowUp } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { formatMoney, formatDate, cn } from '@/lib/utils'
 import { ProgressBar } from './ProgressBar'
@@ -31,15 +32,6 @@ function estadoBadgeClasses(estado: EstadoMeta): string {
   return map[estado]
 }
 
-function estadoLabel(estado: EstadoMeta): string {
-  const map: Record<EstadoMeta, string> = {
-    activa: 'Activa',
-    completada: 'Completada',
-    cancelada: 'Cancelada',
-  }
-  return map[estado]
-}
-
 function tipoContribucionColor(tipo: TipoContribucion): string {
   return tipo === 'deposito' ? 'text-prosperity-green' : 'text-golden-flow'
 }
@@ -51,6 +43,7 @@ export function MetaDetail({
   onEdit,
   onDelete,
 }: MetaDetailProps): JSX.Element {
+  const { t } = useTranslation()
   const [showContribucionForm, setShowContribucionForm] = useState(false)
 
   const { data: meta, isLoading, isError } = useMetaDetalle(metaId)
@@ -74,7 +67,7 @@ export function MetaDetail({
   const handleDeleteContribucion = async (
     contribucionId: string
   ): Promise<void> => {
-    if (window.confirm('Eliminar esta contribucion?')) {
+    if (window.confirm(t('metas.contribucion.confirmarEliminar'))) {
       await deleteContribucion.mutateAsync(contribucionId)
     }
   }
@@ -110,7 +103,7 @@ export function MetaDetail({
         />
         <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card shadow-card-hover w-full max-w-xl p-6">
           <p className="text-sm text-gray-500">
-            No se pudo cargar el detalle de la meta.
+            {t('metas.detail.noCargar')}
           </p>
           <Button
             variant="secondary"
@@ -118,7 +111,7 @@ export function MetaDetail({
             onClick={onClose}
             className="mt-4"
           >
-            Cerrar
+            {t('common.close')}
           </Button>
         </div>
       </div>,
@@ -172,7 +165,7 @@ export function MetaDetail({
                   estadoBadgeClasses(displayMeta.estado)
                 )}
               >
-                {estadoLabel(displayMeta.estado)}
+                {t(`metas.status.${displayMeta.estado}`)}
               </span>
             </div>
           </div>
@@ -180,7 +173,7 @@ export function MetaDetail({
             type="button"
             onClick={onClose}
             className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors ml-3 flex-shrink-0"
-            aria-label="Cerrar detalle"
+            aria-label={t('metas.detail.cerrar')}
           >
             <X size={20} />
           </button>
@@ -191,7 +184,7 @@ export function MetaDetail({
           <div>
             <div className="flex justify-between items-end mb-2">
               <div>
-                <p className="text-xs text-[var(--text-muted)]">Ahorrado</p>
+                <p className="text-xs text-[var(--text-muted)]">{t('metas.detail.ahorrado')}</p>
                 <p
                   className="text-3xl font-bold money"
                   style={{ color: colorMeta }}
@@ -200,7 +193,7 @@ export function MetaDetail({
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-[var(--text-muted)]">Objetivo</p>
+                <p className="text-xs text-[var(--text-muted)]">{t('metas.detail.objetivo')}</p>
                 <p className="text-lg font-semibold text-[var(--text-primary)]">
                   {formatMoney(displayMeta.monto_objetivo)}
                 </p>
@@ -209,22 +202,24 @@ export function MetaDetail({
             <ProgressBar
               porcentaje={porcentaje}
               color={colorMeta}
-              aria-label={`${porcentaje}% de la meta ${displayMeta.nombre}`}
+              aria-label={t('metas.detail.porcentaje', { pct: porcentaje })}
             />
-            <p className="text-xs text-[var(--text-muted)] mt-1">{porcentaje}% completado</p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">
+              {t('metas.detail.porcentaje', { pct: porcentaje })}
+            </p>
           </div>
 
           {/* Datos generales */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-xs text-[var(--text-muted)]">Fecha inicio</p>
+              <p className="text-xs text-[var(--text-muted)]">{t('metas.detail.fechaInicio')}</p>
               <p className="text-[var(--text-primary)]">
                 {formatDate(displayMeta.fecha_inicio)}
               </p>
             </div>
             {displayMeta.fecha_objetivo && (
               <div>
-                <p className="text-xs text-[var(--text-muted)]">Fecha objetivo</p>
+                <p className="text-xs text-[var(--text-muted)]">{t('metas.detail.fechaObjetivo')}</p>
                 <p className="text-[var(--text-primary)]">
                   {formatDate(displayMeta.fecha_objetivo)}
                 </p>
@@ -234,7 +229,7 @@ export function MetaDetail({
 
           {displayMeta.descripcion && (
             <div>
-              <p className="text-xs text-[var(--text-muted)] mb-1">Descripcion</p>
+              <p className="text-xs text-[var(--text-muted)] mb-1">{t('metas.detail.descripcion')}</p>
               <p className="text-sm text-[var(--text-primary)]">{displayMeta.descripcion}</p>
             </div>
           )}
@@ -242,7 +237,7 @@ export function MetaDetail({
           {/* Lista de contribuciones */}
           <div>
             <p className="text-sm font-semibold text-[var(--text-secondary)] mb-3">
-              Historial de contribuciones
+              {t('metas.detail.historial')}
             </p>
 
             {isLoadingContribuciones && (
@@ -259,7 +254,7 @@ export function MetaDetail({
             {!isLoadingContribuciones &&
               contribucionesOrdenadas.length === 0 && (
                 <p className="text-xs text-[var(--text-muted)] text-center py-4">
-                  Sin contribuciones aun. Agrega tu primer deposito.
+                  {t('metas.detail.sinContribuciones')}
                 </p>
               )}
 
@@ -310,7 +305,7 @@ export function MetaDetail({
                           type="button"
                           onClick={() => handleDeleteContribucion(contrib.id)}
                           className="text-[var(--text-subtle)] hover:text-alert-red transition-colors"
-                          aria-label="Eliminar contribucion"
+                          aria-label={t('metas.contribucion.eliminarLabel')}
                         >
                           <Trash2 size={13} />
                         </button>
@@ -325,7 +320,7 @@ export function MetaDetail({
           {showContribucionForm && displayMeta.estado === 'activa' && (
             <div className="border border-[var(--border)] bg-[var(--surface-raised)] rounded-lg p-4">
               <p className="text-sm font-semibold text-[var(--text-secondary)] mb-3">
-                Agregar contribucion
+                {t('metas.detail.agregarContribucion')}
               </p>
               <ContribucionForm
                 montoActual={displayMeta.monto_actual}
@@ -346,7 +341,7 @@ export function MetaDetail({
               onClick={() => setShowContribucionForm(true)}
             >
               <Plus size={15} className="mr-1" />
-              Agregar contribucion
+              {t('metas.detail.agregarContribucionBtn')}
             </Button>
           )}
           <div className="flex gap-2 ml-auto">
@@ -356,7 +351,7 @@ export function MetaDetail({
               onClick={() => onEdit(displayMeta)}
             >
               <Pencil size={15} className="mr-1" />
-              Editar
+              {t('common.edit')}
             </Button>
             <Button
               variant="danger"
@@ -364,7 +359,7 @@ export function MetaDetail({
               onClick={() => onDelete(displayMeta.id)}
             >
               <Trash2 size={15} className="mr-1" />
-              Eliminar
+              {t('common.delete')}
             </Button>
           </div>
         </div>

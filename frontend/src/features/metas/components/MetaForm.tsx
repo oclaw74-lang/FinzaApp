@@ -1,6 +1,7 @@
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DatePicker } from '@/components/ui/DatePicker'
@@ -49,6 +50,7 @@ export function MetaForm({
   onCancel,
   isLoading,
 }: MetaFormProps): JSX.Element {
+  const { t } = useTranslation()
   const {
     register,
     handleSubmit,
@@ -74,9 +76,9 @@ export function MetaForm({
     <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
       {/* Nombre */}
       <Input
-        label="Nombre de la meta"
+        label={t('metas.form.nombre')}
         type="text"
-        placeholder="Ej: Fondo de emergencia"
+        placeholder={t('metas.form.nombrePlaceholder')}
         error={errors.nombre?.message}
         {...register('nombre')}
       />
@@ -87,20 +89,20 @@ export function MetaForm({
           htmlFor="meta-descripcion"
           className="text-sm font-medium text-[var(--text-secondary)]"
         >
-          Descripcion (opcional)
+          {t('metas.form.descripcion')}
         </label>
         <textarea
           id="meta-descripcion"
           {...register('descripcion')}
           rows={2}
-          placeholder="Describe el proposito de esta meta..."
+          placeholder={t('metas.form.descripcionPlaceholder')}
           className="finza-input w-full resize-none"
         />
       </div>
 
       {/* Monto objetivo */}
       <Input
-        label="Monto objetivo"
+        label={t('metas.form.montoObjetivo')}
         type="number"
         step="0.01"
         placeholder="0.00"
@@ -111,12 +113,12 @@ export function MetaForm({
       {/* Fechas */}
       <div className="grid grid-cols-2 gap-4">
         <DatePicker
-          label="Fecha de inicio"
+          label={t('metas.form.fechaInicio')}
           error={errors.fecha_inicio?.message}
           {...register('fecha_inicio')}
         />
         <DatePicker
-          label="Fecha objetivo (opcional)"
+          label={t('metas.form.fechaObjetivo')}
           error={errors.fecha_objetivo?.message}
           {...register('fecha_objetivo')}
         />
@@ -129,14 +131,14 @@ export function MetaForm({
             htmlFor="meta-color"
             className="text-sm font-medium text-[var(--text-secondary)]"
           >
-            Color
+            {t('metas.form.color')}
           </label>
           <input
             id="meta-color"
             type="color"
             {...register('color')}
             className="h-10 w-full rounded-lg border border-[var(--border)] cursor-pointer px-1"
-            aria-label="Color de la meta"
+            aria-label={t('metas.form.color')}
           />
         </div>
         <Controller
@@ -154,12 +156,13 @@ export function MetaForm({
 
       <div className="flex gap-3 justify-end mt-2">
         <Button type="button" variant="secondary" onClick={onCancel}>
-          Cancelar
+          {t('common.cancel')}
         </Button>
         <Button type="submit" variant="default" isLoading={isLoading}>
-          {meta ? 'Guardar cambios' : 'Crear meta'}
+          {meta ? t('metas.form.guardar') : t('metas.form.crear')}
         </Button>
       </div>
     </form>
   )
 }
+
