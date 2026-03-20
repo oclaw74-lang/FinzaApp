@@ -117,7 +117,7 @@ def marcar_todas_leidas(user_jwt: str, user_id: str) -> dict:
                 "¡Ayúdanos a mejorar Finza!",
                 "Tienes una encuesta pendiente. Solo toma 2 minutos y nos ayuda a mejorar la app para ti.",
             ):
-                generadas += 1
+                pass  # notification created; count tracked separately
     except Exception:
         pass
 
