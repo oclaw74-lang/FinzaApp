@@ -141,7 +141,9 @@ function NuevaCategoriaForm({ onDone }: NuevaCategoriaFormProps): JSX.Element {
 }
 
 function CategoriasTab({ navigate }: CategoriasTabProps): JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const getCatNombre = (cat: { nombre: string; nombre_en?: string }) =>
+    i18n.language.startsWith('en') && cat.nombre_en ? cat.nombre_en : cat.nombre
   const { data: categorias = [], isLoading, isError } = useCategorias()
   const deleteCategoria = useDeleteCategoria()
   const [showForm, setShowForm] = useState(false)
@@ -219,7 +221,7 @@ function CategoriasTab({ navigate }: CategoriasTabProps): JSX.Element {
                 <div className="w-8 h-8 rounded-lg bg-[var(--surface-raised)] flex items-center justify-center flex-shrink-0">
                   <IconComp size={15} className="text-[var(--text-muted)]" />
                 </div>
-                <span className="flex-1 text-sm text-[var(--text-primary)] truncate">{cat.nombre}</span>
+                <span className="flex-1 text-sm text-[var(--text-primary)] truncate">{getCatNombre(cat)}</span>
                 {getTipoBadge(cat.tipo, t)}
                 {cat.es_sistema && (
                   <span className="text-[10px] text-[var(--text-muted)] px-1.5 py-0.5 rounded bg-[var(--surface-raised)]">
@@ -231,7 +233,7 @@ function CategoriasTab({ navigate }: CategoriasTabProps): JSX.Element {
                     type="button"
                     onClick={() => handleDelete(cat)}
                     className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors flex-shrink-0"
-                    aria-label={`Eliminar ${cat.nombre}`}
+                    aria-label={`Eliminar ${getCatNombre(cat)}`}
                   >
                     <Trash2 size={13} />
                   </button>
@@ -330,7 +332,9 @@ function PaisModal({ currentPaisCodigo, onClose, onSave, isSaving }: PaisModalPr
 }
 
 export function ConfiguracionPage(): JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const getCatNombre = (cat: { nombre: string; nombre_en?: string }) =>
+    i18n.language.startsWith('en') && cat.nombre_en ? cat.nombre_en : cat.nombre
   const { user } = useAuthStore()
   const { theme, setTheme, language, setLanguage } = useThemeStore()
   const [activeTab, setActiveTab] = useState<Tab>('profile')
