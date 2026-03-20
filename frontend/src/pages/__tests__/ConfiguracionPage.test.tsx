@@ -144,7 +144,7 @@ describe('ConfiguracionPage', () => {
   it('clicking dark mode toggle calls setTheme with dark', () => {
     renderPage()
     fireEvent.click(screen.getByText('settings.appearance'))
-    fireEvent.click(screen.getByLabelText('Toggle modo oscuro'))
+    fireEvent.click(screen.getByTitle('settings.darkMode'))
     expect(mockSetTheme).toHaveBeenCalledWith('dark')
   })
 
@@ -157,7 +157,7 @@ describe('ConfiguracionPage', () => {
   it('appearance tab shows Espanol and English options', () => {
     renderPage()
     fireEvent.click(screen.getByText('settings.appearance'))
-    expect(screen.getByText('Espanol')).toBeInTheDocument()
+    expect(screen.getByText('Español')).toBeInTheDocument()
     expect(screen.getByText('English')).toBeInTheDocument()
   })
 
