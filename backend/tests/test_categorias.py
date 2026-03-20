@@ -218,6 +218,13 @@ def test_update_categoria_not_found_returns_none():
     mock_response.data = []
 
     mock_client = MagicMock()
+    # es_sistema check: not a system category
+    (mock_client.table.return_value
+     .select.return_value
+     .eq.return_value
+     .is_.return_value
+     .maybe_single.return_value
+     .execute.return_value.data) = None
     (mock_client.table.return_value
      .update.return_value
      .eq.return_value
@@ -244,6 +251,13 @@ def test_delete_categoria_performs_soft_delete():
     mock_response.data = [soft_deleted_row]
 
     mock_client = MagicMock()
+    # es_sistema check: not a system category
+    (mock_client.table.return_value
+     .select.return_value
+     .eq.return_value
+     .is_.return_value
+     .maybe_single.return_value
+     .execute.return_value.data) = None
     (mock_client.table.return_value
      .update.return_value
      .eq.return_value
@@ -253,11 +267,9 @@ def test_delete_categoria_performs_soft_delete():
     with patch("app.services.categorias.get_user_client", return_value=mock_client):
         result = delete_categoria("fake-jwt", "user-123", "some-id")
 
-    # Must return the updated record, not True
     assert result["id"] == "some-id"
     assert "deleted_at" in result
 
-    # Verify the update payload contains deleted_at
     update_payload = mock_client.table.return_value.update.call_args[0][0]
     assert "deleted_at" in update_payload
 
@@ -272,6 +284,13 @@ def test_delete_categoria_not_found_raises_404():
     mock_response.data = []  # empty = record not found
 
     mock_client = MagicMock()
+    # es_sistema check: not a system category
+    (mock_client.table.return_value
+     .select.return_value
+     .eq.return_value
+     .is_.return_value
+     .maybe_single.return_value
+     .execute.return_value.data) = None
     (mock_client.table.return_value
      .update.return_value
      .eq.return_value
