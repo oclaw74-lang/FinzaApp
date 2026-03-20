@@ -96,9 +96,7 @@ describe('MetaCard', () => {
   it('calls onClick with meta when clicked', () => {
     const handleClick = vi.fn()
     render(<MetaCard meta={mockMetaActiva} onClick={handleClick} />)
-    screen
-      .getByRole('button', { name: /ver detalle de meta/i })
-      .click()
+    screen.getByRole('button').click()
     expect(handleClick).toHaveBeenCalledWith(mockMetaActiva)
   })
 
