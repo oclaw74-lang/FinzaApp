@@ -1,4 +1,4 @@
-﻿const en = {
+const en = {
   nav: {
     dashboard: 'Dashboard', ingresos: 'Income', egresos: 'Expenses',
     prestamos: 'Loans', metas: 'Goals', presupuestos: 'Budgets',
@@ -369,6 +369,21 @@
     horasPorPeso: 'Work hours per peso',
     saved: 'Financial profile saved',
     salarioHint: 'Used to calculate work hours per expense',
+    salarioBruto: 'Gross salary',
+    salarioNeto: 'Net salary',
+    descuentosAdicionales: 'Additional deductions',
+    frecuenciaPago: 'Pay frequency',
+    frecQuincenal: 'Bi-monthly',
+    frecBisemanal: 'Bi-weekly',
+    frecMensual: 'Monthly',
+    infoSalarial: 'Salary information',
+    asignacionAutomatica: 'Automatic savings allocation',
+    asignacionActivar: 'Enable automatic allocation',
+    asignacionDesc: 'When a salary income is registered, it will be automatically distributed to your goals and emergency fund.',
+    pctAhorroMetas: '% savings for goals',
+    pctAhorroFondo: '% savings for emergency fund',
+    totalAhorro: 'Total allocated',
+    advertenciaPct: 'The sum exceeds 100%. Please adjust the percentages.'
   },
   retos: {
     title: 'Financial challenges',
@@ -615,3 +630,4 @@
 }
 
 export default en
+

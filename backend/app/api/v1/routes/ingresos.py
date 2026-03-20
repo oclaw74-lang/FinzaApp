@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -45,8 +46,29 @@ async def create_ingreso(
     if payload.get("subcategoria_id"):
         payload["subcategoria_id"] = str(payload["subcategoria_id"])
     payload["fecha"] = str(payload["fecha"])
-    payload["monto"] = str(payload["monto"])
-    return svc.create_ingreso(token, current_user["user_id"], payload)
+    monto = payload["monto"]
+    payload["monto"] = str(monto)
+    ingreso = svc.create_ingreso(token, current_user["user_id"], payload)
+
+    # Check if this income belongs to a salary category and trigger auto distribution
+    try:
+        from app.core.supabase_client import get_user_client
+        from postgrest import APIError as _APIError
+        client = get_user_client(token)
+        cat_r = (
+            client.table("categorias")
+            .select("nombre")
+            .eq("id", str(data.categoria_id))
+            .maybe_single()
+            .execute()
+        )
+        cat_nombre = (cat_r.data or {}).get("nombre", "") if cat_r else ""
+        if "sueldo" in cat_nombre.lower() or "salario" in cat_nombre.lower():
+            svc.distribuir_ahorro_automatico(token, current_user["user_id"], Decimal(str(monto)))
+    except Exception:
+        pass
+
+    return ingreso
 
 
 @router.get("/{ingreso_id}", response_model=IngresoResponse)
