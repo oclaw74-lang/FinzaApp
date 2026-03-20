@@ -126,8 +126,14 @@ def create_prestamo(user_jwt: str, user_id: str, data: PrestamoCreate) -> dict:
     client = get_user_client(user_jwt)
     payload = data.model_dump(exclude_none=True)
     payload["user_id"] = user_id
-    payload["monto_pendiente"] = str(payload["monto_original"])
-    payload["monto_original"] = str(payload["monto_original"])
+
+    monto_original = Decimal(str(payload["monto_original"]))
+    monto_ya_pagado = Decimal(str(payload.get("monto_ya_pagado", "0")))
+    monto_pendiente = max(monto_original - monto_ya_pagado, Decimal("0"))
+
+    payload["monto_original"] = str(monto_original)
+    payload["monto_pendiente"] = str(monto_pendiente)
+    payload["monto_ya_pagado"] = str(monto_ya_pagado)
     payload["fecha_prestamo"] = str(payload["fecha_prestamo"])
     if payload.get("fecha_vencimiento"):
         payload["fecha_vencimiento"] = str(payload["fecha_vencimiento"])

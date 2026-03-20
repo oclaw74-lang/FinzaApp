@@ -25,6 +25,17 @@ export function usePaises(): UseQueryResult<Pais[]> {
   })
 }
 
+export function useBancosAll(): UseQueryResult<Banco[]> {
+  return useQuery({
+    queryKey: ['catalogos', 'bancos', 'all'],
+    queryFn: async (): Promise<Banco[]> => {
+      const { data } = await apiClient.get<Banco[]>('/catalogos/bancos')
+      return data
+    },
+    staleTime: Infinity,
+  })
+}
+
 export function useBancos(paisCodigo: string | null): UseQueryResult<Banco[]> {
   return useQuery({
     queryKey: ['catalogos', 'bancos', paisCodigo],
