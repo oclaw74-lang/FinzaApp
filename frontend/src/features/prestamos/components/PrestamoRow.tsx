@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { formatMoney, formatDate, cn } from '@/lib/utils'
 import type { Prestamo, EstadoPrestamo } from '@/types/prestamo'
 
@@ -10,10 +11,12 @@ function calcularDiasHastaVencimiento(fecha: string): number {
 }
 
 function EstadoBadge({ estado, diasVencimiento }: { estado: EstadoPrestamo; diasVencimiento?: number }): JSX.Element {
+  const { t } = useTranslation()
+
   if (estado === 'pagado') {
     return (
       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[rgba(0,223,162,0.12)] text-[#00dfa2]">
-        Pagado
+        {t('prestamos.status.pagado')}
       </span>
     )
   }
@@ -21,7 +24,7 @@ function EstadoBadge({ estado, diasVencimiento }: { estado: EstadoPrestamo; dias
   if (estado === 'vencido') {
     return (
       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[rgba(255,64,96,0.12)] text-[#ff4060]">
-        Vencido
+        {t('prestamos.status.vencido')}
       </span>
     )
   }
@@ -30,14 +33,14 @@ function EstadoBadge({ estado, diasVencimiento }: { estado: EstadoPrestamo; dias
   if (diasVencimiento !== undefined && diasVencimiento <= 7) {
     return (
       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[rgba(255,179,64,0.12)] text-[#ffb340]">
-        Pagar pronto
+        {t('prestamos.row.pagarPronto')}
       </span>
     )
   }
 
   return (
     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[rgba(0,223,162,0.12)] text-[#00dfa2]">
-      Al corriente
+      {t('prestamos.row.alCorriente')}
     </span>
   )
 }
@@ -48,6 +51,7 @@ interface PrestamoRowProps {
 }
 
 export function PrestamoRow({ prestamo, onClick }: PrestamoRowProps): JSX.Element {
+  const { t } = useTranslation()
   const monto_original = Number(prestamo.monto_original ?? 0)
   const monto_pendiente = Number(prestamo.monto_pendiente ?? 0)
   const montoPagado = monto_original - monto_pendiente
@@ -81,7 +85,7 @@ export function PrestamoRow({ prestamo, onClick }: PrestamoRowProps): JSX.Elemen
         prestamo.estado === 'pagado' && 'opacity-60'
       )}
       onClick={() => onClick(prestamo)}
-      aria-label={`Ver detalle de prestamo con ${prestamo.persona}`}
+      aria-label={`${t('prestamos.detail.meDeben')} ${prestamo.persona}`}
     >
       <div
         className="flex items-center gap-4 px-5 py-[18px] rounded-[20px] mb-3"
@@ -118,7 +122,7 @@ export function PrestamoRow({ prestamo, onClick }: PrestamoRowProps): JSX.Elemen
             aria-valuenow={porcentajePagado}
             aria-valuemin={0}
             aria-valuemax={100}
-            aria-label={`${porcentajePagado}% pagado`}
+            aria-label={t('prestamos.detail.porcentajePagado', { pct: porcentajePagado })}
           >
             <div
               className="h-full rounded-full"
@@ -130,8 +134,8 @@ export function PrestamoRow({ prestamo, onClick }: PrestamoRowProps): JSX.Elemen
           </div>
 
           <div className="flex items-center gap-3 text-xs text-[#657a9e]">
-            <span>Pagado: {formatMoney(montoPagado, prestamo.moneda)}</span>
-            <span>Pendiente: {formatMoney(monto_pendiente, prestamo.moneda)}</span>
+            <span>{t('prestamos.row.pagadoLabel')}: {formatMoney(montoPagado, prestamo.moneda)}</span>
+            <span>{t('prestamos.row.pendienteLabel')}: {formatMoney(monto_pendiente, prestamo.moneda)}</span>
           </div>
         </div>
 
@@ -139,7 +143,7 @@ export function PrestamoRow({ prestamo, onClick }: PrestamoRowProps): JSX.Elemen
         <div className="text-right flex-shrink-0 flex flex-col items-end gap-1">
           {prestamo.cuota_mensual != null && (
             <>
-              <p className="text-[10px] uppercase tracking-widest text-[#657a9e]">Cuota</p>
+              <p className="text-[10px] uppercase tracking-widest text-[#657a9e]">{t('prestamos.row.cuota')}</p>
               <p className="text-sm font-bold tabular-nums text-[#e8f0ff]">
                 {formatMoney(prestamo.cuota_mensual, prestamo.moneda)}
               </p>
@@ -147,7 +151,7 @@ export function PrestamoRow({ prestamo, onClick }: PrestamoRowProps): JSX.Elemen
           )}
           {prestamo.fecha_vencimiento && (
             <p className="text-xs text-[#657a9e]">
-              Vence: {formatDate(prestamo.fecha_vencimiento)}
+              {t('prestamos.row.vencePrefix')} {formatDate(prestamo.fecha_vencimiento)}
             </p>
           )}
           <EstadoBadge estado={prestamo.estado} diasVencimiento={diasVencimiento} />
@@ -156,3 +160,4 @@ export function PrestamoRow({ prestamo, onClick }: PrestamoRowProps): JSX.Elemen
     </button>
   )
 }
+

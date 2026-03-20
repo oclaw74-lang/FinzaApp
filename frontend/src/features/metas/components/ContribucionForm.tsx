@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -28,7 +29,7 @@ function buildContribucionSchema(montoActual: number) {
           maximum: montoActual,
           type: 'number',
           inclusive: true,
-          message: `No puedes retirar mas de lo ahorrado (${montoActual.toFixed(2)})`,
+          message: `No puedes retirar mas de lo ahorrado (${(montoActual ?? 0).toFixed(2)})`,
           path: ['monto'],
         })
       }
@@ -48,6 +49,7 @@ export function ContribucionForm({
   onCancel,
   isLoading,
 }: ContribucionFormProps): JSX.Element {
+  const { t } = useTranslation()
   const schema = buildContribucionSchema(montoActual)
 
   const {
@@ -71,16 +73,16 @@ export function ContribucionForm({
       {/* Tipo */}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="contribucion-tipo" className="text-sm font-medium text-gray-700">
-          Tipo
+          {t('metas.contribucion.tipo')}
         </label>
         <select
           id="contribucion-tipo"
           {...register('tipo')}
           className="finza-input w-full"
-          aria-label="Tipo de contribucion"
+          aria-label={t('metas.contribucion.tipoLabel')}
         >
-          <option value="deposito">Deposito</option>
-          <option value="retiro">Retiro</option>
+          <option value="deposito">{t('metas.contribucion.deposito')}</option>
+          <option value="retiro">{t('metas.contribucion.retiro')}</option>
         </select>
         {errors.tipo && (
           <p className="text-xs text-alert-red" role="alert">
@@ -92,7 +94,7 @@ export function ContribucionForm({
       {/* Monto */}
       <div>
         <Input
-          label="Monto"
+          label={t('metas.contribucion.monto')}
           type="number"
           step="0.01"
           placeholder="0.00"
@@ -101,14 +103,14 @@ export function ContribucionForm({
         />
         {tipoSeleccionado === 'retiro' && (
           <p className="text-xs text-gray-400 mt-1">
-            Maximo a retirar: {montoActual.toFixed(2)}
+            {t('metas.contribucion.maximoRetirar', { monto: (montoActual ?? 0).toFixed(2) })}
           </p>
         )}
       </div>
 
       {/* Fecha */}
       <Input
-        label="Fecha"
+        label={t('common.date')}
         type="date"
         error={errors.fecha?.message}
         {...register('fecha')}
@@ -120,29 +122,30 @@ export function ContribucionForm({
           htmlFor="contribucion-notas"
           className="text-sm font-medium text-gray-700"
         >
-          Notas (opcional)
+          {t('metas.contribucion.notas')}
         </label>
         <textarea
           id="contribucion-notas"
           {...register('notas')}
           rows={2}
-          placeholder="Notas adicionales..."
+          placeholder={t('metas.contribucion.notasPlaceholder')}
           className="finza-input w-full resize-none"
         />
       </div>
 
       <div className="flex gap-3 justify-end mt-2">
         <Button type="button" variant="secondary" onClick={onCancel}>
-          Cancelar
+          {t('common.cancel')}
         </Button>
         <Button
           type="submit"
           variant={tipoSeleccionado === 'deposito' ? 'success' : 'default'}
           isLoading={isLoading}
         >
-          {tipoSeleccionado === 'deposito' ? 'Depositar' : 'Retirar'}
+          {tipoSeleccionado === 'deposito' ? t('metas.contribucion.depositar') : t('metas.contribucion.retirar')}
         </Button>
       </div>
     </form>
   )
 }
+

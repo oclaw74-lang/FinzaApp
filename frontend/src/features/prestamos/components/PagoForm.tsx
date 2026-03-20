@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -29,6 +30,7 @@ export type PagoFormData = {
 }
 
 export function PagoForm({ montoPendiente, onSubmit, onCancel, isLoading }: PagoFormProps): JSX.Element {
+  const { t } = useTranslation()
   const schema = buildPagoSchema(montoPendiente)
 
   const {
@@ -47,7 +49,7 @@ export function PagoForm({ montoPendiente, onSubmit, onCancel, isLoading }: Pago
   return (
     <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
       <Input
-        label="Monto del pago"
+        label={t('prestamos.pago.monto')}
         type="number"
         step="0.01"
         placeholder="0.00"
@@ -55,11 +57,11 @@ export function PagoForm({ montoPendiente, onSubmit, onCancel, isLoading }: Pago
         {...register('monto', { valueAsNumber: true })}
       />
       <p className="text-xs text-[var(--text-muted)] -mt-2">
-        Maximo: {montoPendiente.toFixed(2)}
+        {t('prestamos.pago.maximo', { monto: (montoPendiente ?? 0).toFixed(2) })}
       </p>
 
       <Input
-        label="Fecha"
+        label={t('common.date')}
         type="date"
         error={errors.fecha?.message}
         {...register('fecha')}
@@ -67,25 +69,26 @@ export function PagoForm({ montoPendiente, onSubmit, onCancel, isLoading }: Pago
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="notas-pago" className="text-sm font-medium text-[var(--text-primary)]">
-          Notas (opcional)
+          {t('prestamos.pago.notas')}
         </label>
         <textarea
           id="notas-pago"
           {...register('notas')}
           rows={2}
-          placeholder="Notas del pago..."
+          placeholder={t('prestamos.pago.notasPlaceholder')}
           className="finza-input w-full resize-none"
         />
       </div>
 
       <div className="flex gap-3 justify-end mt-2">
         <Button type="button" variant="secondary" onClick={onCancel}>
-          Cancelar
+          {t('common.cancel')}
         </Button>
         <Button type="submit" variant="success" isLoading={isLoading}>
-          Registrar pago
+          {t('prestamos.pago.registrar')}
         </Button>
       </div>
     </form>
   )
 }
+
