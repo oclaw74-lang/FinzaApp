@@ -4,7 +4,15 @@ from postgrest import APIError
 from fastapi import HTTPException
 
 from app.core.supabase_client import get_user_client
+from app.core.config import settings
 from app.services.base import _handle_api_error
+
+# --- Fix #21: pywebpush optional import ---
+try:
+    from pywebpush import webpush, WebPushException  # type: ignore[import]
+    _WEBPUSH_AVAILABLE = True
+except ImportError:
+    _WEBPUSH_AVAILABLE = False
 
 
 def _calc_proximo_pago_simple(
@@ -109,7 +117,7 @@ def marcar_todas_leidas(user_jwt: str, user_id: str) -> dict:
                 "¡Ayúdanos a mejorar Finza!",
                 "Tienes una encuesta pendiente. Solo toma 2 minutos y nos ayuda a mejorar la app para ti.",
             ):
-                generadas += 1
+                pass  # notification created; count tracked separately
     except Exception:
         pass
 
@@ -154,6 +162,46 @@ def _ya_existe_notificacion_reciente(
     return bool(result.data)
 
 
+def _send_push_for_user(client, user_id: str, titulo: str, mensaje: str) -> None:
+    """Send web push to all active subscriptions for the user (Fix #21).
+
+    Silently ignores errors — push must never block notification creation.
+    """
+    if not _WEBPUSH_AVAILABLE:
+        return
+    vapid_private = getattr(settings, "VAPID_PRIVATE_KEY", "")
+    vapid_email = getattr(settings, "VAPID_EMAIL", "")
+    if not vapid_private or not vapid_email:
+        return
+    try:
+        import json
+
+        subs_r = (
+            client.table("push_subscriptions")
+            .select("endpoint,p256dh,auth")
+            .eq("user_id", user_id)
+            .execute()
+        )
+        for sub in (subs_r.data or []):
+            try:
+                webpush(
+                    subscription_info={
+                        "endpoint": sub["endpoint"],
+                        "keys": {
+                            "p256dh": sub["p256dh"],
+                            "auth": sub["auth"],
+                        },
+                    },
+                    data=json.dumps({"title": titulo, "body": mensaje}),
+                    vapid_private_key=vapid_private,
+                    vapid_claims={"sub": f"mailto:{vapid_email}"},
+                )
+            except Exception:
+                pass  # Individual push failure must not affect other subscribers
+    except Exception:
+        pass
+
+
 def _crear_notificacion(
     client,
     user_id: str,
@@ -175,6 +223,8 @@ def _crear_notificacion(
                 "mensaje": mensaje,
             }
         ).execute()
+        # Fix #21: send web push after successful insert
+        _send_push_for_user(client, user_id, titulo, mensaje)
         return True
     except APIError:
         return False
@@ -796,3 +846,289 @@ def generar_notificaciones(user_jwt: str, user_id: str) -> dict:
         "generadas": generadas,
         "mensaje": f"Se generaron {generadas} notificación(es) nueva(s).",
     }
+
+
+# ============================================================= #
+# Fix #20 — check_notificaciones: 4 new smart triggers          #
+# ============================================================= #
+
+def check_notificaciones(user_jwt: str, user_id: str) -> dict:
+    """
+    Evaluate 4 additional smart notification triggers (Fix #20):
+
+    1. recordatorio_cobro    — upcoming salary day reminder (2 days before).
+    2. alerta_gasto_excesivo — monthly spend > 80% of estimated budget.
+    3. alerta_prestamo_proximo — active loan due in ≤5 days.
+    4. alerta_meta_progreso  — weekly savings-goal progress (Mondays).
+
+    All checks are idempotent (24-hour deduplication window).
+    """
+    client = get_user_client(user_jwt)
+    today = date.today()
+    generadas = 0
+
+    # --------------------------------------------------------- #
+    # Trigger 1: recordatorio_cobro                             #
+    # Profile campo fecha_cobro (int 1-31, día del mes de cobro)#
+    # --------------------------------------------------------- #
+    try:
+        profile_r = (
+            client.table("profiles")
+            .select("salario_mensual_neto,fecha_cobro")
+            .eq("user_id", user_id)
+            .maybe_single()
+            .execute()
+        )
+        if profile_r and profile_r.data:
+            fecha_cobro = profile_r.data.get("fecha_cobro")
+            if fecha_cobro is not None:
+                dia_cobro = int(fecha_cobro)
+                # Build next cobro date in this or next month
+                dias_mes = monthrange(today.year, today.month)[1]
+                dia_cobro_clamp = min(dia_cobro, dias_mes)
+                cobro_date = date(today.year, today.month, dia_cobro_clamp)
+                if cobro_date < today:
+                    # Already passed this month → next month
+                    m = today.month + 1
+                    y = today.year
+                    if m > 12:
+                        m -= 12
+                        y += 1
+                    dias_mes_next = monthrange(y, m)[1]
+                    cobro_date = date(y, m, min(dia_cobro, dias_mes_next))
+                dias_para_cobro = (cobro_date - today).days
+                if dias_para_cobro == 2:
+                    if _crear_notificacion(
+                        client,
+                        user_id,
+                        "informativa",
+                        f"recordatorio_cobro_{today.year}_{today.month}",
+                        "Tu día de cobro se acerca",
+                        f"En 2 días recibes tu ingreso ({cobro_date.strftime('%d/%m/%Y')}). "
+                        "Recuerda registrar tu ingreso en Finza para mantener tus finanzas al día.",
+                    ):
+                        generadas += 1
+    except Exception:
+        pass
+
+    # --------------------------------------------------------- #
+    # Trigger 2: alerta_gasto_excesivo                          #
+    # egresos_mes_actual > 80% of presupuesto_mensual_estimado  #
+    # --------------------------------------------------------- #
+    try:
+        mes = today.month
+        year = today.year
+        dias_mes = monthrange(year, mes)[1]
+        fi_mes = f"{year}-{mes:02d}-01"
+        ff_mes = f"{year}-{mes:02d}-{dias_mes:02d}"
+
+        egresos_mes_r = (
+            client.table("egresos")
+            .select("monto")
+            .eq("user_id", user_id)
+            .gte("fecha", fi_mes)
+            .lte("fecha", ff_mes)
+            .execute()
+        )
+        total_egresos_mes = sum(float(e["monto"]) for e in (egresos_mes_r.data or []))
+
+        presupuestos_r = (
+            client.table("presupuestos")
+            .select("monto_limite")
+            .eq("user_id", user_id)
+            .eq("mes", mes)
+            .eq("year", year)
+            .execute()
+        )
+        presupuesto_estimado = sum(
+            float(p["monto_limite"]) for p in (presupuestos_r.data or [])
+        )
+
+        if presupuesto_estimado > 0 and total_egresos_mes > 0.8 * presupuesto_estimado:
+            pct = round((total_egresos_mes / presupuesto_estimado) * 100)
+            if _crear_notificacion(
+                client,
+                user_id,
+                "urgente",
+                f"alerta_gasto_excesivo_{mes}_{year}",
+                "Alerta: gasto excesivo este mes",
+                f"Llevas el {pct}% de tu presupuesto mensual estimado (${presupuesto_estimado:,.0f}). "
+                f"Gastos acumulados: ${total_egresos_mes:,.0f}. "
+                "Revisa tus egresos para mantenerte dentro del límite.",
+            ):
+                generadas += 1
+    except Exception:
+        pass
+
+    # --------------------------------------------------------- #
+    # Trigger 3: alerta_prestamo_proximo (≤5 días)              #
+    # --------------------------------------------------------- #
+    try:
+        prestamos_r = (
+            client.table("prestamos")
+            .select(
+                "id,descripcion,persona,monto_pendiente,fecha_prestamo,"
+                "fecha_vencimiento,plazo_meses,cuota_mensual"
+            )
+            .eq("user_id", user_id)
+            .eq("estado", "activo")
+            .is_("deleted_at", "null")
+            .execute()
+        )
+        for p in (prestamos_r.data or []):
+            try:
+                plazo = int(p["plazo_meses"]) if p.get("plazo_meses") else None
+                prox_pago = None
+                if plazo:
+                    fecha_inicio_p = date.fromisoformat(p["fecha_prestamo"][:10])
+                    pagos_resp = (
+                        client.table("pagos_prestamo")
+                        .select("fecha")
+                        .eq("prestamo_id", p["id"])
+                        .order("fecha", desc=True)
+                        .limit(1)
+                        .execute()
+                    )
+                    prox_pago = _calc_proximo_pago_simple(
+                        fecha_inicio_p,
+                        pagos_resp.data or [],
+                        plazo,
+                    )
+                elif p.get("fecha_vencimiento"):
+                    venc = date.fromisoformat(p["fecha_vencimiento"][:10])
+                    if venc >= today:
+                        prox_pago = venc
+
+                if not prox_pago:
+                    continue
+                dias = (prox_pago - today).days
+                if 0 <= dias <= 5:
+                    desc = p.get("descripcion") or p.get("persona") or "préstamo"
+                    monto = float(p.get("monto_pendiente", 0))
+                    cat_key = f"alerta_prestamo_proximo_{p['id']}"
+                    if dias == 0:
+                        titulo_n = f"Pago de préstamo hoy: {desc}"
+                        mensaje_n = (
+                            f"Tienes un pago del préstamo '{desc}' programado para hoy. "
+                            f"Monto pendiente: ${monto:,.0f}."
+                        )
+                    else:
+                        titulo_n = f"Cuota próxima: {desc}"
+                        mensaje_n = (
+                            f"El préstamo '{desc}' tiene una cuota en {dias} día(s) "
+                            f"({prox_pago.strftime('%d/%m/%Y')}). "
+                            f"Monto pendiente: ${monto:,.0f}."
+                        )
+                    tipo_n = "urgente" if dias <= 2 else "informativa"
+                    if _crear_notificacion(
+                        client, user_id, tipo_n, cat_key, titulo_n, mensaje_n
+                    ):
+                        generadas += 1
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    # --------------------------------------------------------- #
+    # Trigger 4: alerta_meta_progreso (weekly, Mondays)         #
+    # --------------------------------------------------------- #
+    try:
+        # Only on Mondays (weekday == 0) — dedup window is 7 days
+        if today.weekday() == 0:
+            metas_r = (
+                client.table("metas_ahorro")
+                .select("id,nombre,monto_actual,monto_objetivo,fecha_objetivo")
+                .eq("user_id", user_id)
+                .eq("estado", "activa")
+                .execute()
+            )
+            for meta in (metas_r.data or []):
+                try:
+                    monto_obj = float(meta["monto_objetivo"])
+                    monto_act = float(meta["monto_actual"])
+                    if monto_obj <= 0:
+                        continue
+                    pct = round((monto_act / monto_obj) * 100)
+                    nombre = meta.get("nombre", "tu meta")
+                    restante = monto_obj - monto_act
+
+                    cat_key = f"alerta_meta_progreso_{meta['id']}"
+                    if _ya_existe_notificacion_reciente(client, user_id, cat_key, horas=168):
+                        # 7 days = 168 hours
+                        continue
+
+                    if pct >= 100:
+                        titulo_n = f"🎉 ¡Meta '{nombre}' completada!"
+                        mensaje_n = (
+                            f"¡Felicidades! Completaste tu meta '{nombre}' con "
+                            f"${monto_act:,.0f} ahorrados."
+                        )
+                    else:
+                        titulo_n = f"Progreso semanal: {nombre}"
+                        mensaje_n = (
+                            f"Tu meta '{nombre}' está al {pct}% "
+                            f"(${monto_act:,.0f} de ${monto_obj:,.0f}). "
+                            f"Faltan ${restante:,.0f} para alcanzarla."
+                        )
+                    tipo_n = "logro" if pct >= 100 else "informativa"
+                    # Direct insert with 7-day window (bypass 24h helper)
+                    try:
+                        client.table("notificaciones").insert(
+                            {
+                                "user_id": user_id,
+                                "tipo": tipo_n,
+                                "categoria": cat_key,
+                                "titulo": titulo_n,
+                                "mensaje": mensaje_n,
+                            }
+                        ).execute()
+                        _send_push_for_user(client, user_id, titulo_n, mensaje_n)
+                        generadas += 1
+                    except Exception:
+                        pass
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
+    return {
+        "generadas": generadas,
+        "mensaje": f"Se generaron {generadas} notificación(es) nueva(s).",
+    }
+
+
+# ============================================================= #
+# Fix #21 — Web Push subscription management                    #
+# ============================================================= #
+
+def subscribe_push(
+    user_jwt: str,
+    user_id: str,
+    endpoint: str,
+    p256dh: str,
+    auth: str,
+) -> dict:
+    """Store or update a Web Push subscription for the user."""
+    client = get_user_client(user_jwt)
+    payload = {
+        "user_id": user_id,
+        "endpoint": endpoint,
+        "p256dh": p256dh,
+        "auth": auth,
+    }
+    try:
+        result = (
+            client.table("push_subscriptions")
+            .upsert(payload, on_conflict="endpoint")
+            .execute()
+        )
+        return result.data[0] if result.data else payload
+    except APIError as e:
+        _handle_api_error(e)
+    return payload
+
+
+def get_vapid_public_key() -> str:
+    """Return the VAPID public key from settings."""
+    return getattr(settings, "VAPID_PUBLIC_KEY", "")
+

@@ -425,3 +425,13 @@ html.dark body::after {
     background: rgba(255,64,96,0.04) !important;
   }
 }
+
+/* scrollbar-hide utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+

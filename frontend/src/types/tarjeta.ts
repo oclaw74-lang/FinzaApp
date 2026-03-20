@@ -39,6 +39,7 @@ export interface Tarjeta {
   fecha_pago: number | null
   color: string | null
   activa: boolean
+  bloqueada: boolean
   created_at: string
   updated_at: string
 }

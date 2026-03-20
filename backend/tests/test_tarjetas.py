@@ -476,3 +476,231 @@ class TestEnrichTarjeta:
         row = {"tipo": "credito", "limite_credito": "20000.00", "saldo_actual": "0"}
         result = _enrich_tarjeta(row)
         assert result["disponible"] == 20000.0
+
+
+# ---------------------------------------------------------------------------
+# toggle_bloquear_tarjeta — service unit tests
+# ---------------------------------------------------------------------------
+
+
+def test_bloquear_tarjeta_activa():
+    """toggle_bloquear_tarjeta en tarjeta con bloqueada=False → devuelve bloqueada=True."""
+    from app.services.tarjetas import toggle_bloquear_tarjeta
+
+    existing = {
+        "id": "ffff-0001",
+        "user_id": "u1",
+        "banco": "BPD",
+        "tipo": "credito",
+        "red": "visa",
+        "limite_credito": "30000.00",
+        "saldo_actual": "5000.00",
+        "activa": True,
+        "bloqueada": False,
+    }
+    updated = {**existing, "bloqueada": True}
+
+    mock_response = MagicMock()
+    mock_response.data = [updated]
+
+    mock_client = MagicMock()
+    (
+        mock_client.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value
+    ) = mock_response
+
+    # Patch get_tarjeta para evitar re-mockear toda la cadena de select
+    with patch("app.services.tarjetas.get_tarjeta", return_value=existing):
+        with patch("app.services.tarjetas.get_user_client", return_value=mock_client):
+            result = toggle_bloquear_tarjeta("fake-jwt", "u1", "ffff-0001")
+
+    # Verifica que el update recibió bloqueada=True
+    update_payload = mock_client.table.return_value.update.call_args[0][0]
+    assert update_payload["bloqueada"] is True
+    assert result["bloqueada"] is True
+
+
+def test_desbloquear_tarjeta_bloqueada():
+    """toggle_bloquear_tarjeta en tarjeta con bloqueada=True → devuelve bloqueada=False."""
+    from app.services.tarjetas import toggle_bloquear_tarjeta
+
+    existing = {
+        "id": "ffff-0002",
+        "user_id": "u1",
+        "banco": "BHD Leon",
+        "tipo": "debito",
+        "red": "mastercard",
+        "limite_credito": None,
+        "saldo_actual": "10000.00",
+        "activa": True,
+        "bloqueada": True,  # ya bloqueada
+    }
+    updated = {**existing, "bloqueada": False}
+
+    mock_response = MagicMock()
+    mock_response.data = [updated]
+
+    mock_client = MagicMock()
+    (
+        mock_client.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value
+    ) = mock_response
+
+    with patch("app.services.tarjetas.get_tarjeta", return_value=existing):
+        with patch("app.services.tarjetas.get_user_client", return_value=mock_client):
+            result = toggle_bloquear_tarjeta("fake-jwt", "u1", "ffff-0002")
+
+    update_payload = mock_client.table.return_value.update.call_args[0][0]
+    assert update_payload["bloqueada"] is False
+    assert result["bloqueada"] is False
+
+
+# ---------------------------------------------------------------------------
+# registrar_movimiento — validación tarjeta bloqueada
+# ---------------------------------------------------------------------------
+
+
+def test_movimiento_en_tarjeta_bloqueada_retorna_400():
+    """registrar_movimiento lanza HTTP 400 cuando la tarjeta tiene bloqueada=True."""
+    from datetime import date
+
+    from app.services.movimientos_tarjeta import registrar_movimiento
+
+    # Simula _get_tarjeta_simple devolviendo tarjeta bloqueada
+    mock_tarjeta_resp = MagicMock()
+    mock_tarjeta_resp.data = {"id": "t-bloqueada", "bloqueada": True, "activa": True}
+
+    mock_client = MagicMock()
+    (
+        mock_client.table.return_value.select.return_value.eq.return_value.eq.return_value.maybe_single.return_value.execute.return_value
+    ) = mock_tarjeta_resp
+
+    with patch(
+        "app.services.movimientos_tarjeta.get_user_client", return_value=mock_client
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            registrar_movimiento(
+                "fake-jwt",
+                "u1",
+                "t-bloqueada",
+                "compra",
+                500.0,
+                date(2026, 3, 17),
+            )
+
+    assert exc_info.value.status_code == 400
+    assert "bloqueada" in exc_info.value.detail.lower()
+
+
+def test_movimiento_en_tarjeta_activa_permitido():
+    """registrar_movimiento no lanza excepción cuando la tarjeta tiene bloqueada=False."""
+    from datetime import date
+
+    from app.services.movimientos_tarjeta import registrar_movimiento
+
+    # _get_tarjeta_simple → tarjeta activa y no bloqueada
+    mock_tarjeta_resp = MagicMock()
+    mock_tarjeta_resp.data = {"id": "t-activa", "bloqueada": False, "activa": True}
+
+    # RPC result exitoso
+    mock_rpc_resp = MagicMock()
+    mock_rpc_resp.data = {"id": "mov-001", "tipo": "compra", "monto": "500.00"}
+
+    mock_client = MagicMock()
+    (
+        mock_client.table.return_value.select.return_value.eq.return_value.eq.return_value.maybe_single.return_value.execute.return_value
+    ) = mock_tarjeta_resp
+    mock_client.rpc.return_value.execute.return_value = mock_rpc_resp
+
+    with patch(
+        "app.services.movimientos_tarjeta.get_user_client", return_value=mock_client
+    ):
+        result = registrar_movimiento(
+            "fake-jwt",
+            "u1",
+            "t-activa",
+            "compra",
+            500.0,
+            date(2026, 3, 17),
+        )
+
+    # Verifica que se llamó al RPC y se obtuvo resultado
+    assert result is not None
+    mock_client.rpc.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# update_tarjeta — banco_id nullable
+# ---------------------------------------------------------------------------
+
+
+def test_update_tarjeta_quitar_banco():
+    """PUT /tarjetas/{id} con banco_id=None guarda null en la base de datos."""
+    from app.schemas.tarjeta import TarjetaUpdate
+    from app.services.tarjetas import update_tarjeta
+
+    updated_row = {
+        "id": "gggg-0003",
+        "user_id": "u1",
+        "banco": "BPD",
+        "banco_id": None,
+        "tipo": "debito",
+        "red": "visa",
+        "limite_credito": None,
+        "saldo_actual": "2000.00",
+        "activa": True,
+        "bloqueada": False,
+    }
+    mock_response = MagicMock()
+    mock_response.data = [updated_row]
+
+    mock_client = MagicMock()
+    (
+        mock_client.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value
+    ) = mock_response
+
+    # model_validate incluye banco_id en __fields_set__ aunque sea None
+    data = TarjetaUpdate.model_validate({"banco_id": None})
+
+    with patch("app.services.tarjetas.get_user_client", return_value=mock_client):
+        result = update_tarjeta("fake-jwt", "u1", "gggg-0003", data)
+
+    update_payload = mock_client.table.return_value.update.call_args[0][0]
+    # banco_id debe aparecer en el payload como None (null) para borrarlo en DB
+    assert "banco_id" in update_payload
+    assert update_payload["banco_id"] is None
+    assert result is not None
+    assert result["banco_id"] is None
+
+
+# ---------------------------------------------------------------------------
+# TarjetaResponse — campo bloqueada siempre presente
+# ---------------------------------------------------------------------------
+
+
+def test_tarjeta_response_incluye_bloqueada():
+    """TarjetaResponse siempre incluye el campo bloqueada con valor por defecto False."""
+    from app.schemas.tarjeta import TarjetaResponse
+
+    base = {
+        "id": "00000000-0000-0000-0000-000000000010",
+        "user_id": "00000000-0000-0000-0000-000000000020",
+        "banco": "Scotiabank",
+        "titular": "Test User",
+        "ultimos_digitos": "9999",
+        "tipo": "credito",
+        "red": "visa",
+        "saldo_actual": 0.0,
+        "activa": True,
+    }
+
+    # Sin campo bloqueada → default False
+    resp = TarjetaResponse.model_validate(base)
+    assert hasattr(resp, "bloqueada")
+    assert resp.bloqueada is False
+
+    # Con bloqueada=True explícito
+    resp_bloqueada = TarjetaResponse.model_validate({**base, "bloqueada": True})
+    assert resp_bloqueada.bloqueada is True
+
+    # Verifica que el campo aparece al serializar
+    dumped = resp.model_dump()
+    assert "bloqueada" in dumped

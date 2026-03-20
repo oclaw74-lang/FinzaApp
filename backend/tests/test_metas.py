@@ -240,8 +240,8 @@ def test_update_meta_not_found_raises_404():
     assert exc_info.value.status_code == 404
 
 
-def test_agregar_contribucion_deposito_calls_rpc():
-    """agregar_contribucion (deposito) calls the agregar_contribucion_meta RPC."""
+def test_agregar_contribucion_deposito_inserts_directly():
+    """agregar_contribucion (deposito) inserts into contribuciones_meta without RPC."""
     from app.schemas.meta_ahorro import ContribucionMetaCreate
     from app.services.metas_ahorro import agregar_contribucion
 
@@ -251,20 +251,42 @@ def test_agregar_contribucion_deposito_calls_rpc():
         "monto": "5000.00",
         "tipo": "deposito",
         "fecha": "2026-03-09",
-        "notas": None,
+        "notas": "",
         "created_at": "2026-03-09T00:00:00+00:00",
     }
-    mock_rpc_response = MagicMock()
-    mock_rpc_response.data = None
-
-    mock_contribucion_response = MagicMock()
-    mock_contribucion_response.data = [contribucion_row]
+    meta_row = {
+        "id": "meta-id-1",
+        "monto_actual": "10000.00",
+        "monto_objetivo": "50000.00",
+        "estado": "en_progreso",
+    }
 
     mock_client = MagicMock()
-    mock_client.rpc.return_value.execute.return_value = mock_rpc_response
-    (
-        mock_client.table.return_value.select.return_value.eq.return_value.order.return_value.limit.return_value.execute.return_value
-    ) = mock_contribucion_response
+    # First table call: select meta (table("metas_ahorro").select().eq().maybe_single().execute())
+    mock_meta_resp = MagicMock()
+    mock_meta_resp.data = meta_row
+    # Second table call: insert contribucion (table("contribuciones_meta").insert().execute())
+    mock_contrib_resp = MagicMock()
+    mock_contrib_resp.data = [contribucion_row]
+    # Third table call: update metas_ahorro (table("metas_ahorro").update().eq().execute())
+    mock_update_resp = MagicMock()
+    mock_update_resp.data = [meta_row]
+
+    # Use side_effect to return different responses per table() call
+    call_count = {"n": 0}
+    def table_side_effect(table_name):
+        tbl = MagicMock()
+        call_count["n"] += 1
+        n = call_count["n"]
+        if n == 1:  # select meta
+            tbl.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = mock_meta_resp
+        elif n == 2:  # insert contribucion
+            tbl.insert.return_value.execute.return_value = mock_contrib_resp
+        else:  # update metas_ahorro
+            tbl.update.return_value.eq.return_value.execute.return_value = mock_update_resp
+        return tbl
+
+    mock_client.table.side_effect = table_side_effect
 
     data = ContribucionMetaCreate(
         monto=Decimal("5000.00"),
@@ -276,27 +298,25 @@ def test_agregar_contribucion_deposito_calls_rpc():
         result = agregar_contribucion("fake-jwt", "meta-id-1", data)
 
     assert result["id"] == "dddd-4444"
-    mock_client.rpc.assert_called_once_with(
-        "agregar_contribucion_meta",
-        {
-            "p_meta_id": "meta-id-1",
-            "p_monto": 5000.0,
-            "p_tipo": "deposito",
-            "p_fecha": "2026-03-09",
-            "p_notas": "",
-        },
-    )
+    mock_client.rpc.assert_not_called()
 
 
 def test_agregar_contribucion_retiro_excede_monto_raises_400():
-    """agregar_contribucion raises 400 when retiro exceeds monto_actual."""
+    """agregar_contribucion raises 400 when retiro monto > monto_actual."""
     from app.schemas.meta_ahorro import ContribucionMetaCreate
     from app.services.metas_ahorro import agregar_contribucion
 
+    meta_row = {
+        "id": "meta-id-1",
+        "monto_actual": "1000.00",
+        "monto_objetivo": "50000.00",
+        "estado": "en_progreso",
+    }
+
     mock_client = MagicMock()
-    mock_client.rpc.return_value.execute.side_effect = APIError(
-        {"code": "P0001", "message": "El monto de retiro (5000) supera el monto actual (1000)"}
-    )
+    mock_meta_resp = MagicMock()
+    mock_meta_resp.data = meta_row
+    mock_client.table.return_value.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = mock_meta_resp
 
     data = ContribucionMetaCreate(
         monto=Decimal("5000.00"),
@@ -313,14 +333,14 @@ def test_agregar_contribucion_retiro_excede_monto_raises_400():
 
 
 def test_agregar_contribucion_meta_not_found_raises_404():
-    """agregar_contribucion raises 404 when RPC reports meta not found."""
+    """agregar_contribucion raises 404 when meta does not exist."""
     from app.schemas.meta_ahorro import ContribucionMetaCreate
     from app.services.metas_ahorro import agregar_contribucion
 
     mock_client = MagicMock()
-    mock_client.rpc.return_value.execute.side_effect = APIError(
-        {"code": "P0001", "message": "Meta no encontrada o no pertenece al usuario"}
-    )
+    mock_meta_resp = MagicMock()
+    mock_meta_resp.data = None  # meta not found
+    mock_client.table.return_value.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = mock_meta_resp
 
     data = ContribucionMetaCreate(
         monto=Decimal("100.00"),
