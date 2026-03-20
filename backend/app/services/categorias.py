@@ -73,6 +73,27 @@ def create_categoria(user_jwt: str, user_id: str, data: dict) -> dict:
 
 def update_categoria(user_jwt: str, categoria_id: str, data: dict) -> dict | None:
     client = get_user_client(user_jwt)
+
+    # Protect system categories from modification
+    try:
+        check_r = (
+            client.table("categorias")
+            .select("es_sistema")
+            .eq("id", categoria_id)
+            .is_("deleted_at", "null")
+            .maybe_single()
+            .execute()
+        )
+        if check_r.data and check_r.data.get("es_sistema"):
+            raise HTTPException(
+                status_code=403,
+                detail="Las categorías de sistema no pueden ser modificadas.",
+            )
+    except HTTPException:
+        raise
+    except APIError as e:
+        _handle_api_error(e)
+
     try:
         response = (
             client.table("categorias").update(data).eq("id", categoria_id).execute()
@@ -86,6 +107,27 @@ def update_categoria(user_jwt: str, categoria_id: str, data: dict) -> dict | Non
 
 def delete_categoria(user_jwt: str, user_id: str, categoria_id: str) -> dict:
     client = get_user_client(user_jwt)
+
+    # Protect system categories from deletion
+    try:
+        check_r = (
+            client.table("categorias")
+            .select("es_sistema")
+            .eq("id", categoria_id)
+            .is_("deleted_at", "null")
+            .maybe_single()
+            .execute()
+        )
+        if check_r.data and check_r.data.get("es_sistema"):
+            raise HTTPException(
+                status_code=403,
+                detail="Las categorías de sistema no pueden ser eliminadas.",
+            )
+    except HTTPException:
+        raise
+    except APIError as e:
+        _handle_api_error(e)
+
     try:
         response = (
             client.table("categorias")

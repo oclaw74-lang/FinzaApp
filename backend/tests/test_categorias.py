@@ -292,6 +292,13 @@ def test_delete_categoria_api_error_raises_http_500():
 
     mock_client = MagicMock()
     (mock_client.table.return_value
+     .select.return_value
+     .eq.return_value
+     .is_.return_value
+     .maybe_single.return_value
+     .execute.return_value.data) = None  # no es_sistema
+
+    (mock_client.table.return_value
      .update.return_value
      .eq.return_value
      .eq.return_value
@@ -302,3 +309,110 @@ def test_delete_categoria_api_error_raises_http_500():
             delete_categoria("fake-jwt", "user-123", "some-id")
 
     assert exc_info.value.status_code == 500
+
+
+# ---------------------------------------------------------------------------
+# Fix #6 / Fix #8 — sistema category protection
+# ---------------------------------------------------------------------------
+
+
+def test_update_sistema_categoria_raises_403():
+    """update_categoria must raise 403 for system categories (es_sistema=True)."""
+    from app.services.categorias import update_categoria
+
+    # Table mock: select returns a system category, update should never be called
+    select_mock = MagicMock()
+    select_mock.select.return_value.eq.return_value.is_.return_value.maybe_single.return_value.execute.return_value.data = {
+        "id": "sys-cat-id",
+        "nombre": "Salario",
+        "es_sistema": True,
+    }
+
+    mock_client = MagicMock()
+    mock_client.table.return_value = select_mock
+
+    with patch("app.services.categorias.get_user_client", return_value=mock_client):
+        with pytest.raises(HTTPException) as exc_info:
+            update_categoria("fake-jwt", "sys-cat-id", {"nombre": "Hackeado"})
+
+    assert exc_info.value.status_code == 403
+    assert "sistema" in exc_info.value.detail.lower()
+    # update should never have been invoked
+    select_mock.update.assert_not_called()
+
+
+def test_update_user_categoria_succeeds():
+    """update_categoria must allow updates for non-system (user) categories."""
+    from app.services.categorias import update_categoria
+
+    updated_row = {
+        "id": "user-cat-id",
+        "nombre": "Comida Rapida",
+        "tipo": "egreso",
+        "icono": None,
+        "color": None,
+        "es_sistema": False,
+    }
+
+    check_mock = MagicMock()
+    check_mock.select.return_value.eq.return_value.is_.return_value.maybe_single.return_value.execute.return_value.data = {
+        "id": "user-cat-id",
+        "es_sistema": False,
+    }
+    update_response_mock = MagicMock()
+    update_response_mock.data = [updated_row]
+    check_mock.update.return_value.eq.return_value.execute.return_value = update_response_mock
+
+    mock_client = MagicMock()
+    mock_client.table.return_value = check_mock
+
+    with patch("app.services.categorias.get_user_client", return_value=mock_client):
+        result = update_categoria("fake-jwt", "user-cat-id", {"nombre": "Comida Rapida"})
+
+    assert result is not None
+    assert result["nombre"] == "Comida Rapida"
+
+
+def test_delete_sistema_categoria_raises_403():
+    """delete_categoria must raise 403 for system categories (es_sistema=True)."""
+    from app.services.categorias import delete_categoria
+
+    check_mock = MagicMock()
+    check_mock.select.return_value.eq.return_value.is_.return_value.maybe_single.return_value.execute.return_value.data = {
+        "id": "sys-cat-egreso",
+        "nombre": "Pago de Préstamo",
+        "es_sistema": True,
+    }
+
+    mock_client = MagicMock()
+    mock_client.table.return_value = check_mock
+
+    with patch("app.services.categorias.get_user_client", return_value=mock_client):
+        with pytest.raises(HTTPException) as exc_info:
+            delete_categoria("fake-jwt", "user-123", "sys-cat-egreso")
+
+    assert exc_info.value.status_code == 403
+    assert "sistema" in exc_info.value.detail.lower()
+    # update (soft-delete) should never have been invoked
+    check_mock.update.assert_not_called()
+
+
+def test_delete_sistema_cobro_prestamo_raises_403():
+    """delete_categoria must raise 403 for 'Cobro de Préstamo' system category."""
+    from app.services.categorias import delete_categoria
+
+    check_mock = MagicMock()
+    check_mock.select.return_value.eq.return_value.is_.return_value.maybe_single.return_value.execute.return_value.data = {
+        "id": "sys-cat-ingreso",
+        "nombre": "Cobro de Préstamo",
+        "es_sistema": True,
+    }
+
+    mock_client = MagicMock()
+    mock_client.table.return_value = check_mock
+
+    with patch("app.services.categorias.get_user_client", return_value=mock_client):
+        with pytest.raises(HTTPException) as exc_info:
+            delete_categoria("fake-jwt", "user-123", "sys-cat-ingreso")
+
+    assert exc_info.value.status_code == 403
