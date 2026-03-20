@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Plus, CreditCard, Info, Pencil, Trash2, X, ShoppingCart, CreditCard as PayIcon, Search } from 'lucide-react'
+import { Plus, CreditCard, Info, Pencil, Trash2, X, ShoppingCart, CreditCard as PayIcon, Search, Lock, Unlock } from 'lucide-react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -14,6 +14,7 @@ import {
   useCreateTarjeta,
   useUpdateTarjeta,
   useDeleteTarjeta,
+  useBloquearTarjeta,
 } from '@/hooks/useTarjetas'
 import {
   useMovimientosTarjeta,
@@ -56,45 +57,51 @@ const preprocessNumber = (v: unknown) => {
   return isNaN(n) ? null : n
 }
 
+const tarjetaBaseFields = {
+  banco: z.string().max(100).default(''),
+  banco_id: z.string().optional().nullable(),
+  banco_custom: z.string().optional().nullable(),
+  tipo: z.enum(['credito', 'debito'] as const),
+  red: z.enum(['visa', 'mastercard', 'amex', 'discover', 'otro'] as const),
+  ultimos_digitos: z
+    .string()
+    .length(4, 'Debe tener 4 digitos')
+    .regex(/^\d{4}$/, 'Solo digitos'),
+  saldo_actual: z.coerce.number({ invalid_type_error: 'Ingresa un monto' }).min(0),
+  limite_credito: z.preprocess(
+    preprocessNumber,
+    z.number().positive().nullable().optional(),
+  ),
+  fecha_corte: z.preprocess(
+    preprocessNumber,
+    z.number().int().min(1).max(31).nullable().optional(),
+  ),
+  fecha_pago: z.preprocess(
+    preprocessNumber,
+    z.number().int().min(1).max(31).nullable().optional(),
+  ),
+  color: z.string().optional().nullable(),
+  activa: z.boolean().default(true),
+}
+
 // TODO: i18n when zod supports dynamic messages
-const TarjetaSchema = z
-  .object({
-    banco: z.string().min(1, 'Requerido').max(100),
-    banco_id: z.string().optional().nullable(),
-    banco_custom: z.string().optional().nullable(),
-    tipo: z.enum(['credito', 'debito']),
-    red: z.enum(['visa', 'mastercard', 'amex', 'discover', 'otro']),
-    ultimos_digitos: z
-      .string()
-      .length(4, 'Debe tener 4 digitos')
-      .regex(/^\d{4}$/, 'Solo digitos'),
-    saldo_actual: z.coerce.number({ invalid_type_error: 'Ingresa un monto' }).min(0),
-    limite_credito: z.preprocess(
-      preprocessNumber,
-      z.number().positive().nullable().optional(),
-    ),
-    fecha_corte: z.preprocess(
-      preprocessNumber,
-      z.number().int().min(1).max(31).nullable().optional(),
-    ),
-    fecha_pago: z.preprocess(
-      preprocessNumber,
-      z.number().int().min(1).max(31).nullable().optional(),
-    ),
-    color: z.string().optional().nullable(),
-    activa: z.boolean().default(true),
-  })
+const TarjetaCreateSchema = z
+  .object({ ...tarjetaBaseFields, banco: z.string().min(1, 'Requerido').max(100) })
   .superRefine((val, ctx) => {
     if (val.tipo === 'credito' && (val.limite_credito == null || val.limite_credito <= 0)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Requerido para tarjeta de credito',
-        path: ['limite_credito'],
-      })
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Requerido para tarjeta de credito', path: ['limite_credito'] })
     }
   })
 
-type TarjetaFormData = z.infer<typeof TarjetaSchema>
+const TarjetaUpdateSchema = z
+  .object(tarjetaBaseFields)
+  .superRefine((val, ctx) => {
+    if (val.tipo === 'credito' && (val.limite_credito == null || val.limite_credito <= 0)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Requerido para tarjeta de credito', path: ['limite_credito'] })
+    }
+  })
+
+type TarjetaFormData = z.infer<typeof TarjetaCreateSchema>
 
 // ─── Card visual component ─────────────────────────────────────────────────────
 
@@ -188,7 +195,7 @@ interface CardVisualProps {
 
 function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
   const fmt = (v: number) =>
-    new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 }).format(v)
+    new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v)
 
   const isCredit = tarjeta.tipo === 'credito'
   const disponible = isCredit
@@ -222,7 +229,7 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
         flexDirection: 'column',
         gap: '10px',
       }}
-      aria-label={`Tarjeta ${nombreBanco}`}
+      aria-label={`Tarjeta ${nombreBanco}${tarjeta.bloqueada ? ' (bloqueada)' : ''}`}
     >
       {/* Glare overlay */}
       <div
@@ -233,6 +240,20 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
         }}
         aria-hidden="true"
       />
+
+      {/* Bloqueada overlay */}
+      {tarjeta.bloqueada && (
+        <div
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          style={{ background: 'rgba(0,0,0,0.45)', borderRadius: '22px' }}
+          aria-hidden="true"
+        >
+          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-600/90 text-white text-xs font-bold uppercase tracking-widest">
+            <Lock size={12} />
+            BLOQUEADA
+          </span>
+        </div>
+      )}
 
       {/* Row 1: Chip (izq) + Red logo (der) */}
       <div className="flex items-start justify-between">
@@ -420,6 +441,12 @@ function BancoSelector({ paisCodigo, value, onChange }: BancoSelectorProps): JSX
     onChange({ banco_id: null, banco_custom: text, banco: text })
   }
 
+  const handleClearBanco = (): void => {
+    setSearch('')
+    setShowOtro(false)
+    onChange({ banco_id: null, banco_custom: null, banco: '' })
+  }
+
   const selectedBanco = value.banco_id ? bancos.find((b) => b.id === value.banco_id) : null
 
   return (
@@ -447,15 +474,15 @@ function BancoSelector({ paisCodigo, value, onChange }: BancoSelectorProps): JSX
           {/* Selected indicator */}
           {selectedBanco && !showOtro && (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--accent)]/10 rounded-lg border border-[var(--accent)]/30">
+              {selectedBanco.logo_url && (
+                <img src={selectedBanco.logo_url} alt="" className="w-5 h-5 object-contain rounded" aria-hidden="true" />
+              )}
               <span className="text-xs font-medium text-[var(--accent)]">
                 {selectedBanco.nombre_corto ?? selectedBanco.nombre}
               </span>
               <button
                 type="button"
-                onClick={() => {
-                  setSearch('')
-                  onChange({ banco_id: null, banco_custom: null, banco: '' })
-                }}
+                onClick={handleClearBanco}
                 className="ml-auto text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                 aria-label="Limpiar seleccion"
               >
@@ -467,6 +494,17 @@ function BancoSelector({ paisCodigo, value, onChange }: BancoSelectorProps): JSX
           {/* Bank list — only show when no bank is selected or user is searching */}
           {(!selectedBanco || search.trim()) && !showOtro && (
             <div className="max-h-36 overflow-y-auto rounded-lg border border-[var(--border)] bg-[var(--surface)] divide-y divide-[var(--border)]">
+              {/* Sin banco asignado option */}
+              <button
+                type="button"
+                onClick={handleClearBanco}
+                className={cn(
+                  'w-full text-left px-3 py-2 text-xs text-[var(--text-muted)] hover:bg-[var(--surface-raised)] transition-colors',
+                  !value.banco_id && !value.banco_custom && 'bg-[var(--accent)]/10 text-[var(--accent)]'
+                )}
+              >
+                — Sin banco asignado
+              </button>
               {filtered.map((banco) => (
                 <button
                   key={banco.id}
@@ -476,13 +514,16 @@ function BancoSelector({ paisCodigo, value, onChange }: BancoSelectorProps): JSX
                     handleSelectBanco(banco.id, banco.nombre)
                   }}
                   className={cn(
-                    'w-full text-left px-3 py-2 text-xs hover:bg-[var(--surface-raised)] transition-colors',
+                    'w-full text-left px-3 py-2 text-xs hover:bg-[var(--surface-raised)] transition-colors flex items-center gap-2',
                     value.banco_id === banco.id && 'bg-[var(--accent)]/10 text-[var(--accent)]'
                   )}
                 >
+                  {banco.logo_url && (
+                    <img src={banco.logo_url} alt="" className="w-5 h-5 object-contain rounded shrink-0" aria-hidden="true" />
+                  )}
                   <span className="font-medium">{banco.nombre_corto ?? banco.nombre}</span>
                   {banco.nombre_corto && (
-                    <span className="text-[var(--text-muted)] ml-2">{banco.nombre}</span>
+                    <span className="text-[var(--text-muted)] ml-1">{banco.nombre}</span>
                   )}
                 </button>
               ))}
@@ -627,6 +668,7 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
   const userPais = (user?.user_metadata?.pais_codigo as string | undefined) ?? 'DO'
   const [formPaisCodigo, setFormPaisCodigo] = useState(userPais)
   const { data: paises = [] } = usePaises()
+  const isEditing = !!tarjeta
   const {
     register,
     handleSubmit,
@@ -636,7 +678,7 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
     control,
     formState: { errors },
   } = useForm<TarjetaFormData>({
-    resolver: zodResolver(TarjetaSchema),
+    resolver: zodResolver(isEditing ? TarjetaUpdateSchema : TarjetaCreateSchema),
     defaultValues: tarjeta
       ? {
           banco: tarjeta.banco,
@@ -652,7 +694,7 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
           color: tarjeta.color ?? undefined,
           activa: tarjeta.activa,
         }
-      : { tipo: 'credito', red: 'visa', activa: true, banco_id: null, banco_custom: null },
+      : { tipo: 'credito', red: 'visa', activa: true, banco_id: null, banco_custom: null, banco: '' },
   })
 
   const tipo = watch('tipo')
@@ -1060,13 +1102,14 @@ function getNextDayOfMonth(day: number): string {
 
 function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): JSX.Element {
   const { t } = useTranslation()
-  const fmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 })
+  const fmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const [movTab, setMovTab] = useState<MovimientoTab>('todos')
   const [movModalTipo, setMovModalTipo] = useState<'compra' | 'pago' | null>(null)
 
   const tabFiltro = movTab === 'todos' ? undefined : movTab
   const { data: movimientos = [], isLoading: loadingMovs } = useMovimientosTarjeta(tarjeta.id, tabFiltro)
   const eliminarMovimiento = useEliminarMovimiento(tarjeta.id)
+  const bloquearTarjeta = useBloquearTarjeta()
 
   const handleEliminar = async (movimientoId: string): Promise<void> => {
     if (!window.confirm(t('tarjetas.deleteMovimiento'))) return
@@ -1075,6 +1118,15 @@ function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): 
       toast.success(t('tarjetas.movimientoEliminado'))
     } catch {
       toast.error(t('tarjetas.errorEliminar'))
+    }
+  }
+
+  const handleToggleBloquear = async (): Promise<void> => {
+    try {
+      await bloquearTarjeta.mutateAsync(tarjeta.id)
+      toast.success(tarjeta.bloqueada ? 'Tarjeta desbloqueada' : 'Tarjeta bloqueada')
+    } catch {
+      toast.error('Error al cambiar estado de bloqueo')
     }
   }
 
@@ -1267,6 +1319,15 @@ function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): 
                   Editar
                 </Button>
                 <Button
+                  variant={tarjeta.bloqueada ? 'default' : 'outline'}
+                  className={cn('flex-1 gap-2', tarjeta.bloqueada ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'text-amber-600 border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950')}
+                  disabled={bloquearTarjeta.isPending}
+                  onClick={handleToggleBloquear}
+                >
+                  {tarjeta.bloqueada ? <Unlock size={14} /> : <Lock size={14} />}
+                  {tarjeta.bloqueada ? 'Desbloquear' : 'Bloquear'}
+                </Button>
+                <Button
                   variant="destructive"
                   className="flex-1 gap-2"
                   onClick={() => onDelete(tarjeta.id)}
@@ -1330,7 +1391,7 @@ export function TarjetasPage(): JSX.Element {
     .reduce((sum, t) => sum + (t.disponible ?? 0), 0)
 
   const fmt = (n: number): string =>
-    new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 }).format(n)
+    new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
 
   const stats = [
     { label: 'Total saldo', value: fmt(totalSaldo) },
@@ -1373,6 +1434,10 @@ export function TarjetasPage(): JSX.Element {
         banco_id: data.banco_id ?? null,
         banco_custom: data.banco_custom ?? null,
       }
+      // Don't overwrite banco display name with empty string when clearing banco_id
+      if (!data.banco?.trim()) {
+        delete payload.banco
+      }
       await updateTarjeta.mutateAsync(payload)
       setTarjetaEditando(null)
       toast.success(t('tarjetas.updated'))
@@ -1395,9 +1460,9 @@ export function TarjetasPage(): JSX.Element {
   const renderCardSection = (list: Tarjeta[], title: string): JSX.Element => (
     <div className="mb-6">
       <h3 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">{title}</h3>
-      <div className="flex flex-col gap-4 sm:max-w-[520px] sm:mx-auto">
+      <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-hide">
         {list.map((tarjeta) => (
-          <div key={tarjeta.id} className="relative group">
+          <div key={tarjeta.id} className="snap-center shrink-0 w-80 relative group">
             <CardVisual tarjeta={tarjeta} onClick={() => setTarjetaDetalle(tarjeta)} />
             <button
               type="button"
