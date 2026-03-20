@@ -4,15 +4,29 @@ from app.core.supabase_client import get_user_client
 from app.schemas.profile import ProfileUpdate
 from app.services.base import _handle_api_error
 
+_DECIMAL_FIELDS = {
+    "salario_bruto",
+    "salario_neto",
+    "descuentos_adicionales",
+    "porcentaje_ahorro_metas",
+    "porcentaje_ahorro_fondo",
+}
+
 
 def _enrich(row: dict) -> dict:
     salario = row.get("salario_mensual_neto")
     horas_por_peso = round(160.0 / float(salario), 6) if salario and float(salario) > 0 else None
-    return {
+    enriched = {
         **row,
         "salario_mensual_neto": float(salario) if salario is not None else None,
         "horas_por_peso": horas_por_peso,
     }
+    for field in _DECIMAL_FIELDS:
+        if field in enriched and enriched[field] is not None:
+            enriched[field] = float(enriched[field])
+    if "asignacion_automatica_activa" not in enriched:
+        enriched["asignacion_automatica_activa"] = False
+    return enriched
 
 
 def get_or_create_profile(user_jwt: str, user_id: str) -> dict:
@@ -53,6 +67,10 @@ def update_profile(user_jwt: str, user_id: str, data: ProfileUpdate) -> dict:
 
     if "salario_mensual_neto" in payload:
         payload["salario_mensual_neto"] = str(payload["salario_mensual_neto"])
+
+    for field in _DECIMAL_FIELDS:
+        if field in payload and payload[field] is not None:
+            payload[field] = str(payload[field])
 
     try:
         r = (

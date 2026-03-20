@@ -370,6 +370,21 @@ const es = {
     horasPorPeso: 'Horas de trabajo por peso',
     saved: 'Perfil financiero guardado',
     salarioHint: 'Se usa para calcular horas de trabajo por gasto',
+    salarioBruto: 'Salario bruto',
+    salarioNeto: 'Salario neto',
+    descuentosAdicionales: 'Descuentos adicionales',
+    frecuenciaPago: 'Frecuencia de pago',
+    frecQuincenal: 'Quincenal',
+    frecBisemanal: 'Bisemanal',
+    frecMensual: 'Mensual',
+    infoSalarial: 'Informacion salarial',
+    asignacionAutomatica: 'Asignacion automatica de ahorro',
+    asignacionActivar: 'Activar asignacion automatica',
+    asignacionDesc: 'Al registrar un ingreso de sueldo, se distribuira automaticamente a tus metas y fondo de emergencia.',
+    pctAhorroMetas: '% ahorro para metas',
+    pctAhorroFondo: '% ahorro para fondo de emergencia',
+    totalAhorro: 'Total asignado',
+    advertenciaPct: 'La suma supera el 100%. Por favor ajusta los porcentajes.'
   },
   retos: {
     title: 'Retos financieros',
@@ -616,3 +631,4 @@ const es = {
 }
 
 export default es
+
