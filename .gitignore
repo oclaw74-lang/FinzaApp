@@ -9,3 +9,7 @@
 
 # Git worktrees (local development only)
 .claude/worktrees/
+
+qa/node_modules/
+qa/package-lock.json
+qa/test-results/
