@@ -110,6 +110,20 @@ def get_dashboard(
             .execute()
         )
 
+        # --- Savings totals for total_ahorrado accumulator ---
+        resp_metas_saldo = (
+            client.table("metas_ahorro")
+            .select("monto_actual")
+            .execute()
+        )
+        resp_fondo_saldo = (
+            client.table("fondo_emergencia")
+            .select("monto_actual")
+            .eq("user_id", user_id)
+            .maybe_single()
+            .execute()
+        )
+
         ingresos = resp_ingresos.data or []
         egresos = resp_egresos.data or []
 
@@ -118,6 +132,14 @@ def get_dashboard(
         total_egresos = sum(float(r["monto"]) for r in egresos)
         balance = total_ingresos - total_egresos
         ahorro_estimado = max(balance, 0.0)
+
+        total_metas = sum(float(r["monto_actual"]) for r in (resp_metas_saldo.data or []))
+        total_fondo = (
+            float(resp_fondo_saldo.data.get("monto_actual") or 0)
+            if resp_fondo_saldo and resp_fondo_saldo.data
+            else 0.0
+        )
+        total_ahorrado = total_metas + total_fondo
 
         # --- Category breakdown ---
         breakdown = _build_breakdown(ingresos, "ingreso", total_ingresos)
@@ -174,6 +196,7 @@ def get_dashboard(
                 "total_egresos": total_egresos,
                 "balance": balance,
                 "ahorro_estimado": ahorro_estimado,
+                "total_ahorrado": total_ahorrado,
             },
             "categoria_breakdown": breakdown,
             "monthly_trend": trend,
@@ -344,6 +367,15 @@ def get_dashboard_v2(
             .execute()
         )
 
+        # --- Fondo de emergencia saldo ---
+        resp_fondo_v2 = (
+            client.table("fondo_emergencia")
+            .select("monto_actual")
+            .eq("user_id", user_id)
+            .maybe_single()
+            .execute()
+        )
+
     except APIError as e:
         logger.error("Supabase APIError en dashboard_v2: code=%s message=%s", e.code, e.message)
         code = e.code or ""
@@ -360,6 +392,15 @@ def get_dashboard_v2(
     presupuestos = resp_presupuestos.data or []
     metas = resp_metas.data or []
     prestamos = resp_prestamos.data or []
+
+    # --- total_ahorrado: current balance across all metas + emergency fund ---
+    total_metas_v2 = sum(float(m.get("monto_actual") or 0) for m in metas)
+    total_fondo_v2 = (
+        float(resp_fondo_v2.data.get("monto_actual") or 0)
+        if resp_fondo_v2 and resp_fondo_v2.data
+        else 0.0
+    )
+    total_ahorrado_v2 = total_metas_v2 + total_fondo_v2
 
     # --- Resumen financiero ---
     ingresos_mes = sum(float(r["monto"]) for r in ingresos)
@@ -446,6 +487,7 @@ def get_dashboard_v2(
             "egresos_mes_anterior": egresos_mes_anterior,
             "variacion_ingresos_pct": variacion_ingresos_pct,
             "variacion_egresos_pct": variacion_egresos_pct,
+            "total_ahorrado": total_ahorrado_v2,
         },
         "presupuestos_estado": presupuestos_estado,
         "metas_activas": metas_activas,

@@ -9,6 +9,7 @@ class KPIs(BaseModel):
     total_egresos: float
     balance: float
     ahorro_estimado: float
+    total_ahorrado: float
 
 
 class CategoriaBreakdown(BaseModel):
@@ -61,6 +62,7 @@ class ResumenFinanciero(BaseModel):
     egresos_mes_anterior: float
     variacion_ingresos_pct: float
     variacion_egresos_pct: float
+    total_ahorrado: float
 
 
 class PresupuestoEstadoDashboard(BaseModel):
