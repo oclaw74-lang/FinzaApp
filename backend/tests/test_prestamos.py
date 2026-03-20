@@ -233,6 +233,177 @@ def test_registrar_pago_completo_estado_pagado():
     assert result["estado"] == "pagado"
 
 
+def test_registrar_pago_yo_debo_creates_egreso_with_prestamo_category():
+    """For yo_debo loans, registrar_pago must create an egreso (not an ingreso)
+    using the 'Pago de Préstamo' system category."""
+    from app.schemas.prestamo import PagoPrestamoCreate
+    from app.services.prestamos import registrar_pago
+
+    rpc_result = {"pago_id": "pago-yo-debo", "monto_pendiente": 700.0, "estado": "activo"}
+    mock_rpc_response = MagicMock()
+    mock_rpc_response.data = rpc_result
+
+    mock_client = MagicMock()
+    mock_client.rpc.return_value.execute.return_value = mock_rpc_response
+
+    # Table-specific mocks
+    prestamo_mock = MagicMock()
+    prestamo_mock.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = {
+        "tipo": "yo_debo",
+        "persona": "Pedro",
+        "descripcion": "Deuda personal",
+    }
+
+    cat_mock = MagicMock()
+    cat_mock.select.return_value.eq.return_value.is_.return_value.limit.return_value.execute.return_value.data = [
+        {"id": "cat-pago-prestamo-id"}
+    ]
+
+    egreso_mock = MagicMock()
+    ingreso_mock = MagicMock()
+
+    def table_side_effect(name: str):
+        if name == "prestamos":
+            return prestamo_mock
+        if name == "categorias":
+            return cat_mock
+        if name == "egresos":
+            return egreso_mock
+        if name == "ingresos":
+            return ingreso_mock
+        return MagicMock()
+
+    mock_client.table.side_effect = table_side_effect
+
+    data = PagoPrestamoCreate(monto=Decimal("300.00"), fecha="2026-03-09")
+
+    with patch("app.services.prestamos.get_user_client", return_value=mock_client):
+        result = registrar_pago("fake-jwt", "u1", "prestamo-id", data)
+
+    assert result["monto_pendiente"] == 700.0
+    # yo_debo → debe crear egreso, NO ingreso
+    egreso_mock.insert.assert_called_once()
+    ingreso_mock.insert.assert_not_called()
+
+    # Verificar payload del egreso
+    egreso_insert_payload = egreso_mock.insert.call_args[0][0]
+    assert egreso_insert_payload["user_id"] == "u1"
+    assert egreso_insert_payload["monto"] == "300.00"
+    assert egreso_insert_payload["categoria_id"] == "cat-pago-prestamo-id"
+    assert "Pedro" in egreso_insert_payload["descripcion"]
+
+
+def test_registrar_pago_me_deben_creates_ingreso_with_cobro_category():
+    """For me_deben loans, registrar_pago must create an ingreso (not an egreso)
+    using the 'Cobro de Préstamo' system category."""
+    from app.schemas.prestamo import PagoPrestamoCreate
+    from app.services.prestamos import registrar_pago
+
+    rpc_result = {"pago_id": "pago-me-deben", "monto_pendiente": 500.0, "estado": "activo"}
+    mock_rpc_response = MagicMock()
+    mock_rpc_response.data = rpc_result
+
+    mock_client = MagicMock()
+    mock_client.rpc.return_value.execute.return_value = mock_rpc_response
+
+    prestamo_mock = MagicMock()
+    prestamo_mock.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = {
+        "tipo": "me_deben",
+        "persona": "Juan",
+        "descripcion": "Préstamo de oficina",
+    }
+
+    cat_mock = MagicMock()
+    cat_mock.select.return_value.eq.return_value.is_.return_value.limit.return_value.execute.return_value.data = [
+        {"id": "cat-cobro-prestamo-id"}
+    ]
+
+    egreso_mock = MagicMock()
+    ingreso_mock = MagicMock()
+
+    def table_side_effect(name: str):
+        if name == "prestamos":
+            return prestamo_mock
+        if name == "categorias":
+            return cat_mock
+        if name == "egresos":
+            return egreso_mock
+        if name == "ingresos":
+            return ingreso_mock
+        return MagicMock()
+
+    mock_client.table.side_effect = table_side_effect
+
+    data = PagoPrestamoCreate(monto=Decimal("200.00"), fecha="2026-03-10")
+
+    with patch("app.services.prestamos.get_user_client", return_value=mock_client):
+        result = registrar_pago("fake-jwt", "u1", "prestamo-id-me-deben", data)
+
+    assert result["monto_pendiente"] == 500.0
+    # me_deben → debe crear ingreso, NO egreso
+    ingreso_mock.insert.assert_called_once()
+    egreso_mock.insert.assert_not_called()
+
+    # Verificar payload del ingreso
+    ingreso_insert_payload = ingreso_mock.insert.call_args[0][0]
+    assert ingreso_insert_payload["user_id"] == "u1"
+    assert ingreso_insert_payload["monto"] == "200.00"
+    assert ingreso_insert_payload["categoria_id"] == "cat-cobro-prestamo-id"
+    assert "Juan" in ingreso_insert_payload["descripcion"]
+    assert "Préstamo de oficina" in ingreso_insert_payload["descripcion"]
+    # ingreso no debe tener metodo_pago ni pago_prestamo_id
+    assert "metodo_pago" not in ingreso_insert_payload
+
+
+def test_registrar_pago_me_deben_sin_descripcion_no_falla():
+    """me_deben payment with no descripcion should still create ingreso successfully."""
+    from app.schemas.prestamo import PagoPrestamoCreate
+    from app.services.prestamos import registrar_pago
+
+    rpc_result = {"pago_id": "pago-p", "monto_pendiente": 0.0, "estado": "pagado"}
+    mock_rpc_response = MagicMock()
+    mock_rpc_response.data = rpc_result
+
+    mock_client = MagicMock()
+    mock_client.rpc.return_value.execute.return_value = mock_rpc_response
+
+    prestamo_mock = MagicMock()
+    prestamo_mock.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = {
+        "tipo": "me_deben",
+        "persona": "Maria",
+        "descripcion": None,  # sin descripcion
+    }
+
+    cat_mock = MagicMock()
+    cat_mock.select.return_value.eq.return_value.is_.return_value.limit.return_value.execute.return_value.data = [
+        {"id": "cat-cobro-id"}
+    ]
+
+    ingreso_mock = MagicMock()
+
+    def table_side_effect(name: str):
+        if name == "prestamos":
+            return prestamo_mock
+        if name == "categorias":
+            return cat_mock
+        if name == "ingresos":
+            return ingreso_mock
+        return MagicMock()
+
+    mock_client.table.side_effect = table_side_effect
+
+    data = PagoPrestamoCreate(monto=Decimal("100.00"), fecha="2026-03-11")
+
+    with patch("app.services.prestamos.get_user_client", return_value=mock_client):
+        result = registrar_pago("fake-jwt", "u1", "prestamo-sin-desc", data)
+
+    assert result["estado"] == "pagado"
+    ingreso_mock.insert.assert_called_once()
+    ingreso_payload = ingreso_mock.insert.call_args[0][0]
+    # sin descripcion → solo "Pago recibido: Maria" sin el "—"
+    assert ingreso_payload["descripcion"] == "Pago recibido: Maria"
+
+
 def test_registrar_pago_excede_pendiente_raises_400():
     """registrar_pago raises 400 when the RPC signals monto exceeds monto_pendiente."""
     from app.schemas.prestamo import PagoPrestamoCreate
