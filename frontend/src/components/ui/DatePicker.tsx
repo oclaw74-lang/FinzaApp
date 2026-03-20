@@ -77,7 +77,7 @@ const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
             value={value ?? ''}
             disabled={disabled}
             onChange={(e) => onChange?.(e.target.value)}
-            className="absolute inset-0 opacity-0 w-full cursor-pointer disabled:cursor-not-allowed"
+            className="absolute inset-0 z-10 opacity-0 w-full cursor-pointer disabled:cursor-not-allowed"
             ref={ref}
             aria-label={label || String(placeholder)}
             {...props}

@@ -343,7 +343,6 @@ export function ConfiguracionPage(): JSX.Element {
   const [savingPais, setSavingPais] = useState(false)
   // Extended salary fields
   const [salarioBruto, setSalarioBruto] = useState('')
-  const [salarioNeto, setSalarioNeto] = useState('')
   const [descuentosAdicionales, setDescuentosAdicionales] = useState('')
   const [frecuenciaPago, setFrecuenciaPago] = useState<FrecuenciaPago>('mensual')
   // Auto savings fields
@@ -361,7 +360,6 @@ export function ConfiguracionPage(): JSX.Element {
       setSalarioValue(profile.salario_mensual_neto != null ? String(profile.salario_mensual_neto) : '')
       setMostrarHoras(profile.mostrar_horas_trabajo ?? false)
       setSalarioBruto(profile.salario_bruto != null ? String(profile.salario_bruto) : '')
-      setSalarioNeto(profile.salario_neto != null ? String(profile.salario_neto) : '')
       setDescuentosAdicionales(profile.descuentos_adicionales != null ? String(profile.descuentos_adicionales) : '')
       setFrecuenciaPago(profile.frecuencia_pago ?? 'mensual')
       setAsignacionActiva(profile.asignacion_automatica_activa ?? false)
@@ -435,7 +433,6 @@ export function ConfiguracionPage(): JSX.Element {
         salario_mensual_neto: salarioValue ? parseFloat(salarioValue) : undefined,
         mostrar_horas_trabajo: mostrarHoras,
         salario_bruto: salarioBruto ? parseFloat(salarioBruto) : undefined,
-        salario_neto: salarioNeto ? parseFloat(salarioNeto) : undefined,
         descuentos_adicionales: descuentosAdicionales ? parseFloat(descuentosAdicionales) : undefined,
         frecuencia_pago: frecuenciaPago,
         asignacion_automatica_activa: asignacionActiva,
@@ -608,7 +605,7 @@ export function ConfiguracionPage(): JSX.Element {
 
           </form>
 
-          {/* Finances section (salary + work hours) */}
+          {/* Finances section (salary) */}
           <div className="border-t border-[var(--border)] pt-6 space-y-5">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
@@ -625,34 +622,6 @@ export function ConfiguracionPage(): JSX.Element {
                 className="finza-input w-full"
               />
               <p className="text-xs text-[var(--text-muted)]">{t('profile.salarioHint')}</p>
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-xl border border-[var(--border)] dark:border-white/[0.08] dark:bg-white/[0.05]">
-              <div className="flex items-center gap-2">
-                <Clock size={15} className="text-[var(--accent)]" />
-                <div>
-                  <p className="text-sm font-medium text-[var(--text-primary)]">{t('profile.mostrarHoras')}</p>
-                  {profile?.horas_por_peso != null && (
-                    <p className="text-xs text-[var(--text-muted)]">
-                      {t('profile.horasPorPeso')}: {profile.horas_por_peso.toFixed(4)} h/$
-                    </p>
-                  )}
-                </div>
-              </div>
-              <button
-                onClick={() => setMostrarHoras((v) => !v)}
-                className={cn(
-                  'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
-                  mostrarHoras ? 'bg-[#3d8ef8]' : 'bg-[var(--border-strong)]'
-                )}
-              >
-                <span
-                  className={cn(
-                    'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200',
-                    mostrarHoras ? 'left-[21px]' : 'left-[3px]'
-                  )}
-                />
-              </button>
             </div>
           </div>
 
@@ -674,20 +643,6 @@ export function ConfiguracionPage(): JSX.Element {
                   placeholder="0.00"
                   value={salarioBruto}
                   onChange={(e) => setSalarioBruto(e.target.value)}
-                  className="finza-input w-full"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[var(--text-primary)]">
-                  {t('profile.salarioNeto')}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={salarioNeto}
-                  onChange={(e) => setSalarioNeto(e.target.value)}
                   className="finza-input w-full"
                 />
               </div>
@@ -719,6 +674,35 @@ export function ConfiguracionPage(): JSX.Element {
                   <option value="bisemanal">{t('profile.frecBisemanal')}</option>
                 </select>
               </div>
+            </div>
+
+            {/* Mostrar horas de trabajo — dentro de información salarial */}
+            <div className="flex items-center justify-between p-3 rounded-xl border border-[var(--border)] dark:border-white/[0.08] dark:bg-white/[0.05]">
+              <div className="flex items-center gap-2">
+                <Clock size={15} className="text-[var(--accent)]" />
+                <div>
+                  <p className="text-sm font-medium text-[var(--text-primary)]">{t('profile.mostrarHoras')}</p>
+                  {profile?.horas_por_peso != null && (
+                    <p className="text-xs text-[var(--text-muted)]">
+                      {t('profile.horasPorPeso')}: {profile.horas_por_peso.toFixed(4)} h/$
+                    </p>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => setMostrarHoras((v) => !v)}
+                className={cn(
+                  'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
+                  mostrarHoras ? 'bg-[#3d8ef8]' : 'bg-[var(--border-strong)]'
+                )}
+              >
+                <span
+                  className={cn(
+                    'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200',
+                    mostrarHoras ? 'left-[21px]' : 'left-[3px]'
+                  )}
+                />
+              </button>
             </div>
           </div>
 

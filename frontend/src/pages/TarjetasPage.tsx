@@ -224,7 +224,7 @@ function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
       )}
       style={{
         background: getCardGradient(tarjeta.red, tarjeta.tipo, tarjeta.color),
-        minHeight: 220,
+        minHeight: 185,
         borderRadius: '22px',
         padding: '24px 28px 20px',
         border: '1px solid rgba(255,255,255,0.1)',
@@ -1466,9 +1466,9 @@ export function TarjetasPage(): JSX.Element {
   const renderCardSection = (list: Tarjeta[], title: string): JSX.Element => (
     <div className="mb-6">
       <h3 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">{title}</h3>
-      <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-hide">
+      <div className="flex overflow-x-auto snap-x snap-mandatory gap-5 pb-4 scrollbar-hide">
         {list.map((tarjeta) => (
-          <div key={tarjeta.id} className="snap-center shrink-0 w-80 relative group">
+          <div key={tarjeta.id} className="snap-center shrink-0 w-96 relative group">
             <CardVisual tarjeta={tarjeta} onClick={() => setTarjetaDetalle(tarjeta)} />
             <button
               type="button"

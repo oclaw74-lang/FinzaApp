@@ -69,11 +69,11 @@ export function BottomNav(): JSX.Element {
 
   return (
     <>
-      {/* Backdrop — fixed cubre toda la pantalla cuando el menú está abierto */}
+      {/* Backdrop — fixed cubre el contenido principal cuando el menú está abierto */}
       {sheetOpen && (
         <div
           className="fixed inset-0 z-40"
-          style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+          style={{ background: 'rgba(0,0,0,0.4)' }}
           onClick={() => setSheetOpen(false)}
           aria-hidden="true"
         />
@@ -81,7 +81,7 @@ export function BottomNav(): JSX.Element {
 
       <nav
         className={cn(
-          'md:hidden fixed bottom-0 left-0 right-0 z-30 h-16 flex items-center justify-around px-2',
+          'md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 flex items-center justify-around px-2 overflow-visible',
           'backdrop-blur-xl',
           'bg-white/95 dark:bg-[rgba(4,8,15,0.95)]',
           'border-t border-black/[0.08] dark:border-white/[0.06]'

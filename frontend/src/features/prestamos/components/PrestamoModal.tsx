@@ -53,7 +53,7 @@ export function PrestamoModal({
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="relative bg-white dark:bg-[#0d1520] dark:border dark:border-white/[0.08] rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
+      <div className="relative bg-white dark:bg-[#0d1520] dark:border dark:border-white/[0.08] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <h2 className="text-xl font-bold text-[var(--text-primary)] mb-6">{title}</h2>
         <PrestamoForm
           defaultValues={defaultValues}
