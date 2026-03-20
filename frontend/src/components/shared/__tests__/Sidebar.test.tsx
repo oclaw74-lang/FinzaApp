@@ -208,4 +208,21 @@ describe('Sidebar', () => {
     fireEvent.click(logoutBtn)
     expect(mockSignOut).toHaveBeenCalled()
   })
+
+  it('theme toggle renders light dark system options', () => {
+    setupMocks({ sidebarCollapsed: false })
+    renderSidebar()
+    // ToggleGroup for theme renders 3 buttons: Claro, Oscuro, Auto
+    expect(screen.getByText('Claro')).toBeInTheDocument()
+    expect(screen.getByText('Oscuro')).toBeInTheDocument()
+    expect(screen.getByText('Auto')).toBeInTheDocument()
+  })
+
+  it('language toggle renders ES and EN options', () => {
+    setupMocks({ sidebarCollapsed: false })
+    renderSidebar()
+    // ToggleGroup for language renders 2 buttons: ES, EN
+    expect(screen.getByText('ES')).toBeInTheDocument()
+    expect(screen.getByText('EN')).toBeInTheDocument()
+  })
 })
