@@ -131,7 +131,7 @@ describe('ConfiguracionPage', () => {
   it('switches to appearance tab on click', () => {
     renderPage()
     fireEvent.click(screen.getByText('settings.appearance'))
-    expect(screen.getByText('settings.darkModeDesc')).toBeInTheDocument()
+    expect(screen.getByText('settings.theme')).toBeInTheDocument()
   })
 
   it('appearance tab shows light and dark mode cards', () => {
