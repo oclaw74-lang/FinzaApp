@@ -1,7 +1,14 @@
 from fastapi import APIRouter, Depends, Query
 
 from app.core.security import get_current_user, get_raw_token
-from app.schemas.notificacion import GenerarNotificacionesResponse, NotificacionResponse
+from app.schemas.notificacion import (
+    CheckNotificacionesResponse,
+    GenerarNotificacionesResponse,
+    NotificacionResponse,
+    PushSubscriptionCreate,
+    PushSubscriptionResponse,
+    VapidPublicKeyResponse,
+)
 import app.services.notificaciones as svc
 
 router = APIRouter(prefix="/notificaciones", tags=["notificaciones"])
@@ -66,3 +73,51 @@ async def generar_notificaciones_endpoint(
 ) -> dict:
     """Evaluate triggers and create smart notifications (idempotent, 24h window)."""
     return svc.generar_notificaciones(user_jwt=token, user_id=current_user["user_id"])
+
+
+# --- Fix #20: check endpoint ---
+@router.post("/check", response_model=CheckNotificacionesResponse)
+async def check_notificaciones_endpoint(
+    token: str = Depends(get_raw_token),
+    current_user: dict = Depends(get_current_user),
+) -> dict:
+    """
+    Run 4 additional smart notification checks and create pending notifications.
+
+    Triggers evaluated:
+    - recordatorio_cobro: reminder 2 days before salary day.
+    - alerta_gasto_excesivo: spend > 80% of monthly budget estimate.
+    - alerta_prestamo_proximo: loan installment due in ≤5 days.
+    - alerta_meta_progreso: weekly savings goal progress (Mondays).
+    """
+    return svc.check_notificaciones(user_jwt=token, user_id=current_user["user_id"])
+
+
+# --- Fix #21: Web Push endpoints ---
+@router.post("/subscribe", response_model=PushSubscriptionResponse, status_code=201)
+async def subscribe_push_endpoint(
+    body: PushSubscriptionCreate,
+    token: str = Depends(get_raw_token),
+    current_user: dict = Depends(get_current_user),
+) -> dict:
+    """
+    Register a Web Push subscription (Service Worker PushSubscription object).
+
+    Expected body:
+    ```json
+    { "endpoint": "...", "keys": { "p256dh": "...", "auth": "..." } }
+    ```
+    """
+    return svc.subscribe_push(
+        user_jwt=token,
+        user_id=current_user["user_id"],
+        endpoint=body.endpoint,
+        p256dh=body.keys.p256dh,
+        auth=body.keys.auth,
+    )
+
+
+@router.get("/vapid-public-key", response_model=VapidPublicKeyResponse)
+async def get_vapid_public_key_endpoint() -> dict:
+    """Return the VAPID public key for Service Worker subscription."""
+    return {"public_key": svc.get_vapid_public_key()}
