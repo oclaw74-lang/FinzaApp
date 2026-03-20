@@ -1,4 +1,4 @@
-﻿from pydantic import BaseModel
+from pydantic import BaseModel
 from typing import Optional, Any
 
 
@@ -18,3 +18,12 @@ class PrediccionMesResponse(BaseModel):
     sugerencia_datos: Optional[dict[str, Any]] = None
     dias_restantes: int
     gasto_diario_promedio: float
+    # --- Campos enriquecidos (Fix #19) ---
+    ingreso_esperado: float = 0.0
+    gasto_esperado: float = 0.0
+    balance_final: float = 0.0
+    avg_egresos_3m: float = 0.0
+    sum_cuotas_prestamos: float = 0.0
+    sum_suscripciones: float = 0.0
+    sum_compromisos_ahorro: float = 0.0
+    egresos_proyectados: float = 0.0
