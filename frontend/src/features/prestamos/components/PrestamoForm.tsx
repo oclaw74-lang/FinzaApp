@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DatePicker } from '@/components/ui/DatePicker'
 import type { Prestamo } from '@/types/prestamo'
-import { useMonedas, useBancosAll } from '@/hooks/useCatalogos'
+import { useMonedas, useBancos } from '@/hooks/useCatalogos'
+import { useAuthStore } from '@/store/authStore'
 
 /** Add N months to a 'yyyy-MM-dd' string, clamping the day to the last day of the target month. */
 function addMonthsToDateStr(dateStr: string, months: number): string {
@@ -98,8 +99,10 @@ export function PrestamoForm({
   isLoading,
 }: PrestamoFormProps): JSX.Element {
   const { t } = useTranslation()
+  const { user } = useAuthStore()
+  const userPais = (user?.user_metadata?.pais_codigo as string | undefined) ?? 'DO'
   const { data: monedas = [] } = useMonedas()
-  const { data: bancos = [] } = useBancosAll()
+  const { data: bancos = [] } = useBancos(userPais)
 
   const {
     register,

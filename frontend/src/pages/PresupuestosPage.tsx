@@ -67,7 +67,9 @@ function EmptyState({ onNew }: { onNew: () => void }): JSX.Element {
 }
 
 export function PresupuestosPage(): JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const getCatNombre = (cat: { nombre: string; nombre_en?: string }) =>
+    i18n.language.startsWith('en') && cat.nombre_en ? cat.nombre_en : cat.nombre
   const defaults = getDefaultMesYear()
   const [mes, setMes] = useState<number>(defaults.mes)
   const [year, setYear] = useState<number>(defaults.year)
@@ -399,7 +401,7 @@ export function PresupuestosPage(): JSX.Element {
                     >
                       <span className="flex items-center gap-2 text-sm text-[var(--text-primary)]">
                         <IconComponent className="w-4 h-4 shrink-0 text-[var(--text-muted)]" />
-                        {cat.nombre}
+                        {getCatNombre(cat)}
                       </span>
                       <Button
                         variant="secondary"
