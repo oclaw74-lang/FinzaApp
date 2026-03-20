@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from app.core.security import get_current_user, get_raw_token
 from app.schemas.fondo_emergencia import (
@@ -19,7 +19,12 @@ async def get_fondo(
 ) -> dict:
     fondo = svc.get_or_none(user_jwt=token, user_id=current_user["user_id"])
     if fondo is None:
-        raise HTTPException(status_code=404, detail="Fondo de emergencia no encontrado.")
+        # Auto-create with defaults (3 months) so users land on a ready state
+        fondo = svc.create_fondo(
+            user_jwt=token,
+            user_id=current_user["user_id"],
+            data=FondoEmergenciaCreate(),
+        )
     return fondo
 
 

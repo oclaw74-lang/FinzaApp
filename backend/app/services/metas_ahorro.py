@@ -161,44 +161,63 @@ def agregar_contribucion(
     meta_id: str,
     data: ContribucionMetaCreate,
 ) -> dict:
+    """Register a savings contribution without creating any egreso record."""
     client = get_user_client(user_jwt)
     try:
-        client.rpc(
-            "agregar_contribucion_meta",
-            {
-                "p_meta_id": meta_id,
-                "p_monto": float(data.monto),
-                "p_tipo": data.tipo,
-                "p_fecha": str(data.fecha),
-                "p_notas": data.notas or "",
-            },
-        ).execute()
-
-        # Obtener la contribucion recien insertada (la mas reciente de esa meta)
-        contribucion_response = (
-            client.table("contribuciones_meta")
-            .select("*")
-            .eq("meta_id", meta_id)
-            .order("created_at", desc=True)
-            .limit(1)
+        # Verify meta exists (RLS ensures ownership)
+        meta_response = (
+            client.table("metas_ahorro")
+            .select("id, monto_actual, monto_objetivo, estado")
+            .eq("id", meta_id)
+            .maybe_single()
             .execute()
         )
-        if not contribucion_response.data:
-            raise HTTPException(
-                status_code=500, detail="Contribucion no encontrada tras insercion."
-            )
-        return contribucion_response.data[0]
-    except HTTPException:
-        raise
-    except APIError as e:
-        msg = str(e.message) if e.message else ""
-        if "no encontrada" in msg.lower() or "no pertenece" in msg.lower():
+        if not meta_response.data:
             raise HTTPException(status_code=404, detail="Meta no encontrada.")
-        if "supera el monto actual" in msg.lower():
+
+        meta = meta_response.data
+        monto_actual = Decimal(str(meta["monto_actual"]))
+        monto = Decimal(str(data.monto))
+
+        if data.tipo == "retiro" and monto > monto_actual:
             raise HTTPException(
                 status_code=400,
                 detail="El monto de retiro supera el monto actual de la meta.",
             )
+
+        # Insert contribution directly — no egresos record created
+        contrib_payload = {
+            "meta_id": meta_id,
+            "monto": str(monto),
+            "tipo": data.tipo,
+            "fecha": str(data.fecha),
+            "notas": data.notas or "",
+        }
+        contrib_response = (
+            client.table("contribuciones_meta").insert(contrib_payload).execute()
+        )
+        if not contrib_response.data:
+            raise HTTPException(
+                status_code=500, detail="Contribucion no encontrada tras insercion."
+            )
+
+        # Update monto_actual; mark completed when goal is reached
+        if data.tipo == "deposito":
+            nuevo_monto = monto_actual + monto
+        else:
+            nuevo_monto = max(Decimal("0"), monto_actual - monto)
+
+        monto_objetivo = Decimal(str(meta["monto_objetivo"]))
+        nuevo_estado = "completada" if nuevo_monto >= monto_objetivo else meta["estado"]
+
+        client.table("metas_ahorro").update(
+            {"monto_actual": str(nuevo_monto), "estado": nuevo_estado}
+        ).eq("id", meta_id).execute()
+
+        return contrib_response.data[0]
+    except HTTPException:
+        raise
+    except APIError as e:
         _handle_api_error(e)
     return {}
 
