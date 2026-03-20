@@ -152,7 +152,9 @@ function TipoBadge({ tipo }: { tipo: 'ingreso' | 'egreso' | 'ambos' }): JSX.Elem
 }
 
 export function CategoriasPage(): JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const getCatNombre = (cat: { nombre: string; nombre_en?: string }) =>
+    i18n.language.startsWith('en') && cat.nombre_en ? cat.nombre_en : cat.nombre
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [categoriaEditando, setCategoriaEditando] = useState<CategoriaResponse | null>(null)
 
@@ -260,7 +262,7 @@ export function CategoriasPage(): JSX.Element {
                     <div className="w-7 h-7 rounded-full bg-surface-raised flex items-center justify-center text-sm">
                       <CatIcon size={14} className="text-[var(--text-muted)]" />
                     </div>
-                    <span className="text-sm text-[var(--text-primary)]">{cat.nombre}</span>
+                    <span className="text-sm text-[var(--text-primary)]">{getCatNombre(cat)}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <TipoBadge tipo={cat.tipo} />
@@ -312,14 +314,14 @@ export function CategoriasPage(): JSX.Element {
                     <div className="w-7 h-7 rounded-full bg-surface-raised flex items-center justify-center text-sm">
                       <CatIcon size={14} className="text-[var(--text-muted)]" />
                     </div>
-                    <span className="text-sm text-[var(--text-primary)]">{cat.nombre}</span>
+                    <span className="text-sm text-[var(--text-primary)]">{getCatNombre(cat)}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <TipoBadge tipo={cat.tipo} />
                     <button
                       type="button"
                       onClick={() => handleOpenEdit(cat)}
-                      aria-label={t('categorias.editLabel', { name: cat.nombre })}
+                      aria-label={t('categorias.editLabel', { name: getCatNombre(cat) })}
                       className="p-1.5 rounded text-[var(--text-muted)] hover:text-finza-blue hover:bg-blue-50 transition-colors"
                     >
                       <Pencil size={14} />
@@ -327,7 +329,7 @@ export function CategoriasPage(): JSX.Element {
                     <button
                       type="button"
                       onClick={() => handleDelete(cat)}
-                      aria-label={t('categorias.deleteLabel', { name: cat.nombre })}
+                      aria-label={t('categorias.deleteLabel', { name: getCatNombre(cat) })}
                       className="p-1.5 rounded text-[var(--text-muted)] hover:text-alert-red hover:bg-red-50 transition-colors"
                     >
                       <Trash2 size={14} />

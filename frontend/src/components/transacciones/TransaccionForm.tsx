@@ -1,6 +1,7 @@
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DatePicker } from '@/components/ui/DatePicker'
@@ -62,6 +63,9 @@ export function TransaccionForm({
   isLoading,
   submitLabel,
 }: TransaccionFormProps): JSX.Element {
+  const { i18n } = useTranslation()
+  const getCatNombre = (cat: { nombre: string; nombre_en?: string }) =>
+    i18n.language.startsWith('en') && cat.nombre_en ? cat.nombre_en : cat.nombre
   const schema = tipo === 'ingreso' ? ingresoSchema : egresoSchema
   const { data: todasCategorias = [], isLoading: loadingCategorias } = useCategorias()
   const categorias = todasCategorias.filter(
@@ -109,7 +113,7 @@ export function TransaccionForm({
           <option value="">Selecciona una categoria...</option>
           {categorias.map((cat) => (
             <option key={cat.id} value={cat.id}>
-              {cat.nombre}
+              {getCatNombre(cat)}
             </option>
           ))}
         </select>

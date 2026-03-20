@@ -1,6 +1,7 @@
 export interface CategoriaResponse {
   id: string
   nombre: string
+  nombre_en?: string
   tipo: 'ingreso' | 'egreso' | 'ambos'
   icono: string | null
   color: string | null
