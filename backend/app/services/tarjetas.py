@@ -160,5 +160,3 @@ def toggle_bloquear_tarjeta(user_jwt: str, user_id: str, tarjeta_id: str) -> dic
     except APIError as e:
         _handle_api_error(e)
     return None
-    except APIError as e:
-        _handle_api_error(e)

@@ -122,7 +122,8 @@ def test_registrar_movimiento_success() -> None:
     mock_client = MagicMock()
     mock_client.rpc.return_value = mock_rpc
 
-    with patch("app.services.movimientos_tarjeta.get_user_client", return_value=mock_client):
+    with patch("app.services.movimientos_tarjeta.get_user_client", return_value=mock_client), \
+         patch("app.services.movimientos_tarjeta._get_tarjeta_simple", return_value={"bloqueada": False, "activa": True}):
         result = registrar_movimiento(
             user_jwt="jwt",
             user_id="u1",
@@ -135,7 +136,6 @@ def test_registrar_movimiento_success() -> None:
     assert result["movimiento_id"] == "mov-001"
     assert result["tipo"] == "compra"
 
-    # Verify RPC was called with correct params
     call_kwargs = mock_client.rpc.call_args
     assert call_kwargs[0][0] == "registrar_movimiento_tarjeta"
     params = call_kwargs[0][1]
@@ -152,7 +152,8 @@ def test_registrar_movimiento_tarjeta_not_found_raises_404() -> None:
         {"code": "400", "message": "Tarjeta no encontrada o inactiva"}
     )
 
-    with patch("app.services.movimientos_tarjeta.get_user_client", return_value=mock_client):
+    with patch("app.services.movimientos_tarjeta.get_user_client", return_value=mock_client), \
+         patch("app.services.movimientos_tarjeta._get_tarjeta_simple", return_value={"bloqueada": False, "activa": True}):
         with pytest.raises(HTTPException) as exc_info:
             registrar_movimiento("jwt", "u1", "bad-id", "compra", 100.0, date(2026, 3, 18))
 
@@ -195,7 +196,8 @@ def test_registrar_movimiento_no_data_raises_500() -> None:
     mock_client = MagicMock()
     mock_client.rpc.return_value.execute.return_value.data = None
 
-    with patch("app.services.movimientos_tarjeta.get_user_client", return_value=mock_client):
+    with patch("app.services.movimientos_tarjeta.get_user_client", return_value=mock_client), \
+         patch("app.services.movimientos_tarjeta._get_tarjeta_simple", return_value={"bloqueada": False, "activa": True}):
         with pytest.raises(HTTPException) as exc_info:
             registrar_movimiento("jwt", "u1", "t1", "compra", 100.0, date(2026, 3, 18))
 
