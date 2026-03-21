@@ -124,6 +124,7 @@ const en = {
     noEgresosDesc: 'Record your first expense to get started',
     created: 'Expense recorded', updated: 'Expense updated', deleted: 'Expense deleted',
     deleteConfirm: 'Delete this expense?',
+    pagadoConTarjeta: 'Paid with card',
   },
   prestamos: {
     title: 'Loans', newPrestamo: 'New loan',

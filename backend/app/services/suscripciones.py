@@ -88,7 +88,7 @@ def update_suscripcion(user_jwt: str, user_id: str, suscripcion_id: str, data: S
         )
     except APIError as e:
         _handle_api_error(e)
-    if not r.data:
+    if not (r and r.data):
         raise HTTPException(status_code=404, detail="Suscripcion no encontrada.")
     return _enrich(r.data[0])
 
@@ -105,7 +105,7 @@ def delete_suscripcion(user_jwt: str, user_id: str, suscripcion_id: str) -> None
         )
     except APIError as e:
         _handle_api_error(e)
-    if not r.data:
+    if not (r and r.data):
         raise HTTPException(status_code=404, detail="Suscripcion no encontrada.")
 
 

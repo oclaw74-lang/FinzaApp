@@ -22,7 +22,7 @@ def _get_system_categoria_id(client, nombre: str) -> str | None:
             .maybe_single()
             .execute()
         )
-        return resp.data["id"] if resp.data else None
+        return resp.data["id"] if (resp and resp.data) else None
     except Exception:
         return None
 
@@ -99,7 +99,7 @@ def get_meta_by_id(user_jwt: str, meta_id: str) -> dict:
             .maybe_single()
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Meta no encontrada.")
         return response.data
     except HTTPException:
@@ -149,7 +149,7 @@ def update_meta(user_jwt: str, meta_id: str, data: MetaAhorroUpdate) -> dict:
             .eq("id", meta_id)
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Meta no encontrada.")
         return response.data[0]
     except HTTPException:
@@ -182,7 +182,7 @@ def delete_meta(user_jwt: str, meta_id: str) -> None:
             .eq("id", meta_id)
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Meta no encontrada.")
     except HTTPException:
         raise
@@ -201,7 +201,7 @@ def get_contribuciones(user_jwt: str, meta_id: str) -> list[dict]:
             .maybe_single()
             .execute()
         )
-        if not meta_check.data:
+        if not (meta_check and meta_check.data):
             raise HTTPException(status_code=404, detail="Meta no encontrada.")
 
         response = (
@@ -236,7 +236,7 @@ def agregar_contribucion(
             .maybe_single()
             .execute()
         )
-        if not meta_response.data:
+        if not (meta_response and meta_response.data):
             raise HTTPException(status_code=404, detail="Meta no encontrada.")
 
         meta = meta_response.data
@@ -312,7 +312,7 @@ def delete_contribucion(
             .maybe_single()
             .execute()
         )
-        if not check.data:
+        if not (check and check.data):
             raise HTTPException(status_code=404, detail="Contribucion no encontrada.")
 
         contribucion = check.data
@@ -330,7 +330,7 @@ def delete_contribucion(
             .maybe_single()
             .execute()
         )
-        if not meta_response.data:
+        if not (meta_response and meta_response.data):
             raise HTTPException(status_code=404, detail="Meta no encontrada.")
 
         meta = meta_response.data

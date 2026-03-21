@@ -283,7 +283,7 @@ def _crear_transaccion_fondo(client, user_id: str, tipo: str, monto: float) -> N
             .maybe_single()
             .execute()
         )
-        cat_id = resp.data["id"] if resp.data else None
+        cat_id = resp.data["id"] if (resp and resp.data) else None
         if not cat_id:
             return
 

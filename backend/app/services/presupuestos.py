@@ -43,7 +43,7 @@ def get_presupuesto_by_id(user_jwt: str, presupuesto_id: str) -> dict:
             .maybe_single()
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Presupuesto no encontrado.")
         return response.data
     except HTTPException:
@@ -91,7 +91,7 @@ def create_presupuesto(user_jwt: str, user_id: str, data: PresupuestoCreate) -> 
                 .maybe_single()
                 .execute()
             )
-            return existing.data or {}
+            return (existing.data if existing else None) or {}
         except APIError:
             return {}
 
@@ -133,7 +133,7 @@ def update_presupuesto(
             .eq("id", presupuesto_id)
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Presupuesto no encontrado.")
         return response.data[0]
     except HTTPException:
@@ -152,7 +152,7 @@ def delete_presupuesto(user_jwt: str, presupuesto_id: str) -> None:
             .eq("id", presupuesto_id)
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Presupuesto no encontrado.")
     except HTTPException:
         raise

@@ -164,7 +164,7 @@ def get_prestamo(user_jwt: str, user_id: str, prestamo_id: str) -> dict | None:
             .maybe_single()
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             return None
 
         prestamo = response.data
@@ -227,7 +227,7 @@ def delete_prestamo(user_jwt: str, user_id: str, prestamo_id: str) -> dict:
             .eq("user_id", user_id)
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Prestamo no encontrado.")
         return response.data[0]
     except IndexError:
@@ -251,7 +251,7 @@ def get_pagos(
             .maybe_single()
             .execute()
         )
-        if not prestamo_check.data:
+        if not (prestamo_check and prestamo_check.data):
             raise HTTPException(status_code=404, detail="Prestamo no encontrado.")
 
         response = (
@@ -409,7 +409,7 @@ def delete_pago(
             .maybe_single()
             .execute()
         )
-        if not pago_response.data:
+        if not (pago_response and pago_response.data):
             raise HTTPException(status_code=404, detail="Pago no encontrado.")
 
         pago = pago_response.data
@@ -434,7 +434,7 @@ def delete_pago(
             .maybe_single()
             .execute()
         )
-        if not prestamo_response.data:
+        if not (prestamo_response and prestamo_response.data):
             raise HTTPException(status_code=404, detail="Prestamo no encontrado.")
 
         prestamo = prestamo_response.data

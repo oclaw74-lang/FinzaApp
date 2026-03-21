@@ -99,7 +99,7 @@ def delete_estado_cuenta(
             .is_("deleted_at", "null")
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(
                 status_code=404, detail="Estado de cuenta no encontrado."
             )

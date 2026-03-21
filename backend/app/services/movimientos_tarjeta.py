@@ -19,7 +19,7 @@ def _get_tarjeta_simple(client, tarjeta_id: str, user_id: str) -> dict | None:
             .maybe_single()
             .execute()
         )
-        return response.data or None
+        return (response.data if response else None)
     except Exception:
         return None
 
@@ -130,7 +130,7 @@ def delete_movimiento(
             .is_("deleted_at", "null")
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Movimiento no encontrado.")
     except HTTPException:
         raise
