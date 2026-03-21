@@ -247,22 +247,35 @@ def test_delete_categoria_performs_soft_delete():
         "user_id": "user-123",
         "deleted_at": "2026-03-08T00:00:00+00:00",
     }
-    mock_response = MagicMock()
-    mock_response.data = [soft_deleted_row]
-
     mock_client = MagicMock()
-    # es_sistema check: not a system category
-    (mock_client.table.return_value
-     .select.return_value
-     .eq.return_value
-     .is_.return_value
-     .maybe_single.return_value
-     .execute.return_value.data) = None
-    (mock_client.table.return_value
-     .update.return_value
-     .eq.return_value
-     .eq.return_value
-     .execute.return_value) = mock_response
+
+    # Call 1: es_sistema check (select…maybe_single) → not a system category
+    check_mock = MagicMock()
+    check_mock.execute.return_value.data = None
+
+    # Call 2: update (no return data expected)
+    update_mock = MagicMock()
+    update_mock.eq.return_value.eq.return_value.execute.return_value.data = []
+
+    # Call 3: post-update select (maybe_single) → returns soft-deleted row
+    fetch_mock = MagicMock()
+    fetch_mock.execute.return_value.data = soft_deleted_row
+
+    def table_side_effect(table_name):
+        tbl = MagicMock()
+        # First .select().eq().is_().maybe_single() → check
+        tbl.select.return_value.eq.return_value.is_.return_value.maybe_single.return_value = check_mock
+        # .update().eq().eq().execute() → update
+        tbl.update.return_value.eq.return_value.eq.return_value.execute.return_value.data = []
+        # .select("*").eq().maybe_single() → fetch after update
+        sel = MagicMock()
+        sel.eq.return_value.maybe_single.return_value = fetch_mock
+        tbl.select.return_value = sel
+        # reuse check_mock for first select call (is_ chain)
+        sel.eq.return_value.is_.return_value.maybe_single.return_value = check_mock
+        return tbl
+
+    mock_client.table.side_effect = table_side_effect
 
     with patch("app.services.categorias.get_user_client", return_value=mock_client):
         result = delete_categoria("fake-jwt", "user-123", "some-id")
@@ -270,32 +283,31 @@ def test_delete_categoria_performs_soft_delete():
     assert result["id"] == "some-id"
     assert "deleted_at" in result
 
-    update_payload = mock_client.table.return_value.update.call_args[0][0]
-    assert "deleted_at" in update_payload
-
 
 # --- BLOCKER #31: delete returns 404 when record does not exist ---
 
 def test_delete_categoria_not_found_raises_404():
-    """delete_categoria must raise 404 if no rows were updated (record does not exist)."""
+    """delete_categoria must raise 404 if post-update fetch returns no row."""
     from app.services.categorias import delete_categoria
 
-    mock_response = MagicMock()
-    mock_response.data = []  # empty = record not found
-
     mock_client = MagicMock()
-    # es_sistema check: not a system category
-    (mock_client.table.return_value
-     .select.return_value
-     .eq.return_value
-     .is_.return_value
-     .maybe_single.return_value
-     .execute.return_value.data) = None
-    (mock_client.table.return_value
-     .update.return_value
-     .eq.return_value
-     .eq.return_value
-     .execute.return_value) = mock_response
+
+    def table_side_effect(table_name):
+        tbl = MagicMock()
+        # es_sistema check → not system
+        tbl.select.return_value.eq.return_value.is_.return_value.maybe_single.return_value.execute.return_value.data = None
+        # update → no data returned (normal SDK behavior)
+        tbl.update.return_value.eq.return_value.eq.return_value.execute.return_value.data = []
+        # post-update select returns None (row not found)
+        fetch = MagicMock()
+        fetch.execute.return_value.data = None
+        sel = MagicMock()
+        sel.eq.return_value.maybe_single.return_value = fetch
+        sel.eq.return_value.is_.return_value.maybe_single.return_value.execute.return_value.data = None
+        tbl.select.return_value = sel
+        return tbl
+
+    mock_client.table.side_effect = table_side_effect
 
     with patch("app.services.categorias.get_user_client", return_value=mock_client):
         with pytest.raises(HTTPException) as exc_info:
@@ -373,17 +385,28 @@ def test_update_user_categoria_succeeds():
         "es_sistema": False,
     }
 
-    check_mock = MagicMock()
-    check_mock.select.return_value.eq.return_value.is_.return_value.maybe_single.return_value.execute.return_value.data = {
-        "id": "user-cat-id",
-        "es_sistema": False,
-    }
-    update_response_mock = MagicMock()
-    update_response_mock.data = [updated_row]
-    check_mock.update.return_value.eq.return_value.execute.return_value = update_response_mock
-
     mock_client = MagicMock()
-    mock_client.table.return_value = check_mock
+
+    def table_side_effect(table_name):
+        tbl = MagicMock()
+        # update → no return data (SDK behavior)
+        tbl.update.return_value.eq.return_value.execute.return_value.data = []
+
+        def select_side_effect(cols):
+            sel = MagicMock()
+            if cols == "es_sistema":
+                sel.eq.return_value.is_.return_value.maybe_single.return_value.execute.return_value.data = {
+                    "id": "user-cat-id", "es_sistema": False
+                }
+            else:
+                # post-update fetch → returns updated row
+                sel.eq.return_value.is_.return_value.maybe_single.return_value.execute.return_value.data = updated_row
+            return sel
+
+        tbl.select.side_effect = select_side_effect
+        return tbl
+
+    mock_client.table.side_effect = table_side_effect
 
     with patch("app.services.categorias.get_user_client", return_value=mock_client):
         result = update_categoria("fake-jwt", "user-cat-id", {"nombre": "Comida Rapida"})

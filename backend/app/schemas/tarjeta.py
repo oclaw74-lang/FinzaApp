@@ -107,11 +107,11 @@ class TarjetaUpdate(BaseModel):
 
 
 class MovimientoTarjetaCreate(BaseModel):
-    tipo: Literal["compra", "pago"]
+    tipo: Literal["compra", "pago", "deposito"]
     monto: Decimal = Field(gt=0)
     descripcion: Optional[str] = None
     fecha: date
-    categoria_id: Optional[uuid.UUID] = None  # only relevant for compras
+    categoria_id: Optional[uuid.UUID] = None  # optional for all tipos
     notas: Optional[str] = None
 
 
@@ -123,6 +123,7 @@ class MovimientoTarjetaResponse(BaseModel):
     descripcion: Optional[str] = None
     fecha: date
     egreso_id: Optional[uuid.UUID] = None
+    ingreso_id: Optional[uuid.UUID] = None
     notas: Optional[str] = None
     created_at: datetime
 

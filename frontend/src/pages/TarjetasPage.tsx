@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, ChangeEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Plus, CreditCard, Info, Pencil, Trash2, X, ShoppingCart, CreditCard as PayIcon, Search, Lock, Unlock } from 'lucide-react'
+import { Plus, CreditCard, Info, Pencil, Trash2, X, ShoppingCart, CreditCard as PayIcon, Search, Lock, Unlock, Upload, FileText, ExternalLink, Wallet, Bell } from 'lucide-react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -16,6 +16,7 @@ import {
   useUpdateTarjeta,
   useDeleteTarjeta,
   useBloquearTarjeta,
+  useTarjetasPagoPendiente,
 } from '@/hooks/useTarjetas'
 import {
   useMovimientosTarjeta,
@@ -25,7 +26,8 @@ import {
 import { useCategorias } from '@/hooks/useCategorias'
 import { useBancos, usePaises } from '@/hooks/useCatalogos'
 import { useAuthStore } from '@/store/authStore'
-import type { Tarjeta, TarjetaCreate, TarjetaUpdate, MovimientoTarjetaCreate } from '@/types/tarjeta'
+import { useEstadosCuenta, useUploadEstadoCuenta, useDeleteEstadoCuenta } from '@/hooks/useEstadosCuenta'
+import type { Tarjeta, TarjetaCreate, TarjetaUpdate, MovimientoTarjetaCreate, TipoMovimiento, TarjetaPagoPendiente } from '@/types/tarjeta'
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -922,7 +924,7 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
 
 // TODO: i18n when zod supports dynamic messages
 const MovimientoSchema = z.object({
-  tipo: z.enum(['compra', 'pago']),
+  tipo: z.enum(['compra', 'pago', 'deposito']),
   monto: z.coerce.number({ invalid_type_error: 'Ingresa un monto' }).positive('Debe ser mayor a 0'),
   descripcion: z.string().optional(),
   fecha: z.string().min(1, 'La fecha es requerida'),
@@ -934,15 +936,17 @@ type MovimientoFormData = z.infer<typeof MovimientoSchema>
 
 interface MovimientoModalProps {
   tarjetaId: string
-  tipoInicial: 'compra' | 'pago'
+  tarjetaTipo: 'credito' | 'debito'
+  tipoInicial: TipoMovimiento
   onClose: () => void
 }
 
-function MovimientoModal({ tarjetaId, tipoInicial, onClose }: MovimientoModalProps): JSX.Element {
+function MovimientoModal({ tarjetaId, tarjetaTipo, tipoInicial, onClose }: MovimientoModalProps): JSX.Element {
   const { t } = useTranslation()
   const registrar = useRegistrarMovimiento(tarjetaId)
   const { data: todasCategorias = [] } = useCategorias()
   const categoriasEgreso = todasCategorias.filter((c) => c.tipo === 'egreso' || c.tipo === 'ambos')
+  const categoriasIngreso = todasCategorias.filter((c) => c.tipo === 'ingreso' || c.tipo === 'ambos')
 
   const {
     register,
@@ -959,6 +963,16 @@ function MovimientoModal({ tarjetaId, tipoInicial, onClose }: MovimientoModalPro
 
   const tipo = watch('tipo')
 
+  // Determine which categories to show based on operation type
+  const isIngreso = tipo === 'deposito'
+  const categorias = isIngreso ? categoriasIngreso : categoriasEgreso
+
+  const getSuccessMessage = (t_tipo: TipoMovimiento): string => {
+    if (t_tipo === 'compra') return t('tarjetas.compraRegistrada')
+    if (t_tipo === 'pago') return t('tarjetas.pagoRegistrado')
+    return t('tarjetas.depositoRegistrado', { defaultValue: 'Depósito registrado' })
+  }
+
   const onSubmit = async (data: MovimientoFormData): Promise<void> => {
     try {
       const payload: MovimientoTarjetaCreate = {
@@ -967,10 +981,10 @@ function MovimientoModal({ tarjetaId, tipoInicial, onClose }: MovimientoModalPro
         fecha: data.fecha,
         descripcion: data.descripcion || undefined,
         notas: data.notas || undefined,
-        categoria_id: data.tipo === 'compra' ? data.categoria_id : undefined,
+        categoria_id: data.categoria_id || undefined,
       }
       await registrar.mutateAsync(payload)
-      toast.success(data.tipo === 'compra' ? t('tarjetas.compraRegistrada') : t('tarjetas.pagoRegistrado'))
+      toast.success(getSuccessMessage(data.tipo))
       onClose()
     } catch {
       toast.error(t('tarjetas.errorMovimiento'))
@@ -1005,8 +1019,19 @@ function MovimientoModal({ tarjetaId, tipoInicial, onClose }: MovimientoModalPro
             <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">{t('tarjetas.movimiento.tipo')}</label>
             <select {...register('tipo')} className="finza-input w-full">
               <option value="compra">{t('tarjetas.movimiento.compra')}</option>
-              <option value="pago">{t('tarjetas.movimiento.pago')}</option>
+              {tarjetaTipo === 'credito' && (
+                <option value="pago">{t('tarjetas.movimiento.pago')}</option>
+              )}
+              {tarjetaTipo === 'debito' && (
+                <option value="deposito">{t('tarjetas.movimiento.deposito', { defaultValue: 'Depósito' })}</option>
+              )}
             </select>
+            {/* Credit card info: compra does not create an egreso */}
+            {tarjetaTipo === 'credito' && tipo === 'compra' && (
+              <p className="text-xs text-[var(--text-muted)] mt-1">
+                💳 La compra se registra como deuda. Solo el pago descuenta tu balance.
+              </p>
+            )}
           </div>
 
           <div>
@@ -1042,21 +1067,20 @@ function MovimientoModal({ tarjetaId, tipoInicial, onClose }: MovimientoModalPro
             />
           </div>
 
-          {tipo === 'compra' && (
-            <div>
-              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
-                {t('tarjetas.movimiento.categoria')}
-              </label>
-              <select {...register('categoria_id')} className="finza-input w-full">
-                <option value="">{t('tarjetas.movimiento.sinCategoria')}</option>
-                {categoriasEgreso.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+          {/* Categoria — shown for all tipos when available */}
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
+              {t('tarjetas.movimiento.categoria')}
+            </label>
+            <select {...register('categoria_id')} className="finza-input w-full">
+              <option value="">{t('tarjetas.movimiento.sinCategoria')}</option>
+              {categorias.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div>
             <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
@@ -1094,7 +1118,7 @@ interface DetailModalProps {
   onDelete: (id: string) => void
 }
 
-type MovimientoTab = 'todos' | 'compra' | 'pago'
+type MovimientoTab = 'todos' | 'compra' | 'pago' | 'deposito'
 
 function getNextDayOfMonth(day: number): string {
   const now = new Date()
@@ -1109,7 +1133,7 @@ function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): 
   const { t } = useTranslation()
   const fmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const [movTab, setMovTab] = useState<MovimientoTab>('todos')
-  const [movModalTipo, setMovModalTipo] = useState<'compra' | 'pago' | null>(null)
+  const [movModalTipo, setMovModalTipo] = useState<TipoMovimiento | null>(null)
 
   const tabFiltro = movTab === 'todos' ? undefined : movTab
   const { data: movimientos = [], isLoading: loadingMovs } = useMovimientosTarjeta(tarjeta.id, tabFiltro)
@@ -1208,7 +1232,7 @@ function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): 
                 </div>
               </div>
 
-              {/* Botones de accion rapida */}
+              {/* Botones de accion rapida — context-aware per card type */}
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -1219,24 +1243,39 @@ function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): 
                   <ShoppingCart size={14} />
                   {t('tarjetas.detalle.registrarCompra')}
                 </Button>
-                <Button
-                  size="sm"
-                  variant="success"
-                  className="flex-1 gap-1"
-                  onClick={() => setMovModalTipo('pago')}
-                >
-                  <PayIcon size={14} />
-                  {t('tarjetas.detalle.registrarPago')}
-                </Button>
+                {tarjeta.tipo === 'credito' ? (
+                  <Button
+                    size="sm"
+                    variant="success"
+                    className="flex-1 gap-1"
+                    onClick={() => setMovModalTipo('pago')}
+                  >
+                    <PayIcon size={14} />
+                    {t('tarjetas.detalle.registrarPago')}
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="success"
+                    className="flex-1 gap-1"
+                    onClick={() => setMovModalTipo('deposito')}
+                  >
+                    <Wallet size={14} />
+                    {t('tarjetas.detalle.registrarDeposito', { defaultValue: 'Depósito' })}
+                  </Button>
+                )}
               </div>
 
               {/* Historial de movimientos */}
               <div>
                 <p className="text-sm font-semibold text-[var(--text-secondary)] mb-3">{t('tarjetas.detalle.movimientos')}</p>
 
-                {/* Tabs */}
+                {/* Tabs — debito also shows deposito tab */}
                 <div className="flex gap-1 mb-3 bg-[var(--surface-raised)] rounded-lg p-1" role="tablist">
-                  {(['todos', 'compra', 'pago'] as MovimientoTab[]).map((tab) => (
+                  {(tarjeta.tipo === 'debito'
+                    ? (['todos', 'compra', 'deposito'] as MovimientoTab[])
+                    : (['todos', 'compra', 'pago'] as MovimientoTab[])
+                  ).map((tab) => (
                     <button
                       key={tab}
                       type="button"
@@ -1250,7 +1289,13 @@ function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): 
                           : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                       )}
                     >
-                      {tab === 'todos' ? t('tarjetas.detalle.todos') : tab === 'compra' ? t('tarjetas.detalle.compras') : t('tarjetas.detalle.pagos')}
+                      {tab === 'todos'
+                        ? t('tarjetas.detalle.todos')
+                        : tab === 'compra'
+                        ? t('tarjetas.detalle.compras')
+                        : tab === 'deposito'
+                        ? t('tarjetas.detalle.depositos', { defaultValue: 'Depósitos' })
+                        : t('tarjetas.detalle.pagos')}
                     </button>
                   ))}
                 </div>
@@ -1275,11 +1320,17 @@ function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): 
                       >
                         <div className="flex items-center gap-2">
                           <span className="text-base" aria-hidden="true">
-                            {mov.tipo === 'compra' ? '🛒' : '💳'}
+                            {mov.tipo === 'compra' ? '🛒' : mov.tipo === 'deposito' ? '💰' : '💳'}
                           </span>
                           <div>
                             <p className="text-xs font-medium text-[var(--text-primary)] leading-tight">
-                              {mov.descripcion ?? (mov.tipo === 'compra' ? t('tarjetas.movimiento.compra') : t('tarjetas.movimiento.pago'))}
+                              {mov.descripcion ?? (
+                                mov.tipo === 'compra'
+                                  ? t('tarjetas.movimiento.compra')
+                                  : mov.tipo === 'deposito'
+                                  ? t('tarjetas.movimiento.deposito', { defaultValue: 'Depósito' })
+                                  : t('tarjetas.movimiento.pago')
+                              )}
                             </p>
                             <p className="text-[10px] text-[var(--text-muted)]">
                               {formatDate(mov.fecha)}
@@ -1312,6 +1363,9 @@ function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): 
                   </div>
                 )}
               </div>
+
+              {/* Estados de Cuenta */}
+              <EstadoCuentaSection tarjetaId={tarjeta.id} />
 
               {/* Acciones */}
               <div className="flex gap-3 pt-1">
@@ -1350,11 +1404,149 @@ function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): 
       {movModalTipo && (
         <MovimientoModal
           tarjetaId={tarjeta.id}
+          tarjetaTipo={tarjeta.tipo}
           tipoInicial={movModalTipo}
           onClose={() => setMovModalTipo(null)}
         />
       )}
     </>
+  )
+}
+
+// ─── Estado de Cuenta section (upload + list) ──────────────────────────────────
+
+const MAX_UPLOAD_SIZE = 10 * 1024 * 1024
+const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png']
+
+interface EstadoCuentaSectionProps {
+  tarjetaId: string
+}
+
+function EstadoCuentaSection({ tarjetaId }: EstadoCuentaSectionProps): JSX.Element {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+
+  const { data: estados = [], isLoading } = useEstadosCuenta(tarjetaId)
+  const uploadMutation = useUploadEstadoCuenta()
+  const deleteMutation = useDeleteEstadoCuenta()
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    const file = e.target.files?.[0] ?? null
+    if (!file) return
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast.error('Solo se permiten archivos PDF, JPG o PNG.')
+      return
+    }
+    if (file.size > MAX_UPLOAD_SIZE) {
+      toast.error('El archivo no puede superar 10 MB.')
+      return
+    }
+    setSelectedFile(file)
+  }
+
+  const handleUpload = async (): Promise<void> => {
+    if (!selectedFile) return
+    setUploading(true)
+    try {
+      await uploadMutation.mutateAsync({ file: selectedFile, tarjeta_id: tarjetaId })
+      setSelectedFile(null)
+      toast.success('Estado de cuenta subido correctamente.')
+    } catch {
+      toast.error('Error al subir el estado de cuenta.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleDelete = async (id: string): Promise<void> => {
+    if (!window.confirm('¿Eliminar este estado de cuenta?')) return
+    try {
+      await deleteMutation.mutateAsync(id)
+      toast.success('Estado de cuenta eliminado.')
+    } catch {
+      toast.error('Error al eliminar.')
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-sm font-semibold text-[var(--text-secondary)]">Estados de Cuenta</p>
+
+      {/* Upload control */}
+      <div className="flex gap-2 items-center">
+        <label
+          htmlFor={`ec-file-${tarjetaId}`}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-[var(--border)] text-xs text-[var(--text-muted)] cursor-pointer hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
+        >
+          <Upload size={13} />
+          {selectedFile ? selectedFile.name : 'Seleccionar PDF / JPG / PNG'}
+        </label>
+        <input
+          id={`ec-file-${tarjetaId}`}
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png"
+          className="sr-only"
+          onChange={handleFileChange}
+        />
+        {selectedFile && (
+          <button
+            type="button"
+            onClick={handleUpload}
+            disabled={uploading}
+            className="px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white text-xs font-medium disabled:opacity-60 hover:opacity-90 transition-opacity"
+          >
+            {uploading ? 'Subiendo…' : 'Subir'}
+          </button>
+        )}
+      </div>
+
+      {/* List of uploaded estados */}
+      {isLoading ? (
+        <p className="text-xs text-[var(--text-muted)]">Cargando…</p>
+      ) : estados.length === 0 ? (
+        <p className="text-xs text-[var(--text-muted)] italic">Sin estados de cuenta subidos.</p>
+      ) : (
+        <div className="space-y-1.5">
+          {estados.map((ec) => (
+            <div
+              key={ec.id}
+              className="flex items-center justify-between px-3 py-2 bg-[var(--surface-raised)] rounded-lg"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <FileText size={13} className="text-[var(--accent)] shrink-0" />
+                <span className="text-xs text-[var(--text-primary)] truncate max-w-[180px]">
+                  {ec.nombre_archivo}
+                </span>
+                {ec.fecha_estado && (
+                  <span className="text-[10px] text-[var(--text-muted)] shrink-0">
+                    {ec.fecha_estado}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <a
+                  href={ec.url_archivo}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+                  aria-label="Abrir archivo"
+                >
+                  <ExternalLink size={13} />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(ec.id)}
+                  className="text-[var(--text-muted)] hover:text-red-500 transition-colors"
+                  aria-label="Eliminar estado de cuenta"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -1386,6 +1578,7 @@ export function TarjetasPage(): JSX.Element {
   const [tarjetaDetalle, setTarjetaDetalle] = useState<Tarjeta | null>(null)
 
   const { data: tarjetas = [], isLoading, isError } = useTarjetas()
+  const { data: pagosPendientes = [] } = useTarjetasPagoPendiente()
   const createTarjeta = useCreateTarjeta()
   const updateTarjeta = useUpdateTarjeta()
   const deleteTarjeta = useDeleteTarjeta()
@@ -1501,6 +1694,39 @@ export function TarjetasPage(): JSX.Element {
 
       {/* Stats */}
       <StatsGrid stats={stats} />
+
+      {/* ─── Pending payment banner ─────────────────────────────────────────────── */}
+      {pagosPendientes.length > 0 && (
+        <div
+          className="flex items-start gap-3 px-4 py-3 rounded-xl border border-amber-300/60 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-600/40"
+          role="alert"
+          aria-live="polite"
+        >
+          <Bell size={16} className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+              {pagosPendientes.length === 1
+                ? 'Pago próximo de tarjeta'
+                : `${pagosPendientes.length} pagos próximos de tarjetas`}
+            </p>
+            <ul className="mt-1 space-y-0.5">
+              {(pagosPendientes as TarjetaPagoPendiente[]).map((tp) => (
+                <li key={tp.id} className="text-xs text-amber-700 dark:text-amber-400/80">
+                  <span className="font-medium">{tp.banco_custom ?? tp.banco}</span>
+                  {' — '}
+                  {tp.dias_para_pago === 0
+                    ? '¡Hoy es el día de pago!'
+                    : tp.dias_para_pago === 1
+                    ? 'Mañana vence'
+                    : `Vence en ${tp.dias_para_pago} días`}
+                  {' '}
+                  ({new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', minimumFractionDigits: 0 }).format(tp.saldo_actual)})
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       {/* Loading */}
       {isLoading && (
