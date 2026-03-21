@@ -257,6 +257,7 @@ def test_delete_estado_cuenta() -> None:
         .update.return_value
         .eq.return_value
         .eq.return_value
+        .is_.return_value
         .execute.return_value
     ) = mock_response
 
@@ -280,6 +281,7 @@ def test_delete_estado_cuenta_not_found_raises_404() -> None:
         .update.return_value
         .eq.return_value
         .eq.return_value
+        .is_.return_value
         .execute.return_value
     ) = mock_response
 

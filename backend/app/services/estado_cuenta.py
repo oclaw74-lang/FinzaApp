@@ -1,3 +1,4 @@
+import os
 import uuid as uuid_module
 from datetime import datetime, timezone
 from typing import Optional
@@ -23,7 +24,8 @@ def upload_estado_cuenta(
 ) -> dict:
     """Upload a bank statement file to Supabase Storage and insert DB record."""
     admin = get_admin_client()
-    path = f"{user_id}/{uuid_module.uuid4()}_{filename}"
+    safe_filename = os.path.basename(filename).replace("..", "__") or "estado_cuenta"
+    path = f"{user_id}/{uuid_module.uuid4()}_{safe_filename}"
 
     try:
         admin.storage.from_(BUCKET).upload(path, file_bytes, {"content-type": content_type})
@@ -35,7 +37,7 @@ def upload_estado_cuenta(
     client = get_user_client(user_jwt)
     payload: dict = {
         "user_id": user_id,
-        "nombre_archivo": filename,
+        "nombre_archivo": safe_filename,
         "url_archivo": public_url,
     }
     if tarjeta_id:
@@ -94,6 +96,7 @@ def delete_estado_cuenta(
             .update({"deleted_at": datetime.now(timezone.utc).isoformat()})
             .eq("id", estado_id)
             .eq("user_id", user_id)
+            .is_("deleted_at", "null")
             .execute()
         )
         if not response.data:
