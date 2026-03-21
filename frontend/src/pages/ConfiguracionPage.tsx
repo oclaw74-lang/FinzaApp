@@ -609,26 +609,6 @@ export function ConfiguracionPage(): JSX.Element {
 
           </form>
 
-          {/* Finances section (salary) */}
-          <div className="border-t border-[var(--border)] pt-6 space-y-5">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
-                <DollarSign size={15} className="text-[var(--accent)]" />
-                {t('profile.salario')}
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                value={salarioValue}
-                onChange={(e) => setSalarioValue(e.target.value)}
-                className="finza-input w-full"
-              />
-              <p className="text-xs text-[var(--text-muted)]">{t('profile.salarioHint')}</p>
-            </div>
-          </div>
-
           {/* Salary information section */}
           <div className="border-t border-[var(--border)] pt-6 space-y-4">
             <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-2">
@@ -636,6 +616,22 @@ export function ConfiguracionPage(): JSX.Element {
               {t('profile.infoSalarial')}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5 sm:col-span-2">
+                <label className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
+                  <DollarSign size={14} className="text-[var(--accent)]" />
+                  {t('profile.salario')}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={salarioValue}
+                  onChange={(e) => setSalarioValue(e.target.value)}
+                  className="finza-input w-full"
+                />
+                <p className="text-xs text-[var(--text-muted)]">{t('profile.salarioHint')}</p>
+              </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[var(--text-primary)]">
                   {t('profile.salarioBruto')}
