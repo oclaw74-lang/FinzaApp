@@ -23,6 +23,8 @@ from app.api.v1.routes.score import router as score_router
 from app.api.v1.routes.tarjetas import router as tarjetas_router
 from app.api.v1.routes.surveys import router as surveys_router
 from app.api.v1.routes.estados_cuenta import router as estados_cuenta_router
+from app.api.v1.routes.dual_moneda import router as dual_moneda_router
+from app.api.v1.routes.importar import router as importar_router
 
 api_router = APIRouter()
 api_router.include_router(health_router, tags=["health"])
@@ -48,3 +50,5 @@ api_router.include_router(comparativa_router)
 api_router.include_router(profiles_router)
 api_router.include_router(surveys_router)
 api_router.include_router(estados_cuenta_router)
+api_router.include_router(dual_moneda_router)
+api_router.include_router(importar_router)

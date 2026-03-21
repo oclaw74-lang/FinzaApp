@@ -1,5 +1,5 @@
 import uuid
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel
 
@@ -108,5 +108,6 @@ class DashboardV2Response(BaseModel):
     prestamos_activos: PrestamosActivosDashboard
     ultimas_transacciones: list[TransaccionReciente]
     egresos_por_categoria: list[EgresoCategoria]
+    moneda_conversion_info: Optional[dict] = None
 
     model_config = {"from_attributes": True}
