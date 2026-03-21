@@ -54,7 +54,7 @@ def get_categoria(user_jwt: str, categoria_id: str) -> dict | None:
             .maybe_single()
             .execute()
         )
-        return response.data
+        return response.data if response else None
     except APIError as e:
         _handle_api_error(e)
 
@@ -84,7 +84,7 @@ def update_categoria(user_jwt: str, categoria_id: str, data: dict) -> dict | Non
             .maybe_single()
             .execute()
         )
-        if check_r.data and check_r.data.get("es_sistema"):
+        if check_r and check_r.data and check_r.data.get("es_sistema"):
             raise HTTPException(
                 status_code=403,
                 detail="Las categorías de sistema no pueden ser modificadas.",
@@ -119,7 +119,7 @@ def delete_categoria(user_jwt: str, user_id: str, categoria_id: str) -> dict:
             .maybe_single()
             .execute()
         )
-        if check_r.data and check_r.data.get("es_sistema"):
+        if check_r and check_r.data and check_r.data.get("es_sistema"):
             raise HTTPException(
                 status_code=403,
                 detail="Las categorías de sistema no pueden ser eliminadas.",

@@ -125,6 +125,7 @@ const es = {
     noEgresosDesc: 'Registra tu primer gasto para comenzar',
     created: 'Gasto registrado', updated: 'Gasto actualizado', deleted: 'Gasto eliminado',
     deleteConfirm: 'Eliminar este egreso?',
+    pagadoConTarjeta: 'Pagado con tarjeta',
   },
   prestamos: {
     title: 'Prestamos', newPrestamo: 'Nuevo prestamo',

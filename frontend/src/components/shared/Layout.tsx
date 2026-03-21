@@ -7,12 +7,16 @@ import { CommandPalette } from './CommandPalette'
 import { BottomNav } from './BottomNav'
 import { useUiStore } from '@/store/uiStore'
 import { useGenerarNotificaciones } from '@/hooks/useNotificaciones'
+import { useRealtimeSync } from '@/hooks/useRealtimeSync'
 import { cn } from '@/lib/utils'
 
 export function Layout(): JSX.Element {
   const { sidebarCollapsed } = useUiStore()
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const generarNotificaciones = useGenerarNotificaciones()
+
+  // Sync all Supabase tables in real-time via Postgres changes
+  useRealtimeSync()
 
   // Evaluate notification triggers once per session on app load
   useEffect(() => {

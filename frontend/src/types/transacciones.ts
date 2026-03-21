@@ -28,6 +28,7 @@ export interface EgresoResponse {
   moneda: 'DOP' | 'USD'
   descripcion: string | null
   metodo_pago: 'efectivo' | 'tarjeta' | 'transferencia' | 'otro'
+  tarjeta_id: string | null
   fecha: string
   notas: string | null
 }

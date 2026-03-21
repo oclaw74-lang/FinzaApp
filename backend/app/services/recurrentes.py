@@ -39,7 +39,7 @@ def get_recurrente_by_id(user_jwt: str, recurrente_id: str) -> dict:
             .maybe_single()
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Recurrente no encontrado.")
         return response.data
     except HTTPException:
@@ -63,7 +63,7 @@ def create_recurrente(user_jwt: str, user_id: str, data: RecurrenteCreate) -> di
 
     try:
         response = client.table("recurrentes").insert(payload).execute()
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(
                 status_code=500, detail="Recurrente no encontrado tras insercion."
             )
@@ -97,7 +97,7 @@ def update_recurrente(user_jwt: str, recurrente_id: str, data: RecurrenteUpdate)
             .eq("id", recurrente_id)
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Recurrente no encontrado.")
         return response.data[0]
     except HTTPException:
@@ -117,7 +117,7 @@ def delete_recurrente(user_jwt: str, recurrente_id: str) -> None:
             .eq("id", recurrente_id)
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Recurrente no encontrado.")
     except HTTPException:
         raise

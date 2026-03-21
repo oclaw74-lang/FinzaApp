@@ -23,6 +23,12 @@ export function useRegistrarMovimiento(tarjetaId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['movimientos-tarjeta', tarjetaId] })
       qc.invalidateQueries({ queryKey: ['tarjetas'] })
+      qc.invalidateQueries({ queryKey: ['egresos'] })
+      qc.invalidateQueries({ queryKey: ['ingresos'] })
+      qc.invalidateQueries({ queryKey: ['dashboard-v2'] })
+      qc.invalidateQueries({ queryKey: ['score'] })
+      qc.invalidateQueries({ queryKey: ['prediccion-mes'] })
+      qc.invalidateQueries({ queryKey: ['comparativa'] })
     },
   })
 }
@@ -35,6 +41,12 @@ export function useEliminarMovimiento(tarjetaId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['movimientos-tarjeta', tarjetaId] })
       qc.invalidateQueries({ queryKey: ['tarjetas'] })
+      qc.invalidateQueries({ queryKey: ['egresos'] })
+      qc.invalidateQueries({ queryKey: ['ingresos'] })
+      qc.invalidateQueries({ queryKey: ['dashboard-v2'] })
+      qc.invalidateQueries({ queryKey: ['score'] })
+      qc.invalidateQueries({ queryKey: ['prediccion-mes'] })
+      qc.invalidateQueries({ queryKey: ['comparativa'] })
     },
   })
 }
