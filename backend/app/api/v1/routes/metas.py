@@ -81,7 +81,7 @@ async def agregar_contribucion(
     token: str = Depends(get_raw_token),
     current_user: dict = Depends(get_current_user),
 ) -> dict:
-    return svc.agregar_contribucion(user_jwt=token, meta_id=str(meta_id), data=data)
+    return svc.agregar_contribucion(user_jwt=token, user_id=current_user["user_id"], meta_id=str(meta_id), data=data)
 
 
 @router.get("/{meta_id}/contribuciones", response_model=list[ContribucionMetaResponse])
