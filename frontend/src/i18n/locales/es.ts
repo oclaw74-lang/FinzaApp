@@ -61,6 +61,7 @@ const es = {
     passwordUpdated: 'Contrasena actualizada',
     uploadAvatar: 'Subir foto de perfil',
     categorias: 'Categorias',
+    importar: 'Importar datos',
     paisYMoneda: 'Pais y moneda principal',
     noConfigurado: 'No configurado',
     moneda: 'Moneda',

@@ -28,9 +28,10 @@ import { ToggleGroup } from '@/components/ui/toggle-group'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 import type { CategoriaResponse } from '@/types/transacciones'
+import { ImportarPage } from '@/pages/ImportarPage'
 import type { FrecuenciaPago } from '@/types/profile'
 
-type Tab = 'profile' | 'appearance' | 'security' | 'categorias'
+type Tab = 'profile' | 'appearance' | 'security' | 'categorias' | 'importar'
 
 // TODO: i18n when zod supports dynamic messages
 const profileSchema = z.object({
@@ -501,6 +502,7 @@ export function ConfiguracionPage(): JSX.Element {
     { id: 'appearance', label: t('settings.appearance') },
     { id: 'security', label: t('settings.security') },
     { id: 'categorias', label: t('settings.categorias') },
+    { id: 'importar', label: t('settings.importar') },
   ]
 
   const userName = metadata.full_name ?? user?.email?.split('@')[0] ?? 'Usuario'
@@ -1029,6 +1031,9 @@ export function ConfiguracionPage(): JSX.Element {
       {activeTab === 'categorias' && (
         <CategoriasTab navigate={navigate} />
       )}
+
+      {/* Tab: Importar */}
+      {activeTab === 'importar' && <ImportarPage />}
 
       {/* Password Modal */}
       {passwordModalOpen && (

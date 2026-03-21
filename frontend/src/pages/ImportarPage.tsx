@@ -762,7 +762,7 @@ export function ImportarPage(): JSX.Element {
   }, [importMutation])
 
   return (
-    <div className="animate-fade-in p-4 md:p-6 max-w-3xl mx-auto">
+    <div className="animate-fade-in max-w-3xl">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-1">
