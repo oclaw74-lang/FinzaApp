@@ -95,12 +95,13 @@ def update_categoria(user_jwt: str, categoria_id: str, data: dict) -> dict | Non
         _handle_api_error(e)
 
     try:
-        response = (
-            client.table("categorias").update(data).eq("id", categoria_id).execute()
-        )
-        return response.data[0] if response.data else None
-    except IndexError:
-        raise HTTPException(status_code=404, detail="Categoria no encontrada.")
+        client.table("categorias").update(data).eq("id", categoria_id).execute()
+    except APIError as e:
+        _handle_api_error(e)
+    # Fetch updated row
+    try:
+        r = client.table("categorias").select("*").eq("id", categoria_id).is_("deleted_at", "null").maybe_single().execute()
+        return r.data if r and r.data else None
     except APIError as e:
         _handle_api_error(e)
 
@@ -129,17 +130,15 @@ def delete_categoria(user_jwt: str, user_id: str, categoria_id: str) -> dict:
         _handle_api_error(e)
 
     try:
-        response = (
-            client.table("categorias")
-            .update({"deleted_at": datetime.now(timezone.utc).isoformat()})
-            .eq("id", categoria_id)
-            .eq("user_id", user_id)
-            .execute()
-        )
-        if not response.data:
+        client.table("categorias").update({"deleted_at": datetime.now(timezone.utc).isoformat()}).eq("id", categoria_id).eq("user_id", user_id).execute()
+    except APIError as e:
+        _handle_api_error(e)
+    try:
+        r = client.table("categorias").select("*").eq("id", categoria_id).maybe_single().execute()
+        if not r or not r.data:
             raise HTTPException(status_code=404, detail="Categoria no encontrada.")
-        return response.data[0]
-    except IndexError:
-        raise HTTPException(status_code=404, detail="Categoria no encontrada.")
+        return r.data
+    except HTTPException:
+        raise
     except APIError as e:
         _handle_api_error(e)

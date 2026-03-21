@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api'
-import type { Tarjeta, TarjetaCreate, TarjetaUpdate } from '@/types/tarjeta'
+import type { Tarjeta, TarjetaCreate, TarjetaUpdate, TarjetaPagoPendiente } from '@/types/tarjeta'
 
 const DASHBOARD_KEYS = [
   ['dashboard-v2'],
@@ -80,5 +80,16 @@ export function useBloquearTarjeta() {
       queryClient.invalidateQueries({ queryKey: ['tarjetas'] })
       DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
     },
+  })
+}
+
+export function useTarjetasPagoPendiente() {
+  return useQuery({
+    queryKey: ['tarjetas-pagos-pendientes'],
+    queryFn: async (): Promise<TarjetaPagoPendiente[]> => {
+      const { data } = await apiClient.get<TarjetaPagoPendiente[]>('/tarjetas/pagos-pendientes')
+      return data
+    },
+    staleTime: 5 * 60 * 1000, // 5 min — no need to refetch on every render
   })
 }

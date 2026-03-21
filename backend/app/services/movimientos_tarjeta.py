@@ -1,4 +1,4 @@
-"""Service for tarjeta movements (purchases and payments)."""
+"""Service for tarjeta movements (purchases, payments, and deposits)."""
 from datetime import date, datetime, timezone
 
 from fastapi import HTTPException
@@ -76,6 +76,8 @@ def registrar_movimiento(
         if "saldo insuficiente" in msg.lower():
             raise HTTPException(status_code=400, detail=msg)
         if "excede la deuda" in msg.lower():
+            raise HTTPException(status_code=400, detail=msg)
+        if "deposito en una tarjeta de credito" in msg.lower():
             raise HTTPException(status_code=400, detail=msg)
         _handle_api_error(e)
     return {}

@@ -8,6 +8,7 @@ import { DatePicker } from '@/components/ui/DatePicker'
 import { useCategorias } from '@/hooks/useCategorias'
 import { useTarjetas } from '@/hooks/useTarjetas'
 import { useMonedas } from '@/hooks/useCatalogos'
+import { useUserCurrency } from '@/hooks/useUserCurrency'
 
 const ingresoSchema = z.object({
   categoria_id: z.string().uuid('Selecciona una categoria'),
@@ -73,6 +74,7 @@ export function TransaccionForm({
   )
   const { data: tarjetas = [] } = useTarjetas()
   const { data: monedas = [] } = useMonedas()
+  const userCurrency = useUserCurrency()
   const tarjetasActivas = tarjetas.filter((t) => t.activa)
 
   const {
@@ -83,7 +85,7 @@ export function TransaccionForm({
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      moneda: 'DOP',
+      moneda: userCurrency,
       fecha: new Date().toISOString().split('T')[0],
       ...(tipo === 'egreso' && { metodo_pago: 'efectivo' }),
       ...defaultValues,

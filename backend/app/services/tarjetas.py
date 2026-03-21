@@ -1,3 +1,6 @@
+import calendar
+from datetime import date
+
 from fastapi import HTTPException
 from postgrest import APIError
 
@@ -104,21 +107,11 @@ def update_tarjeta(
         payload["banco_id"] = str(payload["banco_id"])
 
     try:
-        response = (
-            client.table("tarjetas")
-            .update(payload)
-            .eq("id", tarjeta_id)
-            .eq("user_id", user_id)
-            .execute()
-        )
-        if not response.data:
-            return None
-        return _enrich_tarjeta(response.data[0])
-    except IndexError:
-        raise HTTPException(status_code=404, detail="Tarjeta no encontrada.")
+        client.table("tarjetas").update(payload).eq("id", tarjeta_id).eq("user_id", user_id).execute()
     except APIError as e:
         _handle_api_error(e)
-    return None
+    # SDK does not return data from update; fetch updated row separately
+    return get_tarjeta(user_jwt, user_id, tarjeta_id)
 
 
 def delete_tarjeta(user_jwt: str, user_id: str, tarjeta_id: str) -> None:
@@ -147,16 +140,68 @@ def toggle_bloquear_tarjeta(user_jwt: str, user_id: str, tarjeta_id: str) -> dic
     nuevo_estado = not tarjeta.get("bloqueada", False)
     client = get_user_client(user_jwt)
     try:
-        response = (
-            client.table("tarjetas")
-            .update({"bloqueada": nuevo_estado})
-            .eq("id", tarjeta_id)
-            .eq("user_id", user_id)
-            .execute()
-        )
-        if not response.data:
-            return None
-        return _enrich_tarjeta(response.data[0])
+        client.table("tarjetas").update({"bloqueada": nuevo_estado}).eq("id", tarjeta_id).eq("user_id", user_id).execute()
     except APIError as e:
         _handle_api_error(e)
-    return None
+    return get_tarjeta(user_jwt, user_id, tarjeta_id)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Payment-due notification helpers
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _proximo_dia_del_mes(dia: int, today: date) -> date:
+    """Return the date of the next (or same-day) occurrence of ``dia`` in the month."""
+    last_day = calendar.monthrange(today.year, today.month)[1]
+    candidate = date(today.year, today.month, min(dia, last_day))
+    if candidate >= today:
+        return candidate
+    # Advance to next month
+    next_month = today.month % 12 + 1
+    next_year = today.year + (1 if today.month == 12 else 0)
+    last_day_next = calendar.monthrange(next_year, next_month)[1]
+    return date(next_year, next_month, min(dia, last_day_next))
+
+
+def _days_until_dia_del_mes(dia: int, today: date) -> int:
+    """Return the number of days from ``today`` until the next occurrence of ``dia``."""
+    return (_proximo_dia_del_mes(dia, today) - today).days
+
+
+def get_tarjetas_pago_pendiente(user_jwt: str, user_id: str) -> list[dict]:
+    """Return credit cards with saldo_actual > 0 whose fecha_pago falls within 3 days."""
+    client = get_user_client(user_jwt)
+    try:
+        response = (
+            client.table("tarjetas")
+            .select("*")
+            .eq("user_id", user_id)
+            .eq("tipo", "credito")
+            .eq("activa", True)
+            .execute()
+        )
+        tarjetas = response.data or []
+    except APIError as e:
+        _handle_api_error(e)
+        return []
+
+    today = date.today()
+    resultado: list[dict] = []
+
+    for tarjeta in tarjetas:
+        saldo = float(tarjeta.get("saldo_actual") or 0)
+        if saldo <= 0:
+            continue
+
+        fecha_pago_dia = tarjeta.get("fecha_pago")
+        if not fecha_pago_dia:
+            continue
+
+        days_until = _days_until_dia_del_mes(int(fecha_pago_dia), today)
+        if 0 <= days_until <= 3:
+            enriched = _enrich_tarjeta(dict(tarjeta))
+            enriched["dias_para_pago"] = days_until
+            enriched["fecha_pago_proxima"] = str(_proximo_dia_del_mes(int(fecha_pago_dia), today))
+            resultado.append(enriched)
+
+    return resultado

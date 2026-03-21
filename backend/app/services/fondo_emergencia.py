@@ -249,18 +249,23 @@ def update_fondo(user_jwt: str, user_id: str, data: FondoEmergenciaUpdate) -> di
     if not payload:
         raise HTTPException(status_code=422, detail="No fields to update.")
     try:
+        client.table("fondo_emergencia").update(payload).eq("user_id", user_id).execute()
+    except APIError as e:
+        _handle_api_error(e)
+    # Fetch updated row (update() does not return rows in this SDK version)
+    try:
         r = (
             client.table("fondo_emergencia")
-            .update(payload)
+            .select("*")
             .eq("user_id", user_id)
-            .select()
+            .maybe_single()
             .execute()
         )
     except APIError as e:
         _handle_api_error(e)
-    if not r.data:
+    if r is None or not r.data:
         raise HTTPException(status_code=404, detail="Fondo de emergencia no encontrado.")
-    return _enrich(r.data[0], client, user_id)
+    return _enrich(r.data, client, user_id)
 
 
 def _crear_transaccion_fondo(client, user_id: str, tipo: str, monto: float) -> None:

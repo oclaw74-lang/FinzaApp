@@ -331,18 +331,17 @@ def test_update_saldo_actual():
         "saldo_actual": "8000.00",
         "activa": True,
     }
-    mock_response = MagicMock()
-    mock_response.data = [updated_row]
 
     mock_client = MagicMock()
     (
-        mock_client.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value
-    ) = mock_response
+        mock_client.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value.data
+    ) = []
 
     data = TarjetaUpdate(saldo_actual=8000.0)
 
     with patch("app.services.tarjetas.get_user_client", return_value=mock_client):
-        result = update_tarjeta("fake-jwt", "u1", "dddd-4444", data)
+        with patch("app.services.tarjetas.get_tarjeta", return_value={**updated_row, "disponible": 22000.0}):
+            result = update_tarjeta("fake-jwt", "u1", "dddd-4444", data)
 
     update_payload = mock_client.table.return_value.update.call_args[0][0]
     assert update_payload["saldo_actual"] == "8000.0"
@@ -500,16 +499,13 @@ def test_bloquear_tarjeta_activa():
     }
     updated = {**existing, "bloqueada": True}
 
-    mock_response = MagicMock()
-    mock_response.data = [updated]
-
     mock_client = MagicMock()
     (
-        mock_client.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value
-    ) = mock_response
+        mock_client.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value.data
+    ) = []
 
-    # Patch get_tarjeta para evitar re-mockear toda la cadena de select
-    with patch("app.services.tarjetas.get_tarjeta", return_value=existing):
+    # Patch get_tarjeta: first call returns existing state, second call returns updated state
+    with patch("app.services.tarjetas.get_tarjeta", side_effect=[existing, updated]):
         with patch("app.services.tarjetas.get_user_client", return_value=mock_client):
             result = toggle_bloquear_tarjeta("fake-jwt", "u1", "ffff-0001")
 
@@ -536,15 +532,12 @@ def test_desbloquear_tarjeta_bloqueada():
     }
     updated = {**existing, "bloqueada": False}
 
-    mock_response = MagicMock()
-    mock_response.data = [updated]
-
     mock_client = MagicMock()
     (
-        mock_client.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value
-    ) = mock_response
+        mock_client.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value.data
+    ) = []
 
-    with patch("app.services.tarjetas.get_tarjeta", return_value=existing):
+    with patch("app.services.tarjetas.get_tarjeta", side_effect=[existing, updated]):
         with patch("app.services.tarjetas.get_user_client", return_value=mock_client):
             result = toggle_bloquear_tarjeta("fake-jwt", "u1", "ffff-0002")
 
@@ -649,19 +642,17 @@ def test_update_tarjeta_quitar_banco():
         "activa": True,
         "bloqueada": False,
     }
-    mock_response = MagicMock()
-    mock_response.data = [updated_row]
-
     mock_client = MagicMock()
     (
-        mock_client.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value
-    ) = mock_response
+        mock_client.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value.data
+    ) = []
 
     # model_validate incluye banco_id en __fields_set__ aunque sea None
     data = TarjetaUpdate.model_validate({"banco_id": None})
 
     with patch("app.services.tarjetas.get_user_client", return_value=mock_client):
-        result = update_tarjeta("fake-jwt", "u1", "gggg-0003", data)
+        with patch("app.services.tarjetas.get_tarjeta", return_value=updated_row):
+            result = update_tarjeta("fake-jwt", "u1", "gggg-0003", data)
 
     update_payload = mock_client.table.return_value.update.call_args[0][0]
     # banco_id debe aparecer en el payload como None (null) para borrarlo en DB

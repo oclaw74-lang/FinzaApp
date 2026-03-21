@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api'
-import type { MovimientoTarjeta, MovimientoTarjetaCreate } from '@/types/tarjeta'
+import type { MovimientoTarjeta, MovimientoTarjetaCreate, TipoMovimiento } from '@/types/tarjeta'
 
-export function useMovimientosTarjeta(tarjetaId: string, tipo?: 'compra' | 'pago') {
+export function useMovimientosTarjeta(tarjetaId: string, tipo?: TipoMovimiento) {
   return useQuery<MovimientoTarjeta[]>({
     queryKey: ['movimientos-tarjeta', tarjetaId, tipo],
     queryFn: async () => {

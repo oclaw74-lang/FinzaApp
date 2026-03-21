@@ -10,6 +10,7 @@ import { DatePicker } from '@/components/ui/DatePicker'
 import type { Prestamo } from '@/types/prestamo'
 import { useMonedas, useBancos } from '@/hooks/useCatalogos'
 import { useAuthStore } from '@/store/authStore'
+import { useUserCurrency } from '@/hooks/useUserCurrency'
 
 /** Add N months to a 'yyyy-MM-dd' string, clamping the day to the last day of the target month. */
 function addMonthsToDateStr(dateStr: string, months: number): string {
@@ -101,6 +102,7 @@ export function PrestamoForm({
   const { t } = useTranslation()
   const { user } = useAuthStore()
   const userPais = (user?.user_metadata?.pais_codigo as string | undefined) ?? 'DO'
+  const userCurrency = useUserCurrency()
   const { data: monedas = [] } = useMonedas()
   const { data: bancos = [] } = useBancos(userPais)
 
@@ -116,7 +118,7 @@ export function PrestamoForm({
     defaultValues: {
       tipo: 'me_deben',
       acreedor_tipo: 'persona',
-      moneda: 'DOP',
+      moneda: userCurrency,
       fecha_prestamo: new Date().toISOString().split('T')[0],
       monto_ya_pagado: 0,
       ...defaultValues,
