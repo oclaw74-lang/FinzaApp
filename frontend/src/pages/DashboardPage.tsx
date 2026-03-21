@@ -267,6 +267,17 @@ export function DashboardPage(): JSX.Element {
         )}
       </div>
 
+      {/* Conversion note — shown when secondary currency is active */}
+      {data?.moneda_conversion_info?.moneda_secundaria && data.moneda_conversion_info.tasa_cambio != null && (
+        <p className="text-xs text-[var(--text-muted)] -mt-4 mb-2">
+          {t('dashboard.conversionNota', {
+            monedaSecundaria: data.moneda_conversion_info.moneda_secundaria,
+            monedaPrincipal: data.moneda_conversion_info.moneda_principal,
+            tasa: data.moneda_conversion_info.tasa_cambio,
+          })}
+        </p>
+      )}
+
       {/* Prediccion + Score row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <PrediccionMesCard />

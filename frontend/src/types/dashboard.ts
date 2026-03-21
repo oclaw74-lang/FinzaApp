@@ -53,6 +53,12 @@ export interface EgresoCategoria {
   porcentaje: number
 }
 
+export interface MonedaConversionInfo {
+  moneda_principal: string
+  moneda_secundaria: string | null
+  tasa_cambio: number | null
+}
+
 export interface DashboardV2Response {
   resumen_financiero: ResumenFinanciero
   presupuestos_estado: PresupuestoEstadoV2[]
@@ -60,6 +66,7 @@ export interface DashboardV2Response {
   prestamos_activos: PrestamosActivosV2
   ultimas_transacciones: UltimaTransaccionV2[]
   egresos_por_categoria: EgresoCategoria[]
+  moneda_conversion_info?: MonedaConversionInfo
 }
 
 export interface CategoriaBreakdown {
