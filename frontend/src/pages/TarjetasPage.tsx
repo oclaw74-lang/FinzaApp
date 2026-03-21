@@ -1576,7 +1576,7 @@ export function TarjetasPage(): JSX.Element {
   const { t } = useTranslation()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [tarjetaEditando, setTarjetaEditando] = useState<Tarjeta | null>(null)
-  const [tarjetaDetalle, setTarjetaDetalle] = useState<Tarjeta | null>(null)
+  const [tarjetaDetalleId, setTarjetaDetalleId] = useState<string | null>(null)
 
   const { data: tarjetas = [], isLoading, isError } = useTarjetas()
   const { data: pagosPendientes = [] } = useTarjetasPagoPendiente()
@@ -1650,7 +1650,7 @@ export function TarjetasPage(): JSX.Element {
     if (!window.confirm(t('tarjetas.deleteTarjeta'))) return
     try {
       await deleteTarjeta.mutateAsync(id)
-      setTarjetaDetalle(null)
+      setTarjetaDetalleId(null)
       toast.success(t('tarjetas.deleted'))
     } catch {
       toast.error(t('common.error'))
@@ -1663,10 +1663,10 @@ export function TarjetasPage(): JSX.Element {
       <div className="flex overflow-x-auto snap-x snap-mandatory gap-5 pb-4 scrollbar-hide">
         {list.map((tarjeta) => (
           <div key={tarjeta.id} className="snap-center shrink-0 w-96 relative group">
-            <CardVisual tarjeta={tarjeta} onClick={() => setTarjetaDetalle(tarjeta)} />
+            <CardVisual tarjeta={tarjeta} onClick={() => setTarjetaDetalleId(tarjeta.id)} />
             <button
               type="button"
-              onClick={() => setTarjetaDetalle(tarjeta)}
+              onClick={() => setTarjetaDetalleId(tarjeta.id)}
               className="absolute top-3 right-14 p-1.5 rounded-lg bg-white/10 text-white/70 hover:bg-white/20 transition-opacity opacity-0 group-hover:opacity-100"
               aria-label="Ver detalle"
             >
@@ -1775,14 +1775,17 @@ export function TarjetasPage(): JSX.Element {
       )}
 
       {/* Detail modal */}
-      {tarjetaDetalle && (
-        <DetailModal
-          tarjeta={tarjetaDetalle}
-          onClose={() => setTarjetaDetalle(null)}
-          onEdit={(t) => setTarjetaEditando(t)}
-          onDelete={handleDelete}
-        />
-      )}
+      {tarjetaDetalleId && (() => {
+        const tarjetaDetalle = tarjetas.find((t) => t.id === tarjetaDetalleId) ?? null
+        return tarjetaDetalle ? (
+          <DetailModal
+            tarjeta={tarjetaDetalle}
+            onClose={() => setTarjetaDetalleId(null)}
+            onEdit={(t) => setTarjetaEditando(t)}
+            onDelete={handleDelete}
+          />
+        ) : null
+      })()}
     </div>
   )
 }

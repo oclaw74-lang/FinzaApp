@@ -118,7 +118,7 @@ export function PrestamoForm({
     defaultValues: {
       tipo: 'me_deben',
       acreedor_tipo: 'persona',
-      moneda: userCurrency,
+      moneda: defaultValues?.moneda ?? userCurrency,
       fecha_prestamo: new Date().toISOString().split('T')[0],
       monto_ya_pagado: 0,
       ...defaultValues,
@@ -129,6 +129,14 @@ export function PrestamoForm({
   const fechaPrestamo = watch('fecha_prestamo')
   const plazoMeses = watch('plazo_meses')
   const showMontoPagado = isBeforeCurrentMonth(fechaPrestamo)
+
+  // When the monedas list loads (async), sync the select to user's preferred currency
+  // Only applies when creating a new prestamo (no defaultValues.moneda provided)
+  useEffect(() => {
+    if (monedas.length > 0 && !defaultValues?.moneda) {
+      setValue('moneda', userCurrency, { shouldValidate: false })
+    }
+  }, [monedas, userCurrency, setValue, defaultValues?.moneda])
 
   // Fix #3 — Auto-calculate fecha_vencimiento from fecha_prestamo + plazo_meses
   useEffect(() => {
@@ -272,20 +280,6 @@ export function PrestamoForm({
             value={field.value}
             onChange={field.onChange}
             error={errors.fecha_prestamo?.message}
-          />
-        )}
-      />
-
-      {/* Fix #2 — DatePicker for fecha_vencimiento (Fix #3: auto-filled) */}
-      <Controller
-        name="fecha_vencimiento"
-        control={control}
-        render={({ field }) => (
-          <DatePicker
-            label="Fecha de vencimiento (opcional)"
-            value={field.value}
-            onChange={field.onChange}
-            error={errors.fecha_vencimiento?.message}
           />
         )}
       />

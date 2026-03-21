@@ -60,6 +60,7 @@ const en = {
     passwordUpdated: 'Password updated',
     uploadAvatar: 'Upload profile photo',
     categorias: 'Categories',
+    importar: 'Import data',
     paisYMoneda: 'Country & main currency',
     noConfigurado: 'Not configured',
     moneda: 'Currency',
