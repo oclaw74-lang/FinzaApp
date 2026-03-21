@@ -18,6 +18,7 @@ import {
 import { useMetas } from '@/hooks/useMetas'
 import { useFondoEmergencia } from '@/hooks/useFondoEmergencia'
 import { supabase } from '@/lib/supabase'
+import { getApiErrorMessage } from '@/lib/apiError'
 import { useAuthStore } from '@/store/authStore'
 import { useThemeStore } from '@/store/themeStore'
 import { Button } from '@/components/ui/button'
@@ -457,9 +458,14 @@ export function ConfiguracionPage(): JSX.Element {
         porcentaje_ahorro_metas: pctMetas ? parseFloat(pctMetas) : undefined,
         porcentaje_ahorro_fondo: pctFondo ? parseFloat(pctFondo) : undefined,
       })
+      // Save secondary currency alongside profile
+      await updateDualMoneda.mutateAsync({
+        moneda_secundaria: monedaSecundaria || null,
+        ...(monedaSecundaria && tasaCambio ? { tasa_cambio: parseFloat(tasaCambio) } : {}),
+      })
       toast.success(t('settings.profileSaved'))
-    } catch {
-      toast.error(t('common.error'))
+    } catch (err) {
+      toast.error(getApiErrorMessage(err))
     }
   }
 
@@ -616,6 +622,66 @@ export function ConfiguracionPage(): JSX.Element {
                   )}
               </select>
             </div>
+
+            {/* Secondary currency — inline with profile */}
+            <div className="space-y-1.5">
+              <label htmlFor="moneda-secundaria" className="text-sm font-medium text-[var(--text-primary)]">
+                {t('settings.segundaMoneda')}
+              </label>
+              <select
+                id="moneda-secundaria"
+                value={monedaSecundaria}
+                onChange={(e) => {
+                  setMonedaSecundaria(e.target.value)
+                  if (!e.target.value) setTasaCambio('')
+                }}
+                className="finza-input w-full"
+                aria-label={t('settings.segundaMoneda')}
+              >
+                <option value="">{t('settings.ninguna')}</option>
+                {monedas.length > 0
+                  ? monedas.map((m) => (
+                      <option key={m.codigo} value={m.codigo}>
+                        {m.codigo} — {m.nombre}
+                      </option>
+                    ))
+                  : (
+                    <>
+                      <option value="USD">USD — Dólar Americano</option>
+                      <option value="EUR">EUR — Euro</option>
+                      <option value="DOP">DOP — Peso Dominicano</option>
+                    </>
+                  )}
+              </select>
+            </div>
+
+            {/* Exchange rate — only when secondary currency is selected */}
+            {monedaSecundaria && (
+              <div className="space-y-1.5">
+                <label htmlFor="tasa-cambio" className="text-sm font-medium text-[var(--text-primary)]">
+                  {t('settings.tasaCambio')} — 1 {monedaSecundaria} ={' '}
+                  <span className="text-[var(--accent)]">__</span>{' '}
+                  {dualMoneda.data?.moneda_principal ?? profileForm.getValues('currency') ?? 'DOP'}
+                </label>
+                <input
+                  id="tasa-cambio"
+                  type="number"
+                  min="0.000001"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={tasaCambio}
+                  onChange={(e) => setTasaCambio(e.target.value)}
+                  className="finza-input w-full"
+                  aria-label={t('settings.tasaCambio')}
+                />
+                {dualMoneda.data?.tasa_cambio_actualizada_at && (
+                  <p className="text-xs text-[var(--text-muted)]">
+                    {t('settings.ultimaActualizacion')}:{' '}
+                    {new Date(dualMoneda.data.tasa_cambio_actualizada_at).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Pais y moneda — display + boton cambiar */}
             <div className="space-y-1.5">
@@ -840,10 +906,10 @@ export function ConfiguracionPage(): JSX.Element {
             </div>
           )}
 
-          {/* Single save button for all profile + finances */}
+          {/* Single save button for all profile + finances + segunda moneda */}
           <Button
             onClick={handleSaveAll}
-            isLoading={profileForm.formState.isSubmitting || updateProfile.isPending}
+            isLoading={profileForm.formState.isSubmitting || updateProfile.isPending || updateDualMoneda.isPending}
             className="w-full"
           >
             {t('common.save')}
