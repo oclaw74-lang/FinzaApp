@@ -389,6 +389,7 @@ function UtilizationBar({ saldo, limite }: UtilizationBarProps): JSX.Element {
 interface StatItem {
   label: string
   value: string
+  valueColor?: string
 }
 
 function StatsGrid({ stats }: { stats: StatItem[] }): JSX.Element {
@@ -397,7 +398,7 @@ function StatsGrid({ stats }: { stats: StatItem[] }): JSX.Element {
       {stats.map((s) => (
         <div key={s.label} className="card-glass p-3 sm:p-5">
           <p className="kpi-label dark:text-finza-t2 mb-1">{s.label}</p>
-          <p className={`kpi-value mt-2`}>{s.value}</p>
+          <p className={`kpi-value mt-2`} style={s.valueColor ? { color: s.valueColor } : undefined}>{s.value}</p>
         </div>
       ))}
     </div>
@@ -1594,8 +1595,8 @@ export function TarjetasPage(): JSX.Element {
     new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
 
   const stats = [
-    { label: t('tarjetas.totalSaldo'), value: fmt(totalSaldo) },
-    { label: t('tarjetas.disponibleCredito'), value: fmt(totalDisponible) },
+    { label: t('tarjetas.totalSaldo'), value: fmt(totalSaldo), valueColor: '#ff8080' },
+    { label: t('tarjetas.disponibleCredito'), value: fmt(totalDisponible), valueColor: '#00dfa2' },
     { label: t('tarjetas.tarjetasActivas'), value: String(activas.length) },
   ]
 

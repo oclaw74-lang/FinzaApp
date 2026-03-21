@@ -3,6 +3,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { Layout } from '@/components/shared/Layout'
 
+// Mock useRealtimeSync to avoid QueryClientProvider requirement
+vi.mock('@/hooks/useRealtimeSync', () => ({
+  useRealtimeSync: vi.fn(),
+}))
+
 // Mock child components to isolate Layout
 vi.mock('@/components/shared/Sidebar', () => ({
   Sidebar: () => <div data-testid="sidebar" />,

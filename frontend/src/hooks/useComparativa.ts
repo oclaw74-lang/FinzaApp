@@ -10,5 +10,6 @@ export function useComparativa() {
       return data
     },
     staleTime: 0,
+    gcTime: 0,
   })
 }
