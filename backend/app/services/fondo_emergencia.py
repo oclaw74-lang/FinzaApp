@@ -1,5 +1,6 @@
 from calendar import monthrange
 from datetime import date, datetime
+import logging
 
 from fastapi import HTTPException
 from postgrest import APIError
@@ -7,6 +8,8 @@ from postgrest import APIError
 from app.core.supabase_client import get_user_client
 from app.schemas.fondo_emergencia import FondoEmergenciaCreate, FondoEmergenciaUpdate
 from app.services.base import _handle_api_error
+
+log = logging.getLogger(__name__)
 
 # Factors to convert any subscription/recurrente frequency to monthly equivalent
 _FREQ_TO_MONTHLY: dict[str, float] = {
@@ -255,17 +258,66 @@ def update_fondo(user_jwt: str, user_id: str, data: FondoEmergenciaUpdate) -> di
     return _enrich(r.data[0], client, user_id)
 
 
+def _crear_transaccion_fondo(client, user_id: str, tipo: str, monto: float) -> None:
+    """
+    Create a linked egreso (depositar) or ingreso (retirar) for the emergency fund.
+    Silently skips if the system category is not found.
+    """
+    try:
+        cat_nombre = "Ahorro / Metas" if tipo == "depositar" else "Retiro de Ahorro"
+        resp = (
+            client.table("categorias")
+            .select("id")
+            .eq("nombre", cat_nombre)
+            .eq("es_sistema", True)
+            .maybe_single()
+            .execute()
+        )
+        cat_id = resp.data["id"] if resp.data else None
+        if not cat_id:
+            return
+
+        hoy = str(date.today())
+        if tipo == "depositar":
+            client.table("egresos").insert({
+                "user_id": user_id,
+                "categoria_id": cat_id,
+                "monto": str(monto),
+                "moneda": "DOP",
+                "descripcion": "Abono a fondo de emergencia",
+                "metodo_pago": "efectivo",
+                "fecha": hoy,
+            }).execute()
+        else:
+            client.table("ingresos").insert({
+                "user_id": user_id,
+                "categoria_id": cat_id,
+                "monto": str(monto),
+                "moneda": "DOP",
+                "descripcion": "Retiro de fondo de emergencia",
+                "fecha": hoy,
+            }).execute()
+    except Exception as exc:
+        log.warning("Could not create linked transaction for fondo emergencia: %s", exc)
+
+
 def depositar(user_jwt: str, user_id: str, monto: float) -> dict:
+    client = get_user_client(user_jwt)
     fondo = get_or_none(user_jwt, user_id)
     if fondo is None:
         raise HTTPException(status_code=404, detail="Fondo de emergencia no encontrado.")
     nuevo_monto = fondo["monto_actual"] + monto
-    return update_fondo(user_jwt, user_id, FondoEmergenciaUpdate(monto_actual=nuevo_monto))
+    resultado = update_fondo(user_jwt, user_id, FondoEmergenciaUpdate(monto_actual=nuevo_monto))
+    _crear_transaccion_fondo(client, user_id, "depositar", monto)
+    return resultado
 
 
 def retirar(user_jwt: str, user_id: str, monto: float) -> dict:
+    client = get_user_client(user_jwt)
     fondo = get_or_none(user_jwt, user_id)
     if fondo is None:
         raise HTTPException(status_code=404, detail="Fondo de emergencia no encontrado.")
     nuevo_monto = max(0.0, fondo["monto_actual"] - monto)
-    return update_fondo(user_jwt, user_id, FondoEmergenciaUpdate(monto_actual=nuevo_monto))
+    resultado = update_fondo(user_jwt, user_id, FondoEmergenciaUpdate(monto_actual=nuevo_monto))
+    _crear_transaccion_fondo(client, user_id, "retirar", monto)
+    return resultado
