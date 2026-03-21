@@ -61,7 +61,7 @@ def _get_promedio_egresos(client, user_id: str) -> float:
             d = datetime.strptime(fecha_str[:10], "%Y-%m-%d")
             key = (d.year, d.month)
             if key in meses_set:
-                totales[key] = totales.get(key, 0.0) + float(e["monto"])
+                totales[key] = totales.get(key, 0.0) + float(e.get("monto") or 0)
 
     if not totales:
         return 0.0
@@ -193,8 +193,12 @@ def _calc_meta(client, user_id: str, meta_meses: int) -> float:
 
 
 def _enrich(row: dict, client, user_id: str) -> dict:
-    meta_calculada = _calc_meta(client, user_id, row["meta_meses"])
-    monto_actual = float(row["monto_actual"])
+    try:
+        meta_calculada = _calc_meta(client, user_id, row.get("meta_meses", 3))
+    except Exception as exc:
+        log.warning("_calc_meta failed: %s", exc)
+        meta_calculada = 0.0
+    monto_actual = float(row.get("monto_actual") or 0)
     porcentaje = min(monto_actual / meta_calculada * 100, 100.0) if meta_calculada > 0 else 0.0
     return {
         **row,
@@ -249,6 +253,7 @@ def update_fondo(user_jwt: str, user_id: str, data: FondoEmergenciaUpdate) -> di
             client.table("fondo_emergencia")
             .update(payload)
             .eq("user_id", user_id)
+            .select()
             .execute()
         )
     except APIError as e:
