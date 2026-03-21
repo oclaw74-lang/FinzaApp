@@ -24,6 +24,7 @@ class TarjetaCreate(BaseModel):
     color: Optional[str] = None
     activa: bool = True
     bloqueada: bool = False
+    moneda: str = "DOP"
 
     @field_validator("banco")
     @classmethod
@@ -148,5 +149,6 @@ class TarjetaResponse(BaseModel):
     activa: bool
     bloqueada: bool = False
     disponible: Optional[float] = None  # computed: limite_credito - saldo_actual
+    moneda: str = "DOP"
 
     model_config = {"from_attributes": True}
