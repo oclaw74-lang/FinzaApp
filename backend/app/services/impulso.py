@@ -119,7 +119,7 @@ def clasificar_impulso(user_jwt: str, user_id: str, egreso_id: str, es_impulso: 
         )
     except APIError as e:
         _handle_api_error(e)
-    if not r.data:
+    if not (r and r.data):
         raise HTTPException(status_code=404, detail="Egreso no encontrado.")
     return r.data[0]
 

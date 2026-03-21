@@ -986,8 +986,9 @@ function MovimientoModal({ tarjetaId, tarjetaTipo, tipoInicial, onClose }: Movim
       await registrar.mutateAsync(payload)
       toast.success(getSuccessMessage(data.tipo))
       onClose()
-    } catch {
-      toast.error(t('tarjetas.errorMovimiento'))
+    } catch (err: unknown) {
+      const detail = (err as any)?.response?.data?.detail || (err as any)?.message
+      toast.error(detail || t('tarjetas.errorMovimiento'))
     }
   }
 

@@ -50,7 +50,7 @@ def get_tarjeta(user_jwt: str, user_id: str, tarjeta_id: str) -> dict | None:
             .maybe_single()
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             return None
         return _enrich_tarjeta(response.data)
     except APIError as e:
@@ -125,7 +125,7 @@ def delete_tarjeta(user_jwt: str, user_id: str, tarjeta_id: str) -> None:
             .eq("user_id", user_id)
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Tarjeta no encontrada.")
     except HTTPException:
         raise
