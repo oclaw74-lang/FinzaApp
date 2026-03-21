@@ -1,4 +1,5 @@
 from decimal import Decimal
+import logging
 
 from fastapi import HTTPException
 from postgrest import APIError
@@ -6,6 +7,68 @@ from postgrest import APIError
 from app.core.supabase_client import get_user_client
 from app.schemas.meta_ahorro import ContribucionMetaCreate, MetaAhorroCreate, MetaAhorroUpdate
 from app.services.base import _handle_api_error
+
+log = logging.getLogger(__name__)
+
+
+def _get_system_categoria_id(client, nombre: str) -> str | None:
+    """Return the id of a system category by name, or None if not found."""
+    try:
+        resp = (
+            client.table("categorias")
+            .select("id")
+            .eq("nombre", nombre)
+            .eq("es_sistema", True)
+            .maybe_single()
+            .execute()
+        )
+        return resp.data["id"] if resp.data else None
+    except Exception:
+        return None
+
+
+def _crear_transaccion_ahorro(
+    client,
+    user_id: str,
+    tipo: str,      # "deposito" | "retiro"
+    monto: Decimal,
+    fecha: str,
+    descripcion: str,
+) -> None:
+    """
+    Create a linked ingreso or egreso for a savings contribution.
+    - deposito → egreso (money leaves cash flow, goes into savings)
+    - retiro   → ingreso (money returns to cash flow from savings)
+    Silently skips if the system category is not found.
+    """
+    try:
+        if tipo == "deposito":
+            cat_id = _get_system_categoria_id(client, "Ahorro / Metas")
+            if not cat_id:
+                return
+            client.table("egresos").insert({
+                "user_id": user_id,
+                "categoria_id": cat_id,
+                "monto": str(monto),
+                "moneda": "DOP",
+                "descripcion": descripcion,
+                "metodo_pago": "efectivo",
+                "fecha": fecha,
+            }).execute()
+        else:  # retiro
+            cat_id = _get_system_categoria_id(client, "Retiro de Ahorro")
+            if not cat_id:
+                return
+            client.table("ingresos").insert({
+                "user_id": user_id,
+                "categoria_id": cat_id,
+                "monto": str(monto),
+                "moneda": "DOP",
+                "descripcion": descripcion,
+                "fecha": fecha,
+            }).execute()
+    except Exception as exc:
+        log.warning("Could not create linked transaction for savings: %s", exc)
 
 
 def get_metas(user_jwt: str, estado: str | None = None) -> list[dict]:
@@ -158,16 +221,17 @@ def get_contribuciones(user_jwt: str, meta_id: str) -> list[dict]:
 
 def agregar_contribucion(
     user_jwt: str,
+    user_id: str,
     meta_id: str,
     data: ContribucionMetaCreate,
 ) -> dict:
-    """Register a savings contribution without creating any egreso record."""
+    """Register a savings contribution and create a linked egreso/ingreso record."""
     client = get_user_client(user_jwt)
     try:
-        # Verify meta exists (RLS ensures ownership)
+        # Verify meta exists and fetch its name (RLS ensures ownership)
         meta_response = (
             client.table("metas_ahorro")
-            .select("id, monto_actual, monto_objetivo, estado")
+            .select("id, nombre, monto_actual, monto_objetivo, estado")
             .eq("id", meta_id)
             .maybe_single()
             .execute()
@@ -185,7 +249,7 @@ def agregar_contribucion(
                 detail="El monto de retiro supera el monto actual de la meta.",
             )
 
-        # Insert contribution directly — no egresos record created
+        # Insert contribution
         contrib_payload = {
             "meta_id": meta_id,
             "monto": str(monto),
@@ -204,8 +268,10 @@ def agregar_contribucion(
         # Update monto_actual; mark completed when goal is reached
         if data.tipo == "deposito":
             nuevo_monto = monto_actual + monto
+            descripcion = f"Abono a meta: {meta['nombre']}"
         else:
             nuevo_monto = max(Decimal("0"), monto_actual - monto)
+            descripcion = f"Retiro de meta: {meta['nombre']}"
 
         monto_objetivo = Decimal(str(meta["monto_objetivo"]))
         nuevo_estado = "completada" if nuevo_monto >= monto_objetivo else meta["estado"]
@@ -213,6 +279,16 @@ def agregar_contribucion(
         client.table("metas_ahorro").update(
             {"monto_actual": str(nuevo_monto), "estado": nuevo_estado}
         ).eq("id", meta_id).execute()
+
+        # Create linked egreso (deposito) or ingreso (retiro) for cash-flow tracking
+        _crear_transaccion_ahorro(
+            client=client,
+            user_id=user_id,
+            tipo=data.tipo,
+            monto=monto,
+            fecha=str(data.fecha),
+            descripcion=descripcion,
+        )
 
         return contrib_response.data[0]
     except HTTPException:

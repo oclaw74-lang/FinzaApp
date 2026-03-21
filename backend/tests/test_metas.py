@@ -256,6 +256,7 @@ def test_agregar_contribucion_deposito_inserts_directly():
     }
     meta_row = {
         "id": "meta-id-1",
+        "nombre": "Meta de prueba",
         "monto_actual": "10000.00",
         "monto_objetivo": "50000.00",
         "estado": "en_progreso",
@@ -295,7 +296,7 @@ def test_agregar_contribucion_deposito_inserts_directly():
     )
 
     with patch("app.services.metas_ahorro.get_user_client", return_value=mock_client):
-        result = agregar_contribucion("fake-jwt", "meta-id-1", data)
+        result = agregar_contribucion("fake-jwt", "user-id-1", "meta-id-1", data)
 
     assert result["id"] == "dddd-4444"
     mock_client.rpc.assert_not_called()
@@ -308,6 +309,7 @@ def test_agregar_contribucion_retiro_excede_monto_raises_400():
 
     meta_row = {
         "id": "meta-id-1",
+        "nombre": "Meta de prueba",
         "monto_actual": "1000.00",
         "monto_objetivo": "50000.00",
         "estado": "en_progreso",
@@ -326,7 +328,7 @@ def test_agregar_contribucion_retiro_excede_monto_raises_400():
 
     with patch("app.services.metas_ahorro.get_user_client", return_value=mock_client):
         with pytest.raises(HTTPException) as exc_info:
-            agregar_contribucion("fake-jwt", "meta-id-1", data)
+            agregar_contribucion("fake-jwt", "user-id-1", "meta-id-1", data)
 
     assert exc_info.value.status_code == 400
     assert "retiro" in exc_info.value.detail.lower()
@@ -350,7 +352,7 @@ def test_agregar_contribucion_meta_not_found_raises_404():
 
     with patch("app.services.metas_ahorro.get_user_client", return_value=mock_client):
         with pytest.raises(HTTPException) as exc_info:
-            agregar_contribucion("fake-jwt", "nonexistent-meta", data)
+            agregar_contribucion("fake-jwt", "user-id-1", "nonexistent-meta", data)
 
     assert exc_info.value.status_code == 404
 
