@@ -85,7 +85,7 @@ export function PrestamoDetail({
     return createPortal(
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
-        <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-xl p-6 animate-pulse">
+        <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-3xl p-6 animate-pulse">
           <div className="h-6 w-48 bg-[var(--surface-raised)] rounded mb-4" />
           <div className="space-y-3">
             <div className="h-4 w-full bg-[var(--surface-raised)] rounded" />
@@ -102,7 +102,7 @@ export function PrestamoDetail({
     return createPortal(
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
-        <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-xl p-6">
+        <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-3xl p-6">
           <p className="text-sm text-[var(--text-muted)]">{t('prestamos.detail.noCargar')}</p>
           <Button variant="secondary" size="sm" onClick={onClose} className="mt-4">
             {t('common.close')}
@@ -137,7 +137,7 @@ export function PrestamoDetail({
       aria-label={`Detalle de prestamo con ${displayPrestamo.persona}`}
     >
       <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
-      <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-xl max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
           <div>
