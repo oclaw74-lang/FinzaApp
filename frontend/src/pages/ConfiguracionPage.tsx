@@ -26,7 +26,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ToggleGroup } from '@/components/ui/toggle-group'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
-import i18n from '@/i18n'
 import type { CategoriaResponse } from '@/types/transacciones'
 import type { FrecuenciaPago } from '@/types/profile'
 
@@ -333,8 +332,6 @@ function PaisModal({ currentPaisCodigo, onClose, onSave, isSaving }: PaisModalPr
 
 export function ConfiguracionPage(): JSX.Element {
   const { t, i18n } = useTranslation()
-  const getCatNombre = (cat: { nombre: string; nombre_en?: string }) =>
-    i18n.language.startsWith('en') && cat.nombre_en ? cat.nombre_en : cat.nombre
   const { user } = useAuthStore()
   const { theme, setTheme, language, setLanguage } = useThemeStore()
   const [activeTab, setActiveTab] = useState<Tab>('profile')

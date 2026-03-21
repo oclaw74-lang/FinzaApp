@@ -4,6 +4,27 @@ import { BrowserRouter } from 'react-router-dom'
 import { OnboardingPage } from '../OnboardingPage'
 
 const mockMutateAsync = vi.fn().mockResolvedValue({})
+const mockCreateTarjeta = vi.fn().mockResolvedValue({
+  id: 'card-1',
+  banco: 'Banco Popular',
+  ultimos_digitos: '1234',
+  red: 'visa',
+  tipo: 'debito',
+  saldo_actual: 1000,
+  user_id: 'user-1',
+  titular: null,
+  banco_id: null,
+  banco_custom: null,
+  limite_credito: null,
+  disponible: null,
+  fecha_corte: null,
+  fecha_pago: null,
+  color: null,
+  activa: true,
+  bloqueada: false,
+  created_at: '2024-01-01',
+  updated_at: '2024-01-01',
+})
 const mockNavigate = vi.fn()
 
 vi.mock('react-router-dom', async () => {
@@ -33,6 +54,13 @@ vi.mock('@/hooks/useCatalogos', () => ({
   })),
 }))
 
+vi.mock('@/hooks/useTarjetas', () => ({
+  useCreateTarjeta: vi.fn(() => ({
+    mutateAsync: mockCreateTarjeta,
+    isPending: false,
+  })),
+}))
+
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     auth: {
@@ -47,7 +75,7 @@ vi.mock('sonner', () => ({
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string) => {
+    t: (key: string, opts?: Record<string, unknown>) => {
       const translations: Record<string, string> = {
         'onboarding.bienvenido': '¡Bienvenido a Finza!',
         'onboarding.paisSubtitulo': 'Selecciona tu país',
@@ -59,6 +87,22 @@ vi.mock('react-i18next', () => ({
         'onboarding.listo': '¡Todo configurado!',
         'onboarding.listoDesc': 'Ya puedes empezar',
         'onboarding.finalizar': 'Ir al dashboard',
+        'onboarding.tarjetaDebito': 'Vincula tu tarjeta de débito',
+        'onboarding.tarjetaDebitoSubtitulo': 'Conecta al menos una tarjeta',
+        'onboarding.bancoLabel': 'Banco',
+        'onboarding.ultimosDigitosLabel': 'Últimos 4 dígitos',
+        'onboarding.redLabel': 'Red de pago',
+        'onboarding.saldoLabel': 'Saldo actual',
+        'onboarding.tipoDebitoLocked': 'Tipo: Débito (no modificable)',
+        'onboarding.agregarTarjeta': 'Agregar tarjeta',
+        'onboarding.agregarOtra': 'Agregar otra',
+        'onboarding.agregando': 'Agregando...',
+        'onboarding.tarjetaRequerida': 'Debes agregar al menos una tarjeta de débito para continuar',
+        'onboarding.tarjetaError': 'Error al agregar la tarjeta. Intenta de nuevo.',
+        'onboarding.tarjetaVinculada': '1 tarjeta de débito vinculada',
+      }
+      if (key === 'onboarding.tarjetasVinculadas') {
+        return `${opts?.count ?? 0} tarjetas de débito vinculadas`
       }
       return translations[key] ?? key
     },
@@ -75,9 +119,68 @@ function renderPage() {
   )
 }
 
+/** Helper to advance from step 1 to step 2 */
+async function goToStep2() {
+  fireEvent.click(screen.getByRole('button', { name: /continuar/i }))
+  await waitFor(() => {
+    expect(screen.getByText('Tu perfil')).toBeInTheDocument()
+  })
+}
+
+/** Helper to advance from step 2 to step 3 (debit card) via skip */
+async function goToStep3ViaSkip() {
+  await goToStep2()
+  fireEvent.click(screen.getByRole('button', { name: /omitir/i }))
+  await waitFor(() => {
+    expect(screen.getByText('Vincula tu tarjeta de débito')).toBeInTheDocument()
+  })
+}
+
+/** Helper to add a debit card in step 3 */
+async function addDebitCard() {
+  fireEvent.change(screen.getByLabelText(/banco/i), { target: { value: 'Banco Popular' } })
+  fireEvent.change(screen.getByLabelText(/últimos 4 dígitos/i), { target: { value: '1234' } })
+  fireEvent.change(screen.getByLabelText(/saldo actual/i), { target: { value: '1000' } })
+  fireEvent.click(screen.getByRole('button', { name: /agregar tarjeta/i }))
+  await waitFor(() => {
+    expect(mockCreateTarjeta).toHaveBeenCalled()
+  })
+}
+
+/** Helper to advance from step 3 to step 4 after adding a card */
+async function goToStep4() {
+  await goToStep3ViaSkip()
+  await addDebitCard()
+  fireEvent.click(screen.getByRole('button', { name: /continuar/i }))
+  await waitFor(() => {
+    expect(screen.getByText('¡Todo configurado!')).toBeInTheDocument()
+  })
+}
+
 describe('OnboardingPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockCreateTarjeta.mockResolvedValue({
+      id: 'card-1',
+      banco: 'Banco Popular',
+      ultimos_digitos: '1234',
+      red: 'visa',
+      tipo: 'debito',
+      saldo_actual: 1000,
+      user_id: 'user-1',
+      titular: null,
+      banco_id: null,
+      banco_custom: null,
+      limite_credito: null,
+      disponible: null,
+      fecha_corte: null,
+      fecha_pago: null,
+      color: null,
+      activa: true,
+      bloqueada: false,
+      created_at: '2024-01-01',
+      updated_at: '2024-01-01',
+    })
   })
 
   it('renders step 1 with country list', () => {
@@ -106,7 +209,6 @@ describe('OnboardingPage', () => {
 
   it('saves country via supabase.auth.updateUser on step 1', async () => {
     renderPage()
-    // Select a different country
     fireEvent.click(screen.getByText('Mexico'))
     fireEvent.click(screen.getByRole('button', { name: /continuar/i }))
 
@@ -121,7 +223,7 @@ describe('OnboardingPage', () => {
     })
   })
 
-  it('skip button on step 2 advances to step 3', async () => {
+  it('skip button on step 2 advances to step 3 (debit card)', async () => {
     renderPage()
     fireEvent.click(screen.getByRole('button', { name: /continuar/i }))
     await waitFor(() => {
@@ -129,11 +231,11 @@ describe('OnboardingPage', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: /omitir/i }))
     await waitFor(() => {
-      expect(screen.getByText('¡Todo configurado!')).toBeInTheDocument()
+      expect(screen.getByText('Vincula tu tarjeta de débito')).toBeInTheDocument()
     })
   })
 
-  it('saves salary and advances on Continuar click in step 2', async () => {
+  it('saves salary and advances to step 3 on Continuar click in step 2', async () => {
     renderPage()
     fireEvent.click(screen.getByRole('button', { name: /continuar/i }))
 
@@ -144,7 +246,6 @@ describe('OnboardingPage', () => {
     const salarioInput = screen.getByLabelText(/salario mensual neto/i)
     fireEvent.change(salarioInput, { target: { value: '50000' } })
 
-    // Click the second continuar button (not omitir)
     const buttons = screen.getAllByRole('button', { name: /continuar/i })
     fireEvent.click(buttons[buttons.length - 1])
 
@@ -153,34 +254,93 @@ describe('OnboardingPage', () => {
         salario_mensual_neto: 50000,
       })
     })
+
+    await waitFor(() => {
+      expect(screen.getByText('Vincula tu tarjeta de débito')).toBeInTheDocument()
+    })
   })
 
-  it('shows completion screen on step 3', async () => {
+  it('renders debit card form on step 3', async () => {
     renderPage()
-    // Step 1 → Step 2
-    fireEvent.click(screen.getByRole('button', { name: /continuar/i }))
+    await goToStep3ViaSkip()
+
+    expect(screen.getByLabelText(/banco/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/últimos 4 dígitos/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/red de pago/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/saldo actual/i)).toBeInTheDocument()
+    expect(screen.getByText(/tipo: débito/i)).toBeInTheDocument()
+  })
+
+  it('shows validation error if Continuar is clicked on step 3 with no card added', async () => {
+    renderPage()
+    await goToStep3ViaSkip()
+
+    // The Continuar button is disabled when no cards added, but clicking it still triggers error
+    const continuarBtn = screen.getByRole('button', { name: /continuar/i })
+    fireEvent.click(continuarBtn)
+
     await waitFor(() => {
-      expect(screen.getByText(/omitir/i)).toBeInTheDocument()
+      expect(
+        screen.getByText('Debes agregar al menos una tarjeta de débito para continuar')
+      ).toBeInTheDocument()
     })
-    // Step 2 → Step 3
-    fireEvent.click(screen.getByRole('button', { name: /omitir/i }))
+  })
+
+  it('calls createTarjeta.mutateAsync with tipo debito when Agregar tarjeta is clicked', async () => {
+    renderPage()
+    await goToStep3ViaSkip()
+
+    fireEvent.change(screen.getByLabelText(/banco/i), { target: { value: 'BHD' } })
+    fireEvent.change(screen.getByLabelText(/últimos 4 dígitos/i), { target: { value: '5678' } })
+    fireEvent.change(screen.getByLabelText(/saldo actual/i), { target: { value: '2500' } })
+
+    fireEvent.click(screen.getByRole('button', { name: /agregar tarjeta/i }))
+
     await waitFor(() => {
-      expect(screen.getByText('¡Todo configurado!')).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /ir al dashboard/i })).toBeInTheDocument()
+      expect(mockCreateTarjeta).toHaveBeenCalledWith({
+        banco: 'BHD',
+        tipo: 'debito',
+        red: 'visa',
+        ultimos_digitos: '5678',
+        saldo_actual: 2500,
+      })
     })
+  })
+
+  it('shows added card in the list after successful creation', async () => {
+    renderPage()
+    await goToStep3ViaSkip()
+    await addDebitCard()
+
+    expect(screen.getByText('Banco Popular')).toBeInTheDocument()
+    expect(screen.getByText(/1234/)).toBeInTheDocument()
+  })
+
+  it('enables Continuar button after adding a card', async () => {
+    renderPage()
+    await goToStep3ViaSkip()
+
+    // Before adding a card the button is aria-disabled
+    const continuarBtn = screen.getByRole('button', { name: /continuar/i })
+    expect(continuarBtn).toHaveAttribute('aria-disabled', 'true')
+
+    await addDebitCard()
+
+    // After adding a card the button is no longer aria-disabled
+    expect(continuarBtn).toHaveAttribute('aria-disabled', 'false')
+  })
+
+  it('shows completion screen on step 4', async () => {
+    renderPage()
+    await goToStep4()
+
+    expect(screen.getByText('¡Todo configurado!')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /ir al dashboard/i })).toBeInTheDocument()
   })
 
   it('marks onboarding complete and navigates on finish', async () => {
     renderPage()
-    // Navigate to step 3
-    fireEvent.click(screen.getByRole('button', { name: /continuar/i }))
-    await waitFor(() => {
-      expect(screen.getByText(/omitir/i)).toBeInTheDocument()
-    })
-    fireEvent.click(screen.getByRole('button', { name: /omitir/i }))
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /ir al dashboard/i })).toBeInTheDocument()
-    })
+    await goToStep4()
 
     fireEvent.click(screen.getByRole('button', { name: /ir al dashboard/i }))
 
@@ -196,10 +356,43 @@ describe('OnboardingPage', () => {
     expect(progressBar).toBeInTheDocument()
   })
 
-  it('renders 3 step indicators', () => {
+  it('renders 4 step indicators', () => {
     renderPage()
-    // 3 step circles + 2 connector lines = each step has a circle div
-    const stepContainer = screen.getByRole('progressbar').parentElement?.nextElementSibling
+    const progressBar = screen.getByRole('progressbar')
+    expect(progressBar).toBeInTheDocument()
+    // Verify we now have 4 steps (TOTAL_STEPS = 4)
+    const stepContainer = progressBar.parentElement?.nextElementSibling
     expect(stepContainer).toBeTruthy()
+  })
+
+  it('shows form validation errors for empty fields on Agregar tarjeta', async () => {
+    renderPage()
+    await goToStep3ViaSkip()
+
+    // Click Agregar tarjeta without filling the form
+    fireEvent.click(screen.getByRole('button', { name: /agregar tarjeta/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Requerido')).toBeInTheDocument()
+    })
+  })
+
+  it('shows API error when createTarjeta fails', async () => {
+    mockCreateTarjeta.mockRejectedValueOnce(new Error('API error'))
+
+    renderPage()
+    await goToStep3ViaSkip()
+
+    fireEvent.change(screen.getByLabelText(/banco/i), { target: { value: 'Banco Test' } })
+    fireEvent.change(screen.getByLabelText(/últimos 4 dígitos/i), { target: { value: '9999' } })
+    fireEvent.change(screen.getByLabelText(/saldo actual/i), { target: { value: '500' } })
+
+    fireEvent.click(screen.getByRole('button', { name: /agregar tarjeta/i }))
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Error al agregar la tarjeta. Intenta de nuevo.')
+      ).toBeInTheDocument()
+    })
   })
 })
