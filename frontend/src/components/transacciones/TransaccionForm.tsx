@@ -9,6 +9,8 @@ import { useCategorias } from '@/hooks/useCategorias'
 import { useTarjetas } from '@/hooks/useTarjetas'
 import { useMonedas } from '@/hooks/useCatalogos'
 import { useUserCurrency } from '@/hooks/useUserCurrency'
+import { useDualMoneda } from '@/hooks/useDualMoneda'
+import { cn } from '@/lib/utils'
 
 const ingresoSchema = z.object({
   categoria_id: z.string().uuid('Selecciona una categoria'),
@@ -75,12 +77,19 @@ export function TransaccionForm({
   const { data: tarjetas = [] } = useTarjetas()
   const { data: monedas = [] } = useMonedas()
   const userCurrency = useUserCurrency()
+  const { data: dualMoneda } = useDualMoneda()
   const tarjetasActivas = tarjetas.filter((t) => t.activa)
+
+  const hasSecondary = !!dualMoneda?.moneda_secundaria
+  const activeCurrencies = hasSecondary
+    ? [userCurrency, dualMoneda!.moneda_secundaria as string]
+    : []
 
   const {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
@@ -93,6 +102,7 @@ export function TransaccionForm({
   })
 
   const metodoPagoValue = useWatch({ control, name: 'metodo_pago' as never }) as string | undefined
+  const monedaValue = useWatch({ control, name: 'moneda' as never }) as string | undefined
 
   const handleFormSubmit = handleSubmit((data) =>
     onSubmit(data as IngresoFormData | EgresoFormData)
@@ -140,21 +150,43 @@ export function TransaccionForm({
           <label htmlFor="moneda" className="text-sm font-medium text-[var(--text-secondary)]">
             Moneda
           </label>
-          <select id="moneda" {...register('moneda')} className="finza-input w-full" aria-label="Moneda">
-            {monedas.length > 0
-              ? monedas.map((m) => (
-                  <option key={m.codigo} value={m.codigo}>
-                    {m.simbolo} {m.codigo} — {m.nombre}
-                  </option>
-                ))
-              : (
-                <>
-                  <option value="DOP">RD$ DOP — Peso Dominicano</option>
-                  <option value="USD">$ USD — Dólar Estadounidense</option>
-                </>
-              )
-            }
-          </select>
+          {hasSecondary ? (
+            // Compact toggle for primary + secondary currencies
+            <div className="flex gap-2" role="group" aria-label="Seleccionar moneda">
+              {activeCurrencies.map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  className={cn(
+                    'px-4 py-1.5 rounded-full text-sm font-medium border transition-all',
+                    (monedaValue ?? userCurrency) === code
+                      ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                      : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50'
+                  )}
+                  onClick={() => setValue('moneda' as never, code as never)}
+                  aria-pressed={(monedaValue ?? userCurrency) === code}
+                >
+                  {code}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <select id="moneda" {...register('moneda')} className="finza-input w-full" aria-label="Moneda">
+              {monedas.length > 0
+                ? monedas.map((m) => (
+                    <option key={m.codigo} value={m.codigo}>
+                      {m.simbolo} {m.codigo} — {m.nombre}
+                    </option>
+                  ))
+                : (
+                  <>
+                    <option value="DOP">RD$ DOP — Peso Dominicano</option>
+                    <option value="USD">$ USD — Dólar Estadounidense</option>
+                  </>
+                )
+              }
+            </select>
+          )}
         </div>
       </div>
 

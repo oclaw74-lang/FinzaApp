@@ -19,6 +19,7 @@ class MetaAhorroCreate(BaseModel):
     estado: EstadoMeta = "activa"
     color: str | None = None
     icono: str | None = None
+    moneda: str = "DOP"
 
     @field_validator("monto_objetivo")
     @classmethod
@@ -71,6 +72,7 @@ class MetaAhorroResponse(BaseModel):
     estado: str
     color: str | None
     icono: str | None
+    moneda: str = "DOP"
     created_at: datetime
     updated_at: datetime
 

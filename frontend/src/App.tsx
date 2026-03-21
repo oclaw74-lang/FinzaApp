@@ -31,6 +31,7 @@ import { RecurrentesPage } from '@/pages/RecurrentesPage'
 import { ScorePage } from '@/pages/ScorePage'
 import { TarjetasPage } from '@/pages/TarjetasPage'
 import { SurveyPage } from '@/pages/SurveyPage'
+import { ImportarPage } from '@/pages/ImportarPage'
 import { PwaInstallPrompt } from '@/components/shared/PwaInstallPrompt'
 
 const queryClient = new QueryClient({
@@ -115,6 +116,7 @@ export function App(): JSX.Element {
                 <Route path="/tarjetas" element={<TarjetasPage />} />
                 <Route path="/survey" element={<SurveyPage />} />
                 <Route path="/score" element={<ScorePage />} />
+                <Route path="/importar" element={<ImportarPage />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFoundPage />} />
