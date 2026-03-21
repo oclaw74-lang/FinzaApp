@@ -14,6 +14,15 @@ def _handle_api_error(e: APIError) -> None:
         raise HTTPException(status_code=409, detail=str(e.message))
     if code == "23503":
         raise HTTPException(status_code=400, detail=str(e.message))
+    # 23514 = check_violation (e.g. constraint on meta_meses)
+    if code == "23514":
+        raise HTTPException(status_code=400, detail=str(e.message))
+    # PGRST204 = column not found in schema cache (migration not applied)
+    if code == "PGRST204":
+        raise HTTPException(status_code=400, detail=str(e.message))
+    # 42703 = undefined_column (Postgres SQLSTATE)
+    if code == "42703":
+        raise HTTPException(status_code=400, detail=str(e.message))
     try:
         status = int(code)
     except (ValueError, TypeError):

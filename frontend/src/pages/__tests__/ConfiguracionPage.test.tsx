@@ -9,6 +9,12 @@ vi.mock('@/hooks/useProfile', () => ({
   useUpdateProfile: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
 }))
 
+// Mock useDualMoneda to prevent QueryClient error
+vi.mock('@/hooks/useDualMoneda', () => ({
+  useDualMoneda: vi.fn(() => ({ data: null, isLoading: false })),
+  useUpdateDualMoneda: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+}))
+
 // Mock useMetas and useFondoEmergencia (used in savings distribution section)
 vi.mock('@/hooks/useMetas', () => ({
   useMetas: vi.fn(() => ({ data: [], isLoading: false })),
