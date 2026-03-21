@@ -491,6 +491,18 @@ export function ConfiguracionPage(): JSX.Element {
     }
   }
 
+  const handleSaveDualMoneda = async (): Promise<void> => {
+    try {
+      await updateDualMoneda.mutateAsync({
+        moneda_secundaria: monedaSecundaria || null,
+        ...(monedaSecundaria && tasaCambio ? { tasa_cambio: parseFloat(tasaCambio) } : {}),
+      })
+      toast.success(t('settings.dualMonedaGuardada'))
+    } catch {
+      toast.error(t('settings.dualMonedaError'))
+    }
+  }
+
   const tabs: { id: Tab; label: string }[] = [
     { id: 'profile', label: t('settings.profile') },
     { id: 'appearance', label: t('settings.appearance') },
@@ -902,6 +914,97 @@ export function ConfiguracionPage(): JSX.Element {
           >
             {t('common.save')}
           </Button>
+        </div>
+      )}
+
+      {/* ─── Dual currency section ─── */}
+      {activeTab === 'profile' && (
+        <div className="card-glass p-6 space-y-4 mt-4">
+          <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-2">
+            <DollarSign size={13} className="text-[var(--accent)]" />
+            {t('settings.segundaMoneda')}
+          </p>
+
+          {/* Loading state */}
+          {dualMoneda.isLoading && (
+            <div className="h-8 flex items-center">
+              <span className="text-sm text-[var(--text-muted)]">{t('common.loading')}</span>
+            </div>
+          )}
+
+          {/* Content */}
+          {!dualMoneda.isLoading && (
+            <div className="space-y-4">
+              {/* Secondary currency selector */}
+              <div className="space-y-1.5">
+                <label htmlFor="moneda-secundaria" className="text-sm font-medium text-[var(--text-primary)]">
+                  {t('settings.segundaMoneda')}
+                </label>
+                <select
+                  id="moneda-secundaria"
+                  value={monedaSecundaria}
+                  onChange={(e) => {
+                    setMonedaSecundaria(e.target.value)
+                    if (!e.target.value) setTasaCambio('')
+                  }}
+                  className="finza-input w-full"
+                  aria-label={t('settings.segundaMoneda')}
+                >
+                  <option value="">{t('settings.ninguna')}</option>
+                  {monedas.length > 0
+                    ? monedas.map((m) => (
+                        <option key={m.codigo} value={m.codigo}>
+                          {m.codigo} — {m.nombre}
+                        </option>
+                      ))
+                    : (
+                      <>
+                        <option value="USD">USD — Dólar Americano</option>
+                        <option value="EUR">EUR — Euro</option>
+                        <option value="DOP">DOP — Peso Dominicano</option>
+                      </>
+                    )}
+                </select>
+              </div>
+
+              {/* Exchange rate — only when secondary is selected */}
+              {monedaSecundaria && (
+                <div className="space-y-1.5">
+                  <label htmlFor="tasa-cambio" className="text-sm font-medium text-[var(--text-primary)]">
+                    {t('settings.tasaCambio')} — 1 {monedaSecundaria} ={' '}
+                    <span className="text-[var(--accent)]">__</span>{' '}
+                    {dualMoneda.data?.moneda_principal ?? profileForm.getValues('currency') ?? 'DOP'}
+                  </label>
+                  <input
+                    id="tasa-cambio"
+                    type="number"
+                    min="0.000001"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={tasaCambio}
+                    onChange={(e) => setTasaCambio(e.target.value)}
+                    className="finza-input w-full"
+                    aria-label={t('settings.tasaCambio')}
+                  />
+                  {dualMoneda.data?.tasa_cambio_actualizada_at && (
+                    <p className="text-xs text-[var(--text-muted)]">
+                      {t('settings.ultimaActualizacion')}:{' '}
+                      {new Date(dualMoneda.data.tasa_cambio_actualizada_at).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <Button
+                onClick={handleSaveDualMoneda}
+                isLoading={updateDualMoneda.isPending}
+                className="w-full"
+                variant="secondary"
+              >
+                {t('common.save')}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
