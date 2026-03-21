@@ -616,10 +616,10 @@ export function ConfiguracionPage(): JSX.Element {
               {t('profile.infoSalarial')}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5 sm:col-span-2">
+              <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
                   <DollarSign size={14} className="text-[var(--accent)]" />
-                  {t('profile.salario')}
+                  {t('profile.salarioNeto')}
                 </label>
                 <input
                   type="number"
