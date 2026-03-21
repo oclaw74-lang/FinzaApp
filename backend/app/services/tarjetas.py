@@ -104,21 +104,11 @@ def update_tarjeta(
         payload["banco_id"] = str(payload["banco_id"])
 
     try:
-        response = (
-            client.table("tarjetas")
-            .update(payload)
-            .eq("id", tarjeta_id)
-            .eq("user_id", user_id)
-            .execute()
-        )
-        if not response.data:
-            return None
-        return _enrich_tarjeta(response.data[0])
-    except IndexError:
-        raise HTTPException(status_code=404, detail="Tarjeta no encontrada.")
+        client.table("tarjetas").update(payload).eq("id", tarjeta_id).eq("user_id", user_id).execute()
     except APIError as e:
         _handle_api_error(e)
-    return None
+    # SDK does not return data from update; fetch updated row separately
+    return get_tarjeta(user_jwt, user_id, tarjeta_id)
 
 
 def delete_tarjeta(user_jwt: str, user_id: str, tarjeta_id: str) -> None:
@@ -147,16 +137,7 @@ def toggle_bloquear_tarjeta(user_jwt: str, user_id: str, tarjeta_id: str) -> dic
     nuevo_estado = not tarjeta.get("bloqueada", False)
     client = get_user_client(user_jwt)
     try:
-        response = (
-            client.table("tarjetas")
-            .update({"bloqueada": nuevo_estado})
-            .eq("id", tarjeta_id)
-            .eq("user_id", user_id)
-            .execute()
-        )
-        if not response.data:
-            return None
-        return _enrich_tarjeta(response.data[0])
+        client.table("tarjetas").update({"bloqueada": nuevo_estado}).eq("id", tarjeta_id).eq("user_id", user_id).execute()
     except APIError as e:
         _handle_api_error(e)
-    return None
+    return get_tarjeta(user_jwt, user_id, tarjeta_id)

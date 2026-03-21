@@ -8,7 +8,7 @@ import * as Icons from 'lucide-react'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
-import { usePaises } from '@/hooks/useCatalogos'
+import { usePaises, useMonedas } from '@/hooks/useCatalogos'
 import {
   useCategorias,
   useCreateCategoria,
@@ -356,6 +356,7 @@ export function ConfiguracionPage(): JSX.Element {
 
   const { data: metas = [] } = useMetas()
   const { data: fondo } = useFondoEmergencia()
+  const { data: monedas = [] } = useMonedas()
   const tieneSavingsTarget = metas.some((m) => m.estado === 'activa') || !!fondo
 
   // Sync profile data when loaded (useEffect avoids stale state from render-time mutation)
@@ -575,9 +576,19 @@ export function ConfiguracionPage(): JSX.Element {
                 className="finza-input w-full"
                 {...profileForm.register('currency')}
               >
-                <option value="DOP">{t('settings.currencyDOP')}</option>
-                <option value="USD">{t('settings.currencyUSD')}</option>
-                <option value="EUR">{t('settings.currencyEUR')}</option>
+                {monedas.length > 0
+                  ? monedas.map((m) => (
+                      <option key={m.codigo} value={m.codigo}>
+                        {m.codigo} — {m.nombre}
+                      </option>
+                    ))
+                  : (
+                    <>
+                      <option value="DOP">DOP — Peso Dominicano</option>
+                      <option value="USD">USD — Dólar Americano</option>
+                      <option value="EUR">EUR — Euro</option>
+                    </>
+                  )}
               </select>
             </div>
 
