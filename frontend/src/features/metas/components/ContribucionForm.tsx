@@ -30,7 +30,7 @@ function buildContribucionSchema(montoActual: number) {
           maximum: montoActual,
           type: 'number',
           inclusive: true,
-          message: `No puedes retirar mas de lo ahorrado (${(montoActual ?? 0).toFixed(2)})`,
+          message: `No puedes retirar mas de lo ahorrado (${Number(montoActual ?? 0).toFixed(2)})`,
           path: ['monto'],
         })
       }
@@ -51,7 +51,7 @@ export function ContribucionForm({
   isLoading,
 }: ContribucionFormProps): JSX.Element {
   const { t } = useTranslation()
-  const schema = buildContribucionSchema(montoActual)
+  const schema = buildContribucionSchema(Number(montoActual))
 
   const {
     register,
@@ -104,7 +104,7 @@ export function ContribucionForm({
         />
         {tipoSeleccionado === 'retiro' && (
           <p className="text-xs text-gray-400 mt-1">
-            {t('metas.contribucion.maximoRetirar', { monto: (montoActual ?? 0).toFixed(2) })}
+            {t('metas.contribucion.maximoRetirar', { monto: Number(montoActual ?? 0).toFixed(2) })}
           </p>
         )}
       </div>
