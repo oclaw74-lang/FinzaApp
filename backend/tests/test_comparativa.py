@@ -67,7 +67,7 @@ class TestGetComparativa:
         # 12,000 at 12% annual = 1200/12 = 100/month
         prestamo = {
             "descripcion": "Prestamo auto",
-            "prestamista": "Banco",
+            "persona": "Banco",
             "tasa_interes": "12.00",
             "monto_pendiente": "12000.00",
         }

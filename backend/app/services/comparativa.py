@@ -31,7 +31,7 @@ def get_comparativa(user_jwt: str, user_id: str) -> dict:
             costo_mensual = pendiente * (tasa / 100 / 12)
             deudas.append(
                 {
-                    "nombre": p.get("descripcion") or p.get("prestamista", "Prestamo"),
+                    "nombre": p.get("descripcion") or p.get("persona", "Prestamo"),
                     "tipo": "deuda",
                     "monto": pendiente,
                     "tasa_anual": tasa,
