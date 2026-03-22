@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -9,11 +10,13 @@ class PresupuestoCreate(BaseModel):
     mes: int = Field(..., ge=1, le=12)
     year: int = Field(..., ge=2000)
     monto_limite: float = Field(..., gt=0)
+    moneda: str = "DOP"
     aplicar_todos_los_meses: bool = False
 
 
 class PresupuestoUpdate(BaseModel):
     monto_limite: float = Field(..., gt=0)
+    moneda: Optional[str] = None
 
 
 class PresupuestoResponse(BaseModel):
@@ -23,6 +26,7 @@ class PresupuestoResponse(BaseModel):
     mes: int
     year: int
     monto_limite: float
+    moneda: str = "DOP"
     created_at: datetime
     updated_at: datetime
 

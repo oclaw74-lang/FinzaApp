@@ -5,12 +5,32 @@ export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs))
 }
 
-export function formatMoney(amount: number, currency: string = 'DOP'): string {
-  const prefix = currency === 'DOP' ? 'RD$' : '$'
-  return `${prefix}${new Intl.NumberFormat('es-DO', {
+// Symbol lookup for currencies used in Latin America and beyond
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  DOP: 'RD$',
+  USD: 'US$',
+  EUR: '€',
+  MXN: 'MX$',
+  COP: 'COL$',
+  ARS: 'AR$',
+  BRL: 'R$',
+  GBP: '£',
+  CAD: 'CA$',
+  CLP: 'CLP$',
+  PEN: 'S/',
+}
+
+export function getCurrencySymbol(currency: string): string {
+  return CURRENCY_SYMBOLS[currency?.toUpperCase()] ?? currency
+}
+
+export function formatMoney(amount: number, currency = 'DOP'): string {
+  const symbol = getCurrencySymbol(currency)
+  const formatted = new Intl.NumberFormat('es-DO', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amount)}`
+  }).format(amount)
+  return `${symbol} ${formatted}`
 }
 
 export function formatCurrency(amount: number, currency = 'DOP'): string {

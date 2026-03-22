@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { DatePicker } from '@/components/ui/DatePicker'
-import { formatCurrency } from '@/lib/utils'
+import { formatMoney } from '@/lib/utils'
 import { getApiErrorMessage } from '@/lib/apiError'
 import {
   useRecurrentes,
@@ -15,6 +15,7 @@ import {
   useDeleteRecurrente,
   useProximosVencimientos,
 } from '@/hooks/useRecurrentes'
+import { useDualMoneda } from '@/hooks/useDualMoneda'
 import type { RecurrenteResponse, RecurrenteCreate, FrecuenciaRecurrente, TipoRecurrente } from '@/types/recurrente'
 
 type ModalMode = 'crear' | 'editar' | null
@@ -26,6 +27,7 @@ interface FormState {
   tipo: TipoRecurrente
   descripcion: string
   monto: string
+  moneda: string
   frecuencia: FrecuenciaRecurrente
   dia_del_mes: string
   fecha_inicio: string
@@ -36,6 +38,7 @@ const defaultForm: FormState = {
   tipo: 'egreso',
   descripcion: '',
   monto: '',
+  moneda: 'DOP',
   frecuencia: 'mensual',
   dia_del_mes: '',
   fecha_inicio: '',
@@ -47,6 +50,10 @@ export function RecurrentesPage(): JSX.Element {
   const now = new Date()
   const mes = now.getMonth() + 1
   const year = now.getFullYear()
+
+  const { data: dualMoneda } = useDualMoneda()
+  const monedaPrincipal = dualMoneda?.moneda_principal ?? 'DOP'
+  const monedaSecundaria = dualMoneda?.moneda_secundaria ?? null
 
   const { data: recurrentes, isLoading: loadingRecurrentes } = useRecurrentes()
   const { data: proximos, isLoading: loadingProximos } = useProximosVencimientos(mes, year)
@@ -60,7 +67,7 @@ export function RecurrentesPage(): JSX.Element {
 
   const openCrear = () => {
     setEditando(null)
-    setForm(defaultForm)
+    setForm({ ...defaultForm, moneda: monedaPrincipal })
     setModal('crear')
   }
 
@@ -70,6 +77,7 @@ export function RecurrentesPage(): JSX.Element {
       tipo: r.tipo,
       descripcion: r.descripcion,
       monto: String(r.monto),
+      moneda: r.moneda ?? monedaPrincipal,
       frecuencia: r.frecuencia,
       dia_del_mes: r.dia_del_mes !== null ? String(r.dia_del_mes) : '',
       fecha_inicio: r.fecha_inicio,
@@ -88,6 +96,7 @@ export function RecurrentesPage(): JSX.Element {
     tipo: form.tipo,
     descripcion: form.descripcion,
     monto: parseFloat(form.monto),
+    moneda: form.moneda,
     frecuencia: form.frecuencia,
     dia_del_mes: form.frecuencia === 'mensual' && form.dia_del_mes ? parseInt(form.dia_del_mes, 10) : null,
     fecha_inicio: form.fecha_inicio,
@@ -193,7 +202,7 @@ export function RecurrentesPage(): JSX.Element {
                   <p className="text-xs dark:text-finza-yellow mt-0.5">{fecha_estimada}</p>
                 </div>
                 <p className={`font-bold text-sm money ${recurrente.tipo === 'ingreso' ? 'dark:text-finza-green' : 'dark:text-finza-red'} text-[var(--text-primary)]`}>
-                  {formatCurrency(recurrente.monto)}
+                  {formatMoney(recurrente.monto, recurrente.moneda || monedaPrincipal)}
                 </p>
               </div>
             ))}
@@ -240,7 +249,7 @@ export function RecurrentesPage(): JSX.Element {
                   </p>
                 </div>
                 <p className={`font-bold text-sm money ${r.tipo === 'ingreso' ? 'dark:text-finza-green' : 'dark:text-finza-red'} text-[var(--text-primary)]`}>
-                  {formatCurrency(r.monto)}
+                  {formatMoney(r.monto, r.moneda || monedaPrincipal)}
                 </p>
                 {/* Toggle activo */}
                 <button
@@ -348,6 +357,21 @@ export function RecurrentesPage(): JSX.Element {
                   step="0.01"
                 />
               </div>
+
+              {/* Moneda — solo si monedaSecundaria existe */}
+              {monedaSecundaria && (
+                <div>
+                  <label className="block text-xs text-[var(--text-muted)] mb-1">{t('common.currency', { defaultValue: 'Moneda' })}</label>
+                  <select
+                    value={form.moneda}
+                    onChange={(e) => setForm((f) => ({ ...f, moneda: e.target.value }))}
+                    className="finza-input w-full"
+                  >
+                    <option value={monedaPrincipal}>{monedaPrincipal}</option>
+                    <option value={monedaSecundaria}>{monedaSecundaria}</option>
+                  </select>
+                </div>
+              )}
 
               {/* Frecuencia */}
               <div>

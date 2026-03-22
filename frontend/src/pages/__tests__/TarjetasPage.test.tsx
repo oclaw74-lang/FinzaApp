@@ -35,6 +35,9 @@ vi.mock('@/store/authStore', () => ({
     user: { user_metadata: { pais_codigo: 'DO' } },
   })),
 }))
+vi.mock('@/hooks/useDualMoneda', () => ({
+  useDualMoneda: vi.fn(() => ({ data: { moneda_principal: 'DOP', moneda_secundaria: null, tasa_cambio: null } })),
+}))
 
 import {
   useTarjetas,
@@ -64,6 +67,9 @@ const mockCredito: Tarjeta = {
   saldo_actual: 15000,
   limite_credito: 50000,
   disponible: 35000,
+  moneda: 'DOP',
+  saldo_secundario: 0,
+  limite_secundario: 0,
   fecha_corte: 15,
   fecha_pago: 5,
   color: null,
@@ -84,6 +90,9 @@ const mockDebito: Tarjeta = {
   saldo_actual: 8000,
   limite_credito: null,
   disponible: null,
+  moneda: 'DOP',
+  saldo_secundario: 0,
+  limite_secundario: 0,
   fecha_corte: null,
   fecha_pago: null,
   color: null,

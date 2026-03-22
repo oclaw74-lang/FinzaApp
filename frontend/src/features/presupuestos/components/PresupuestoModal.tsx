@@ -9,6 +9,7 @@ interface PresupuestoModalProps {
   year: number
   categoriaIdInicial?: string
   montoLimiteInicial?: number
+  monedaInicial?: string
   isEditing?: boolean
   errorMessage?: string | null
   onClose: () => void
@@ -23,6 +24,7 @@ export function PresupuestoModal({
   year,
   categoriaIdInicial,
   montoLimiteInicial,
+  monedaInicial,
   isEditing = false,
   errorMessage,
   onClose,
@@ -77,6 +79,7 @@ export function PresupuestoModal({
           year={year}
           categoriaIdInicial={categoriaIdInicial}
           montoLimiteInicial={montoLimiteInicial}
+          monedaInicial={monedaInicial}
           isEditing={isEditing}
           errorMessage={errorMessage}
           onSubmit={onSubmit}

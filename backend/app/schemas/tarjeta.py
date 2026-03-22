@@ -25,6 +25,8 @@ class TarjetaCreate(BaseModel):
     activa: bool = True
     bloqueada: bool = False
     moneda: str = "DOP"
+    saldo_secundario: float = 0.0
+    limite_secundario: float = 0.0
 
     @field_validator("banco")
     @classmethod
@@ -76,6 +78,9 @@ class TarjetaUpdate(BaseModel):
     color: Optional[str] = None
     activa: Optional[bool] = None
     bloqueada: Optional[bool] = None
+    moneda: Optional[str] = None
+    saldo_secundario: Optional[float] = None
+    limite_secundario: Optional[float] = None
 
     # Allow clearing banco by passing null banco_id; allow empty-string banco in updates
     @field_validator("banco")
@@ -150,5 +155,7 @@ class TarjetaResponse(BaseModel):
     bloqueada: bool = False
     disponible: Optional[float] = None  # computed: limite_credito - saldo_actual
     moneda: str = "DOP"
+    saldo_secundario: float = 0.0
+    limite_secundario: float = 0.0
 
     model_config = {"from_attributes": True}

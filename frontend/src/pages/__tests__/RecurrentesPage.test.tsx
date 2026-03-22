@@ -10,6 +10,9 @@ vi.mock('@/hooks/useRecurrentes', () => ({
   useUpdateRecurrente: vi.fn(),
   useDeleteRecurrente: vi.fn(),
 }))
+vi.mock('@/hooks/useDualMoneda', () => ({
+  useDualMoneda: vi.fn(() => ({ data: { moneda_principal: 'DOP', moneda_secundaria: null, tasa_cambio: null } })),
+}))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import {
@@ -26,6 +29,7 @@ const mockRecurrente: RecurrenteResponse = {
   tipo: 'egreso',
   descripcion: 'Renta mensual',
   monto: 15000,
+  moneda: 'DOP',
   categoria_id: null,
   frecuencia: 'mensual',
   dia_del_mes: 1,
@@ -42,6 +46,7 @@ const mockIngresoRecurrente: RecurrenteResponse = {
   tipo: 'ingreso',
   descripcion: 'Salario',
   monto: 50000,
+  moneda: 'DOP',
   categoria_id: null,
   frecuencia: 'mensual',
   dia_del_mes: 15,

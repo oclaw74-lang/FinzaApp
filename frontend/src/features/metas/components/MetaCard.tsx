@@ -99,13 +99,13 @@ export function MetaCard({ meta, onClick }: MetaCardProps): JSX.Element {
             className="text-lg font-bold font-mono"
             style={{ color: colorMeta }}
           >
-            {formatMoney(meta.monto_actual)}
+            {formatMoney(meta.monto_actual, meta.moneda || 'DOP')}
           </p>
         </div>
         <div className="text-right">
           <p className="text-xs text-[var(--text-muted)]">{t('metas.card.objetivo')}</p>
           <p className="text-sm font-semibold text-[var(--text-primary)]">
-            {formatMoney(meta.monto_objetivo)}
+            {formatMoney(meta.monto_objetivo, meta.moneda || 'DOP')}
           </p>
         </div>
       </div>

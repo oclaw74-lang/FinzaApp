@@ -17,6 +17,10 @@ vi.mock('@/hooks/useCategorias', () => ({
   useCategorias: vi.fn(),
 }))
 
+vi.mock('@/hooks/useDualMoneda', () => ({
+  useDualMoneda: vi.fn(() => ({ data: { moneda_principal: 'DOP', moneda_secundaria: null, tasa_cambio: null } })),
+}))
+
 import {
   usePresupuestosEstado,
   usePresupuestosSugeridos,
@@ -306,6 +310,7 @@ describe('PresupuestosPage', () => {
         mes: expect.any(Number),
         year: expect.any(Number),
         monto_limite: 440,
+        moneda: expect.any(String),
       })
     })
   })
