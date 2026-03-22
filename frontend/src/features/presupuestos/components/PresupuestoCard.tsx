@@ -69,10 +69,10 @@ export function PresupuestoCard({
       {/* Montos */}
       <div className="flex items-center justify-between mt-2">
         <p className={cn('text-xs tabular-nums font-medium', pctColor)}>
-          {formatMoney(estado.gasto_actual)}
+          {formatMoney(estado.gasto_actual, estado.moneda)}
         </p>
         <p className="text-xs text-white/30 tabular-nums">
-          de {formatMoney(estado.monto_limite)}
+          de {formatMoney(estado.monto_limite, estado.moneda)}
         </p>
       </div>
     </button>

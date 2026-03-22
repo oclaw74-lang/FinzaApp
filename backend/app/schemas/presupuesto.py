@@ -42,6 +42,7 @@ class PresupuestoEstado(BaseModel):
     mes: int
     year: int
     monto_limite: float
+    moneda: str = "DOP"
     gasto_actual: float
     porcentaje_usado: float
     alerta: bool  # True si porcentaje_usado >= 80
