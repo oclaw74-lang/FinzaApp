@@ -188,25 +188,27 @@ export function NotificacionesPage(): JSX.Element {
             </p>
           )}
         </div>
-        {noLeidas > 0 && (
-          <button
-            onClick={handleMarcarTodas}
-            disabled={marcarTodas.isPending}
-            className="flex items-center gap-1.5 text-sm text-[var(--accent)] hover:underline disabled:opacity-50"
-          >
-            <CheckCheck size={16} />
-            {t('notificaciones.markAllRead')}
-          </button>
-        )}
-        {!subscribed && permission !== 'denied' && (
-          <button
-            onClick={handleSuscribirPush}
-            className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-xl border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-          >
-            <BellRing size={14} />
-            Activar alertas
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {noLeidas > 0 && (
+            <button
+              onClick={handleMarcarTodas}
+              disabled={marcarTodas.isPending}
+              className="flex items-center gap-1.5 text-sm text-[var(--accent)] hover:underline disabled:opacity-50"
+            >
+              <CheckCheck size={16} />
+              {t('notificaciones.markAllRead')}
+            </button>
+          )}
+          {!subscribed && permission !== 'denied' && (
+            <button
+              onClick={handleSuscribirPush}
+              className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-xl border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+            >
+              <BellRing size={14} />
+              Activar alertas
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Loading */}
