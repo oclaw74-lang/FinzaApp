@@ -1400,7 +1400,7 @@ export function LandingPage(): JSX.Element {
                       value: `${stat1Count}+`,
                       label: t('landing.stat1Label'),
                       color: '#3d8ef8',
-                      numericTarget: 15,
+                      numericTarget: 20,
                     },
                     {
                       value: `${stat2Count}`,

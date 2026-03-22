@@ -764,7 +764,7 @@ const es = {
     feature2Title: 'Presupuestos Inteligentes', feature2Desc: 'Define limites por categoria y recibe alertas antes de excederlos.',
     feature3Title: 'Metas de Ahorro', feature3Desc: 'Crea metas con fecha objetivo y visualiza el progreso con aportes.',
     feature4Title: 'Tarjetas y Credito', feature4Desc: 'Gestiona tarjetas al estilo Apple Wallet, movimientos, estado de cuenta y prestamos con tabla de amortizacion.',
-    feature5Title: 'Alertas Inteligentes', feature5Desc: '15 tipos de notificaciones para que nunca pierdas una fecha importante.',
+    feature5Title: 'Alertas Inteligentes', feature5Desc: '20+ tipos de notificaciones para que nunca pierdas una fecha importante.',
     feature6Title: 'Educacion Financiera', feature6Desc: 'Lecciones, retos y consejos adaptados al contexto dominicano.',
     scoreTitle: 'Conoce tu salud financiera en segundos',
     scoreDesc: 'El score de Finza evalua 5 dimensiones clave y las convierte en un numero del 0 al 100.',

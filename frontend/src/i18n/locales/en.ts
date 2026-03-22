@@ -763,7 +763,7 @@ const en = {
     feature2Title: 'Smart Budgets', feature2Desc: 'Set limits by category and receive alerts before you exceed them.',
     feature3Title: 'Savings Goals', feature3Desc: 'Create goals with target dates and track progress with contributions.',
     feature4Title: 'Cards & Credit', feature4Desc: 'Manage cards with Apple Wallet design, transaction history, account statements and loans with amortization tables.',
-    feature5Title: 'Smart Alerts', feature5Desc: '15 notification types so you never miss an important date.',
+    feature5Title: 'Smart Alerts', feature5Desc: '20+ notification types so you never miss an important date.',
     feature6Title: 'Financial Education', feature6Desc: 'Lessons, challenges and tips tailored to the Dominican context.',
     scoreTitle: 'Know your financial health in seconds',
     scoreDesc: 'The Finza score evaluates 5 key dimensions and turns them into a number from 0 to 100.',
