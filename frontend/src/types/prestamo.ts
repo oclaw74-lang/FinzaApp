@@ -1,5 +1,5 @@
 export type TipoPrestamo = 'me_deben' | 'yo_debo'
-export type EstadoPrestamo = 'activo' | 'pagado' | 'vencido'
+export type EstadoPrestamo = 'activo' | 'pagado' | 'vencido' | 'cancelado'
 export type AcreeedorTipo = 'persona' | 'banco'
 
 export interface PagoPrestamo {

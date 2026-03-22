@@ -6,9 +6,11 @@ import type { Prestamo } from '@/types/prestamo'
 const mockPrestamoActivo: Prestamo = {
   id: 'pre-1',
   tipo: 'me_deben',
+  acreedor_tipo: 'persona',
   persona: 'Juan Perez',
   monto_original: 10000,
   monto_pendiente: 6000,
+  monto_ya_pagado: 4000,
   moneda: 'DOP',
   fecha_prestamo: '2026-01-10',
   fecha_vencimiento: '2026-12-31',

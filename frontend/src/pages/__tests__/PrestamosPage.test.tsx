@@ -24,7 +24,7 @@ vi.mock('@/features/prestamos/components/PrestamoResumenCards', () => ({
 vi.mock('@/features/prestamos/components/PrestamoRow', () => ({
   PrestamoRow: (props: any) => (
     <div data-testid="prestamo-row" onClick={() => props.onClick(props.prestamo)}>
-      {props.prestamo.descripcion}
+      {props.prestamo.persona}
     </div>
   ),
 }))
@@ -44,8 +44,8 @@ vi.mock('@/components/dashboard/ComparativaCard', () => ({
 import { usePrestamos, useCreatePrestamo, useUpdatePrestamo, useDeletePrestamo } from '@/hooks/usePrestamos'
 
 const mockPrestamos = [
-  { id: 'p-1', descripcion: 'Préstamo a Juan', monto: '5000.00', moneda: 'DOP', tasa_interes: null, fecha_inicio: '2024-01-01', fecha_vencimiento: null, tipo: 'me_deben', estado: 'activo', pagado: 0, notas: null },
-  { id: 'p-2', descripcion: 'Deuda con María', monto: '10000.00', moneda: 'DOP', tasa_interes: null, fecha_inicio: '2024-01-01', fecha_vencimiento: null, tipo: 'debo', estado: 'activo', pagado: 0, notas: null },
+  { id: 'p-1', tipo: 'me_deben' as const, acreedor_tipo: 'persona' as const, persona: 'Juan', monto_original: 5000, monto_pendiente: 5000, monto_ya_pagado: 0, moneda: 'DOP', fecha_prestamo: '2024-01-01', estado: 'activo' as const, created_at: '2024-01-01T00:00:00Z' },
+  { id: 'p-2', tipo: 'yo_debo' as const, acreedor_tipo: 'persona' as const, persona: 'Maria', monto_original: 10000, monto_pendiente: 10000, monto_ya_pagado: 0, moneda: 'DOP', fecha_prestamo: '2024-01-01', estado: 'activo' as const, created_at: '2024-01-01T00:00:00Z' },
 ]
 
 function setup({ data = mockPrestamos, isLoading = false } = {}) {
@@ -93,8 +93,8 @@ describe('PrestamosPage', () => {
 
   it('shows prestamo rows when data loaded', () => {
     render(<PrestamosPage />)
-    expect(screen.getByText('Préstamo a Juan')).toBeInTheDocument()
-    expect(screen.getByText('Deuda con María')).toBeInTheDocument()
+    expect(screen.getByText('Juan')).toBeInTheDocument()
+    expect(screen.getByText('Maria')).toBeInTheDocument()
   })
 
   it('shows nuevo prestamo button', () => {

@@ -54,5 +54,8 @@ def update_dual_moneda_config(
     if not update_payload:
         return get_dual_moneda_config(user_jwt, user_id)
 
-    client.table("user_config").update(update_payload).eq("user_id", user_id).execute()
+    client.table("user_config").upsert(
+        {"user_id": user_id, **update_payload},
+        on_conflict="user_id",
+    ).execute()
     return get_dual_moneda_config(user_jwt, user_id)

@@ -39,9 +39,11 @@ const mockPrestamos: Prestamo[] = [
   {
     id: 'pre-1',
     tipo: 'me_deben',
+    acreedor_tipo: 'persona',
     persona: 'Ana Garcia',
     monto_original: 5000,
     monto_pendiente: 2500,
+    monto_ya_pagado: 2500,
     moneda: 'DOP',
     fecha_prestamo: '2026-01-15',
     estado: 'activo',
@@ -156,9 +158,11 @@ describe('PrestamosPage', () => {
     const prestamoConCuota: Prestamo = {
       id: 'pre-cuota',
       tipo: 'me_deben',
+      acreedor_tipo: 'persona',
       persona: 'Carlos Lopez',
       monto_original: 12000,
       monto_pendiente: 10000,
+      monto_ya_pagado: 2000,
       moneda: 'DOP',
       fecha_prestamo: '2026-01-01',
       estado: 'activo',
@@ -178,9 +182,11 @@ describe('PrestamosPage', () => {
     const prestamoHoy: Prestamo = {
       id: 'pre-hoy',
       tipo: 'me_deben',
+      acreedor_tipo: 'persona',
       persona: 'Banco Central',
       monto_original: 50000,
       monto_pendiente: 40000,
+      monto_ya_pagado: 10000,
       moneda: 'DOP',
       fecha_prestamo: '2026-01-01',
       estado: 'activo',
@@ -200,9 +206,11 @@ describe('PrestamosPage', () => {
     const prestamoCercano: Prestamo = {
       id: 'pre-3d',
       tipo: 'me_deben',
+      acreedor_tipo: 'persona',
       persona: 'Prestamista',
       monto_original: 20000,
       monto_pendiente: 15000,
+      monto_ya_pagado: 5000,
       moneda: 'DOP',
       fecha_prestamo: '2026-01-01',
       estado: 'activo',
@@ -215,3 +223,5 @@ describe('PrestamosPage', () => {
     expect(screen.getByText('Prestamista')).toBeInTheDocument()
   })
 })
+
+
