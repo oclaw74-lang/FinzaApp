@@ -8,6 +8,7 @@ vi.mock('@/hooks/usePrestamos', () => ({
   useRegistrarPago: vi.fn(),
   useDeletePago: vi.fn(),
   useTablaAmortizacion: vi.fn(),
+  useUpdatePrestamo: vi.fn(),
 }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
@@ -16,6 +17,7 @@ import {
   useRegistrarPago,
   useDeletePago,
   useTablaAmortizacion,
+  useUpdatePrestamo,
 } from '@/hooks/usePrestamos'
 
 // ─── Mock data ─────────────────────────────────────────────────────────────────
@@ -23,9 +25,11 @@ import {
 const mockPrestamo: Prestamo = {
   id: 'pre-1',
   tipo: 'yo_debo',
+  acreedor_tipo: 'banco',
   persona: 'Juan Banco',
   monto_original: 100000,
   monto_pendiente: 80000,
+  monto_ya_pagado: 20000,
   moneda: 'DOP',
   fecha_prestamo: '2026-01-01',
   estado: 'activo',
@@ -95,6 +99,7 @@ function setupMocks(
   } as unknown as ReturnType<typeof usePrestamoDetalle>)
   vi.mocked(useRegistrarPago).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useRegistrarPago>)
   vi.mocked(useDeletePago).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useDeletePago>)
+  vi.mocked(useUpdatePrestamo).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useUpdatePrestamo>)
   vi.mocked(useTablaAmortizacion).mockReturnValue({
     data: amortizacion,
     isLoading: loadingAmortizacion,

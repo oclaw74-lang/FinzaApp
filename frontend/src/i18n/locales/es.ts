@@ -141,7 +141,7 @@ const es = {
     totalDebt: 'Deuda total', active: 'Activos', paid: 'Pagados',
     noPrestamos: 'Sin prestamos activos',
     noPrestamosDesc: 'Registra un prestamo para hacer seguimiento',
-    status: { pendiente: 'Pendiente', pagado: 'Pagado', vencido: 'Vencido', activo: 'Activo' },
+    status: { pendiente: 'Pendiente', pagado: 'Pagado', vencido: 'Vencido', activo: 'Activo', cancelado: 'Cancelado' },
     created: 'Prestamo registrado', updated: 'Prestamo actualizado', deleted: 'Prestamo eliminado',
     pagoRegistrado: 'Pago registrado correctamente',
     form: {
@@ -223,6 +223,9 @@ const es = {
       colEstado: 'Estado',
       eliminarPago: 'Eliminar pago',
       pagoConfirm: 'Eliminar este pago?',
+      cancelar: 'Cancelar prestamo',
+      cancelarConfirm: '¿Cancelar este prestamo? El estado cambiará a cancelado.',
+      cancelarExito: 'Prestamo cancelado correctamente',
       cerrar: 'Cerrar detalle',
     },
     cuota: 'Cuota mensual',

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Pencil, Trash2, Plus, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react'
+import { X, Pencil, Trash2, Plus, ChevronDown, ChevronUp, CheckCircle2, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { formatMoney, formatDate, cn } from '@/lib/utils'
 import { PagoForm } from './PagoForm'
 import type { PagoFormData } from './PagoForm'
-import { useDeletePago, useRegistrarPago, usePrestamoDetalle, useTablaAmortizacion } from '@/hooks/usePrestamos'
+import { useDeletePago, useRegistrarPago, usePrestamoDetalle, useTablaAmortizacion, useUpdatePrestamo } from '@/hooks/usePrestamos'
 import type { Prestamo, EstadoPrestamo } from '@/types/prestamo'
 import { getApiErrorMessage } from '@/lib/apiError'
 
@@ -25,6 +25,7 @@ function estadoLabel(estado: EstadoPrestamo, t: (key: string) => string): string
     activo: t('prestamos.status.activo'),
     pagado: t('prestamos.status.pagado'),
     vencido: t('prestamos.status.vencido'),
+    cancelado: t('prestamos.status.cancelado'),
   }
   return map[estado]
 }
@@ -34,6 +35,7 @@ function estadoColor(estado: EstadoPrestamo): string {
     activo: 'text-finza-blue',
     pagado: 'text-prosperity-green',
     vencido: 'text-alert-red',
+    cancelado: 'text-[var(--text-muted)]',
   }
   return map[estado]
 }
@@ -51,7 +53,9 @@ export function PrestamoDetail({
   const { data: prestamo, isLoading, isError } = usePrestamoDetalle(prestamoId)
   const registrarPago = useRegistrarPago(prestamoId)
   const deletePago = useDeletePago(prestamoId)
+  const updatePrestamo = useUpdatePrestamo()
   const [tablaExpanded, setTablaExpanded] = useState(false)
+  const [cancelando, setCancelando] = useState(false)
 
   const displayPrestamo = prestamo ?? prestamoCache
 
@@ -78,6 +82,20 @@ export function PrestamoDetail({
   const handleDeletePago = async (pagoId: string): Promise<void> => {
     if (window.confirm(t('prestamos.detail.pagoConfirm'))) {
       await deletePago.mutateAsync(pagoId)
+    }
+  }
+
+  const handleCancelar = async (): Promise<void> => {
+    if (!window.confirm(t('prestamos.detail.cancelarConfirm'))) return
+    try {
+      setCancelando(true)
+      await updatePrestamo.mutateAsync({ id: prestamoId, estado: 'cancelado' })
+      toast.success(t('prestamos.detail.cancelarExito'))
+      onClose()
+    } catch (error) {
+      toast.error(getApiErrorMessage(error))
+    } finally {
+      setCancelando(false)
     }
   }
 
@@ -498,6 +516,18 @@ export function PrestamoDetail({
               <Pencil size={15} className="mr-1" />
               {t('common.edit')}
             </Button>
+            {displayPrestamo.estado === 'activo' && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleCancelar}
+                isLoading={cancelando}
+                className="text-[var(--text-muted)]"
+              >
+                <XCircle size={15} className="mr-1" />
+                {t('prestamos.detail.cancelar')}
+              </Button>
+            )}
             <Button
               variant="danger"
               size="sm"

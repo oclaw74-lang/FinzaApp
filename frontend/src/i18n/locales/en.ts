@@ -140,7 +140,7 @@ const en = {
     totalDebt: 'Total debt', active: 'Active', paid: 'Paid',
     noPrestamos: 'No active loans',
     noPrestamosDesc: 'Record a loan to start tracking it',
-    status: { pendiente: 'Pending', pagado: 'Paid', vencido: 'Overdue', activo: 'Active' },
+    status: { pendiente: 'Pending', pagado: 'Paid', vencido: 'Overdue', activo: 'Active', cancelado: 'Cancelled' },
     created: 'Loan recorded', updated: 'Loan updated', deleted: 'Loan deleted',
     pagoRegistrado: 'Payment registered successfully',
     form: {
@@ -222,6 +222,9 @@ const en = {
       colEstado: 'Status',
       eliminarPago: 'Delete payment',
       pagoConfirm: 'Delete this payment?',
+      cancelar: 'Cancel loan',
+      cancelarConfirm: 'Cancel this loan? The status will change to cancelled.',
+      cancelarExito: 'Loan cancelled successfully',
       cerrar: 'Close details',
     },
     cuota: 'Monthly payment',

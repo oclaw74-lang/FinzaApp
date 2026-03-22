@@ -164,31 +164,36 @@ def _get_salario(client, user_id: str) -> float:
     return float(sal) if sal else 0.0
 
 
+def _get_presupuestos_mensual(client, user_id: str) -> float:
+    """Sum of all budgeted amounts for the current month from the presupuestos table."""
+    today = date.today()
+    mes_actual = f"{today.year}-{today.month:02d}"
+    try:
+        r = (
+            client.table("presupuestos")
+            .select("monto_presupuestado")
+            .eq("user_id", user_id)
+            .eq("mes", mes_actual)
+            .execute()
+        )
+    except APIError:
+        return 0.0
+    return sum(float(p.get("monto_presupuestado") or 0) for p in (r.data or []))
+
+
 def _calc_meta(client, user_id: str, meta_meses: int) -> float:
     """
-    Comprehensive emergency fund target.
+    Emergency fund target based on committed monthly expenses only.
 
-    base_mensual = max(
-        salario_mensual_neto,          # income replacement (primary if set)
-        promedio_egresos_3_meses,       # historical variable expenses
-        cuota_prestamos + suscripciones_mensual + recurrentes_mensual  # fixed obligations
-    )
+    base_mensual = presupuestos_mensual + recurrentes_mensual + cuota_prestamos
 
     meta_calculada = base_mensual * meta_meses
     """
-    promedio_egresos = _get_promedio_egresos(client, user_id)
+    presupuestos = _get_presupuestos_mensual(client, user_id)
     cuota_prestamos = _get_cuota_prestamos(client, user_id)
-    suscripciones = _get_suscripciones_mensual(client, user_id)
     recurrentes = _get_recurrentes_mensual(client, user_id)
-    salario = _get_salario(client, user_id)
 
-    obligaciones_fijas = cuota_prestamos + suscripciones + recurrentes
-
-    candidates = [promedio_egresos, obligaciones_fijas]
-    if salario > 0:
-        candidates.append(salario)
-
-    base_mensual = max(candidates)
+    base_mensual = presupuestos + cuota_prestamos + recurrentes
     return round(base_mensual * meta_meses, 2)
 
 

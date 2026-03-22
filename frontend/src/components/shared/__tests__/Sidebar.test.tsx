@@ -177,9 +177,9 @@ describe('Sidebar', () => {
     expect(screen.queryByText('Categorias')).not.toBeInTheDocument()
   })
 
-  it('does not render Suscripciones in nav', () => {
+  it('renders Suscripciones in nav', () => {
     renderSidebar()
-    expect(screen.queryByText('Suscripciones')).not.toBeInTheDocument()
+    expect(screen.getByText('Suscripciones')).toBeInTheDocument()
   })
 
   it('renders Retos in nav', () => {

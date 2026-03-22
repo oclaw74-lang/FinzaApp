@@ -22,7 +22,7 @@ import {
   Monitor,
   Languages,
   MessageSquare,
-  Upload,
+  Repeat2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUiStore } from '@/store/uiStore'
@@ -55,7 +55,6 @@ const navGroups: NavGroup[] = [
       { to: '/ingresos', icon: TrendingUp, labelKey: 'nav.ingresos' },
       { to: '/egresos', icon: TrendingDown, labelKey: 'nav.egresos' },
       { to: '/presupuestos', icon: PieChart, labelKey: 'nav.presupuestos' },
-      { to: '/importar', icon: Upload, labelKey: 'nav.importar' },
     ],
   },
   {
@@ -66,6 +65,7 @@ const navGroups: NavGroup[] = [
       { to: '/tarjetas', icon: CreditCard, labelKey: 'nav.tarjetas' },
       { to: '/metas', icon: Target, labelKey: 'nav.metas' },
       { to: '/recurrentes', icon: RefreshCw, labelKey: 'nav.recurrentes' },
+      { to: '/suscripciones', icon: Repeat2, labelKey: 'nav.suscripciones' },
       { to: '/fondo-emergencia', icon: Shield, labelKey: 'nav.fondoEmergencia' },
     ],
   },
