@@ -27,6 +27,8 @@ import { useCategorias } from '@/hooks/useCategorias'
 import { useBancos, usePaises } from '@/hooks/useCatalogos'
 import { useAuthStore } from '@/store/authStore'
 import { useEstadosCuenta, useUploadEstadoCuenta, useDeleteEstadoCuenta } from '@/hooks/useEstadosCuenta'
+import { useDualMoneda } from '@/hooks/useDualMoneda'
+import { useCurrencyConvert } from '@/hooks/useCurrencyConvert'
 import type { Tarjeta, TarjetaCreate, TarjetaUpdate, MovimientoTarjetaCreate, TipoMovimiento, TarjetaPagoPendiente } from '@/types/tarjeta'
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
@@ -86,6 +88,9 @@ const tarjetaBaseFields = {
   ),
   color: z.string().optional().nullable(),
   activa: z.boolean().default(true),
+  moneda: z.string().default('DOP'),
+  saldo_secundario: z.preprocess(preprocessNumber, z.number().min(0).nullable().optional()),
+  limite_secundario: z.preprocess(preprocessNumber, z.number().min(0).nullable().optional()),
 }
 
 // TODO: i18n when zod supports dynamic messages
@@ -200,7 +205,7 @@ interface CardVisualProps {
 function CardVisual({ tarjeta, onClick }: CardVisualProps): JSX.Element {
   const { t } = useTranslation()
   const fmt = (v: number) =>
-    new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v)
+    new Intl.NumberFormat('es-DO', { style: 'currency', currency: tarjeta.moneda || 'DOP', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v)
 
   const isCredit = tarjeta.tipo === 'credito'
   const disponible = isCredit
@@ -675,6 +680,9 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
   const [formPaisCodigo, setFormPaisCodigo] = useState(userPais)
   const { data: paises = [] } = usePaises()
   const isEditing = !!tarjeta
+  const { data: dualMonedaData } = useDualMoneda()
+  const monedaSecundaria = dualMonedaData?.moneda_secundaria ?? null
+  const monedaPrincipalCard = dualMonedaData?.moneda_principal ?? 'DOP'
   const {
     register,
     handleSubmit,
@@ -699,6 +707,9 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
           fecha_pago: tarjeta.fecha_pago ?? undefined,
           color: tarjeta.color ?? undefined,
           activa: tarjeta.activa,
+          moneda: tarjeta.moneda || 'DOP',
+          saldo_secundario: tarjeta.saldo_secundario || undefined,
+          limite_secundario: tarjeta.limite_secundario || undefined,
         }
       : { tipo: 'credito', red: 'visa', activa: true, banco_id: null, banco_custom: null, banco: '' },
   })
@@ -821,6 +832,17 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
             </select>
           </div>
 
+          {/* Moneda — solo si monedaSecundaria existe */}
+          {monedaSecundaria && (
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Moneda</label>
+              <select {...register('moneda')} className="finza-input w-full">
+                <option value={monedaPrincipalCard}>{monedaPrincipalCard}</option>
+                <option value={monedaSecundaria}>{monedaSecundaria}</option>
+              </select>
+            </div>
+          )}
+
           {/* Ultimos digitos */}
           <div>
             <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">{t('tarjetas.form.ultimosDigitos')}</label>
@@ -867,6 +889,34 @@ function TarjetaModal({ isOpen, onClose, onSubmit, isLoading, tarjeta }: Tarjeta
                 <p className="text-xs text-red-500 mt-1">{errors.limite_credito.message}</p>
               )}
             </div>
+          )}
+
+          {/* Campos secundarios — solo si tipo credito y hay moneda secundaria */}
+          {tipo === 'credito' && monedaSecundaria && (
+            <>
+              <div>
+                <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Saldo en {monedaSecundaria}</label>
+                <input
+                  {...register('saldo_secundario')}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  className="finza-input w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Límite en {monedaSecundaria}</label>
+                <input
+                  {...register('limite_secundario')}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  className="finza-input w-full"
+                />
+              </div>
+            </>
           )}
 
           {/* Fechas corte / pago */}
@@ -1133,7 +1183,7 @@ function getNextDayOfMonth(day: number): string {
 
 function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): JSX.Element {
   const { t } = useTranslation()
-  const fmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const fmt = { format: (v: number) => formatMoney(v, tarjeta.moneda || 'DOP') }
   const [movTab, setMovTab] = useState<MovimientoTab>('todos')
   const [movModalTipo, setMovModalTipo] = useState<TipoMovimiento | null>(null)
 
@@ -1349,7 +1399,7 @@ function DetailModal({ tarjeta, onClose, onEdit, onDelete }: DetailModalProps): 
                             )}
                           >
                             {mov.tipo === 'compra' ? '-' : '+'}
-                            {formatMoney(mov.monto)}
+                            {formatMoney(mov.monto, tarjeta.moneda || 'DOP')}
                           </span>
                           <button
                             type="button"
@@ -1585,14 +1635,16 @@ export function TarjetasPage(): JSX.Element {
   const updateTarjeta = useUpdateTarjeta()
   const deleteTarjeta = useDeleteTarjeta()
 
+  const { formatAmount, toMain, monedaPrincipal: mainCurrency } = useCurrencyConvert()
+
   const activas = tarjetas.filter((t) => t.activa)
-  const totalSaldo = activas.reduce((sum, t) => sum + t.saldo_actual, 0)
+  const totalSaldo = activas.reduce((sum, t) => sum + toMain(t.saldo_actual, t.moneda || mainCurrency), 0)
   const totalDisponible = activas
     .filter((t) => t.tipo === 'credito' && t.disponible !== null)
-    .reduce((sum, t) => sum + (t.disponible ?? 0), 0)
+    .reduce((sum, t) => sum + toMain(t.disponible ?? 0, t.moneda || mainCurrency), 0)
 
   const fmt = (n: number): string =>
-    new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
+    formatAmount(n, mainCurrency)
 
   const stats = [
     { label: t('tarjetas.totalSaldo'), value: fmt(totalSaldo), valueColor: '#ff8080' },
@@ -1613,6 +1665,9 @@ export function TarjetasPage(): JSX.Element {
         color: data.color ?? null,
         banco_id: data.banco_id ?? null,
         banco_custom: data.banco_custom ?? null,
+        moneda: data.moneda || 'DOP',
+        saldo_secundario: data.saldo_secundario ?? undefined,
+        limite_secundario: data.limite_secundario ?? undefined,
       }
       await createTarjeta.mutateAsync(payload)
       setIsModalOpen(false)
@@ -1634,6 +1689,9 @@ export function TarjetasPage(): JSX.Element {
         color: data.color ?? null,
         banco_id: data.banco_id ?? null,
         banco_custom: data.banco_custom ?? null,
+        moneda: data.moneda || 'DOP',
+        saldo_secundario: data.saldo_secundario ?? null,
+        limite_secundario: data.limite_secundario ?? null,
       }
       // Don't overwrite banco display name with empty string when clearing banco_id
       if (!data.banco?.trim()) {

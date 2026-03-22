@@ -189,12 +189,12 @@ export function SuscripcionesPage(): JSX.Element {
         <div className="grid grid-cols-3 gap-3">
           <div className="finza-card p-4">
             <p className="text-xs text-[var(--text-muted)]">{t('suscripciones.totalMensual')}</p>
-            <p className="text-xl font-bold text-[var(--text-primary)] money">{formatCurrency(totalMensualMain)}</p>
+            <p className="text-xl font-bold text-[var(--text-primary)] money">{formatCurrency(totalMensualMain, monedaPrincipal)}</p>
             {monedaSecundaria && <p className="text-[10px] text-[var(--text-muted)]">{monedaPrincipal}</p>}
           </div>
           <div className="finza-card p-4">
             <p className="text-xs text-[var(--text-muted)]">{t('suscripciones.totalAnual')}</p>
-            <p className="text-xl font-bold text-[var(--text-primary)] money">{formatCurrency(totalMensualMain * 12)}</p>
+            <p className="text-xl font-bold text-[var(--text-primary)] money">{formatCurrency(totalMensualMain * 12, monedaPrincipal)}</p>
             {monedaSecundaria && <p className="text-[10px] text-[var(--text-muted)]">{monedaPrincipal}</p>}
           </div>
           <div className="finza-card p-4">
@@ -232,12 +232,12 @@ export function SuscripcionesPage(): JSX.Element {
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-sm money text-[var(--text-primary)]">
-                    {formatCurrency(s.monto)} <span className="text-[10px] font-normal text-[var(--text-muted)]">{s.moneda}</span>
+                    {formatCurrency(s.monto, s.moneda)}
                   </p>
                   {showConverted ? (
-                    <p className="text-xs text-[var(--text-muted)]">≈ {formatCurrency(montoMain)}/mes</p>
+                    <p className="text-xs text-[var(--text-muted)]">≈ {formatCurrency(montoMain, monedaPrincipal)}/mes</p>
                   ) : (
-                    <p className="text-xs text-[var(--text-muted)]">{formatCurrency(s.monto_mensual)}/mes</p>
+                    <p className="text-xs text-[var(--text-muted)]">{formatCurrency(s.monto_mensual, s.moneda)}/mes</p>
                   )}
                 </div>
                 <div className="flex gap-1">
@@ -346,7 +346,7 @@ export function SuscripcionesPage(): JSX.Element {
                       onChange={(e) => setSeleccionados((prev) => { const n = new Set(prev); e.target.checked ? n.add(c.id) : n.delete(c.id); return n })}
                     />
                     <span className="text-sm text-[var(--text-primary)] flex-1">{c.nombre}</span>
-                    <span className="text-sm font-bold money text-[var(--text-primary)]">{formatCurrency(c.monto)}</span>
+                    <span className="text-sm font-bold money text-[var(--text-primary)]">{formatCurrency(c.monto, c.moneda)}</span>
                   </label>
                 ))}
               </div>

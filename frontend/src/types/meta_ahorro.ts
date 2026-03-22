@@ -8,6 +8,7 @@ export interface MetaAhorro {
   descripcion: string | null
   monto_objetivo: number
   monto_actual: number
+  moneda?: string
   fecha_inicio: string
   fecha_objetivo: string | null
   estado: EstadoMeta
@@ -21,6 +22,7 @@ export interface MetaAhorroCreate {
   nombre: string
   descripcion?: string
   monto_objetivo: number
+  moneda?: string
   fecha_inicio: string
   fecha_objetivo?: string
   color?: string
@@ -31,6 +33,7 @@ export interface MetaAhorroUpdate {
   nombre?: string
   descripcion?: string
   monto_objetivo?: number
+  moneda?: string
   fecha_inicio?: string
   fecha_objetivo?: string
   color?: string

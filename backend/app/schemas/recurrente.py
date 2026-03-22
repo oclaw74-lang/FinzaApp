@@ -9,6 +9,7 @@ class RecurrenteBase(BaseModel):
     tipo: Literal["ingreso", "egreso"]
     descripcion: str = Field(..., min_length=1, max_length=255)
     monto: float = Field(..., gt=0)
+    moneda: str = "DOP"
     categoria_id: Optional[UUID] = None
     frecuencia: Literal["diaria", "semanal", "quincenal", "mensual"]
     dia_del_mes: Optional[int] = Field(None, ge=1, le=31)
@@ -23,6 +24,7 @@ class RecurrenteCreate(RecurrenteBase):
 class RecurrenteUpdate(BaseModel):
     descripcion: Optional[str] = Field(None, min_length=1, max_length=255)
     monto: Optional[float] = Field(None, gt=0)
+    moneda: Optional[str] = None
     categoria_id: Optional[UUID] = None
     frecuencia: Optional[Literal["diaria", "semanal", "quincenal", "mensual"]] = None
     dia_del_mes: Optional[int] = Field(None, ge=1, le=31)

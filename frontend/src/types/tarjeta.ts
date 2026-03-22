@@ -37,6 +37,9 @@ export interface Tarjeta {
   saldo_actual: number
   limite_credito: number | null
   disponible: number | null
+  moneda: string
+  saldo_secundario: number
+  limite_secundario: number
   fecha_corte: number | null
   fecha_pago: number | null
   color: string | null
@@ -61,6 +64,9 @@ export interface TarjetaCreate {
   red: RedTarjeta
   ultimos_digitos: string
   saldo_actual: number
+  moneda?: string
+  saldo_secundario?: number
+  limite_secundario?: number
   limite_credito?: number | null
   fecha_corte?: number | null
   fecha_pago?: number | null
@@ -77,6 +83,9 @@ export interface TarjetaUpdate {
   red?: RedTarjeta
   ultimos_digitos?: string
   saldo_actual?: number
+  moneda?: string
+  saldo_secundario?: number | null
+  limite_secundario?: number | null
   limite_credito?: number | null
   fecha_corte?: number | null
   fecha_pago?: number | null

@@ -75,6 +75,10 @@ def create_tarjeta(
         payload["saldo_actual"] = str(payload["saldo_actual"])
     if "limite_credito" in payload and payload["limite_credito"] is not None:
         payload["limite_credito"] = str(payload["limite_credito"])
+    if "saldo_secundario" in payload:
+        payload["saldo_secundario"] = str(payload["saldo_secundario"])
+    if "limite_secundario" in payload:
+        payload["limite_secundario"] = str(payload["limite_secundario"])
 
     try:
         response = client.table("tarjetas").insert(payload).execute()
@@ -102,6 +106,10 @@ def update_tarjeta(
         payload["saldo_actual"] = str(payload["saldo_actual"])
     if "limite_credito" in payload and payload["limite_credito"] is not None:
         payload["limite_credito"] = str(payload["limite_credito"])
+    if "saldo_secundario" in payload and payload["saldo_secundario"] is not None:
+        payload["saldo_secundario"] = str(payload["saldo_secundario"])
+    if "limite_secundario" in payload and payload["limite_secundario"] is not None:
+        payload["limite_secundario"] = str(payload["limite_secundario"])
     # Convert UUID banco_id to string (or keep None to clear)
     if "banco_id" in payload and payload["banco_id"] is not None:
         payload["banco_id"] = str(payload["banco_id"])

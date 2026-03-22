@@ -157,9 +157,18 @@ def get_prediccion_mes(user_jwt: str, user_id: str) -> dict:
         # Active subscriptions
         suscripciones_r = (
             client.table("suscripciones")
-            .select("monto,frecuencia")
+            .select("monto,frecuencia,moneda")
             .eq("user_id", user_id)
             .eq("activa", True)
+            .execute()
+        )
+
+        # User currency config for conversions
+        user_config_r = (
+            client.table("user_config")
+            .select("moneda, moneda_secundaria, tasa_cambio")
+            .eq("user_id", user_id)
+            .maybe_single()
             .execute()
         )
 
@@ -183,6 +192,25 @@ def get_prediccion_mes(user_jwt: str, user_id: str) -> dict:
         )
     except APIError as e:
         _handle_api_error(e)
+
+    # ------------------------------------------------------------------ #
+    # Currency conversion config                                           #
+    # ------------------------------------------------------------------ #
+    moneda_principal = "DOP"
+    moneda_secundaria: str | None = None
+    tasa_cambio_val = 1.0
+    if user_config_r and user_config_r.data:
+        uc = user_config_r.data
+        moneda_principal = uc.get("moneda") or "DOP"
+        moneda_secundaria = uc.get("moneda_secundaria")
+        tasa_cambio_val = float(uc.get("tasa_cambio") or 1.0)
+
+    def _conv(amount: float, moneda: str) -> float:
+        if not moneda or moneda == moneda_principal:
+            return amount
+        if moneda_secundaria and moneda == moneda_secundaria and tasa_cambio_val > 0:
+            return amount * tasa_cambio_val
+        return amount
 
     # ------------------------------------------------------------------ #
     # 3-month historical averages                                          #
@@ -239,13 +267,14 @@ def get_prediccion_mes(user_jwt: str, user_id: str) -> dict:
         plazo = int(p["plazo_meses"]) if p.get("plazo_meses") else None
         sum_cuotas_prestamos += _calc_cuota_mensual(mo, tasa, plazo)
 
-    # Monthly-normalized subscription costs
+    # Monthly-normalized subscription costs (converted to main currency)
     sum_suscripciones = 0.0
     for s in (suscripciones_r.data or []):
         monto = float(s["monto"]) if s.get("monto") else 0.0
         freq = s.get("frecuencia", "mensual")
+        moneda_sus = s.get("moneda") or moneda_principal
         factor = _FREQ_TO_MONTHLY.get(freq, 1.0)
-        sum_suscripciones += monto * factor
+        sum_suscripciones += _conv(monto, moneda_sus) * factor
 
     # Credit card outstanding payments due this month
     sum_tarjetas_pago = 0.0

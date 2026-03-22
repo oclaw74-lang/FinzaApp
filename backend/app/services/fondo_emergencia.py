@@ -68,7 +68,37 @@ def _get_promedio_egresos(client, user_id: str) -> float:
     return sum(totales.values()) / len(meses)
 
 
-def _get_cuota_prestamos(client, user_id: str) -> float:
+def _get_tasa_cambio(client, user_id: str) -> tuple[str, str | None, float]:
+    """Return (moneda_principal, moneda_secundaria, tasa_cambio) from user_config."""
+    try:
+        r = (
+            client.table("user_config")
+            .select("moneda, moneda_secundaria, tasa_cambio")
+            .eq("user_id", user_id)
+            .maybe_single()
+            .execute()
+        )
+    except APIError:
+        return ("DOP", None, 1.0)
+    if r is None or not r.data:
+        return ("DOP", None, 1.0)
+    d = r.data
+    principal = d.get("moneda") or "DOP"
+    secundaria = d.get("moneda_secundaria")
+    tasa = float(d.get("tasa_cambio") or 1.0)
+    return (principal, secundaria, tasa)
+
+
+def _to_main(amount: float, moneda: str, moneda_principal: str, moneda_secundaria: str | None, tasa: float) -> float:
+    """Convert amount to main currency. Returns amount unchanged if moneda == moneda_principal."""
+    if not moneda or moneda == moneda_principal:
+        return amount
+    if moneda_secundaria and moneda == moneda_secundaria and tasa > 0:
+        return amount * tasa
+    return amount
+
+
+
     """Estimated monthly payment for active loans (monto_pendiente / months_remaining)."""
     today = date.today()
     try:
@@ -103,12 +133,12 @@ def _get_cuota_prestamos(client, user_id: str) -> float:
     return total
 
 
-def _get_suscripciones_mensual(client, user_id: str) -> float:
-    """Sum of active subscriptions normalized to monthly amount."""
+def _get_suscripciones_mensual(client, user_id: str, moneda_principal: str, moneda_secundaria: str | None, tasa: float) -> float:
+    """Sum of active subscriptions normalized to monthly amount (converted to main currency)."""
     try:
         r = (
             client.table("suscripciones")
-            .select("monto,frecuencia")
+            .select("monto,frecuencia,moneda")
             .eq("user_id", user_id)
             .eq("activa", True)
             .execute()
@@ -120,16 +150,18 @@ def _get_suscripciones_mensual(client, user_id: str) -> float:
     for s in r.data or []:
         monto = float(s.get("monto") or 0)
         freq = s.get("frecuencia", "mensual")
-        total += monto * _FREQ_TO_MONTHLY.get(freq, 1.0)
+        moneda = s.get("moneda") or moneda_principal
+        monto_main = _to_main(monto, moneda, moneda_principal, moneda_secundaria, tasa)
+        total += monto_main * _FREQ_TO_MONTHLY.get(freq, 1.0)
     return total
 
 
-def _get_recurrentes_mensual(client, user_id: str) -> float:
-    """Sum of active recurring egresos normalized to monthly amount."""
+def _get_recurrentes_mensual(client, user_id: str, moneda_principal: str, moneda_secundaria: str | None, tasa: float) -> float:
+    """Sum of active recurring egresos normalized to monthly amount (converted to main currency)."""
     try:
         r = (
             client.table("recurrentes")
-            .select("monto,frecuencia")
+            .select("monto,frecuencia,moneda")
             .eq("user_id", user_id)
             .eq("tipo", "egreso")
             .eq("activo", True)
@@ -142,7 +174,9 @@ def _get_recurrentes_mensual(client, user_id: str) -> float:
     for rec in r.data or []:
         monto = float(rec.get("monto") or 0)
         freq = rec.get("frecuencia", "mensual")
-        total += monto * _FREQ_TO_MONTHLY.get(freq, 1.0)
+        moneda = rec.get("moneda") or moneda_principal
+        monto_main = _to_main(monto, moneda, moneda_principal, moneda_secundaria, tasa)
+        total += monto_main * _FREQ_TO_MONTHLY.get(freq, 1.0)
     return total
 
 
@@ -164,35 +198,41 @@ def _get_salario(client, user_id: str) -> float:
     return float(sal) if sal else 0.0
 
 
-def _get_presupuestos_mensual(client, user_id: str) -> float:
-    """Sum of all budgeted amounts for the current month from the presupuestos table."""
+def _get_presupuestos_mensual(client, user_id: str, moneda_principal: str, moneda_secundaria: str | None, tasa: float) -> float:
+    """Sum of all budgeted amounts for the current month (converted to main currency)."""
     today = date.today()
-    mes_actual = f"{today.year}-{today.month:02d}"
     try:
         r = (
             client.table("presupuestos")
-            .select("monto_presupuestado")
+            .select("monto_limite,moneda")
             .eq("user_id", user_id)
-            .eq("mes", mes_actual)
+            .eq("mes", today.month)
+            .eq("year", today.year)
             .execute()
         )
     except APIError:
         return 0.0
-    return sum(float(p.get("monto_presupuestado") or 0) for p in (r.data or []))
+    total = 0.0
+    for p in r.data or []:
+        monto = float(p.get("monto_limite") or 0)
+        moneda = p.get("moneda") or moneda_principal
+        total += _to_main(monto, moneda, moneda_principal, moneda_secundaria, tasa)
+    return total
 
 
 def _calc_meta(client, user_id: str, meta_meses: int) -> float:
     """
     Emergency fund target based on committed monthly expenses only.
 
-    base_mensual = presupuestos_mensual + recurrentes_mensual + cuota_prestamos
+    base_mensual = presupuestos_mensual + recurrentes_mensual + cuota_prestamos + suscripciones
 
     meta_calculada = base_mensual * meta_meses
     """
-    presupuestos = _get_presupuestos_mensual(client, user_id)
+    moneda_principal, moneda_secundaria, tasa = _get_tasa_cambio(client, user_id)
+    presupuestos = _get_presupuestos_mensual(client, user_id, moneda_principal, moneda_secundaria, tasa)
     cuota_prestamos = _get_cuota_prestamos(client, user_id)
-    recurrentes = _get_recurrentes_mensual(client, user_id)
-    suscripciones = _get_suscripciones_mensual(client, user_id)
+    recurrentes = _get_recurrentes_mensual(client, user_id, moneda_principal, moneda_secundaria, tasa)
+    suscripciones = _get_suscripciones_mensual(client, user_id, moneda_principal, moneda_secundaria, tasa)
 
     base_mensual = presupuestos + cuota_prestamos + recurrentes + suscripciones
     return round(base_mensual * meta_meses, 2)
