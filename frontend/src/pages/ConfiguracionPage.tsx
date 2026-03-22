@@ -594,7 +594,8 @@ export function ConfiguracionPage(): JSX.Element {
               </label>
               <select
                 className="finza-input w-full"
-                {...profileForm.register('currency')}
+                value={profileForm.watch('currency')}
+                onChange={(e) => profileForm.setValue('currency', e.target.value, { shouldDirty: true })}
               >
                 {monedas.length > 0
                   ? monedas.map((m) => (

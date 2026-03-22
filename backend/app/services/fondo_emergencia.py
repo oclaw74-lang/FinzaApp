@@ -98,7 +98,7 @@ def _to_main(amount: float, moneda: str, moneda_principal: str, moneda_secundari
     return amount
 
 
-
+def _get_cuota_prestamos(client, user_id: str) -> float:
     """Estimated monthly payment for active loans (monto_pendiente / months_remaining)."""
     today = date.today()
     try:
