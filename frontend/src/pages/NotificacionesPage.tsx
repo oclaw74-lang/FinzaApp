@@ -1,4 +1,4 @@
-import { CheckCheck, Trash2, AlertTriangle, Info, Trophy, Bell } from 'lucide-react'
+import { CheckCheck, Trash2, AlertTriangle, Info, Trophy, Bell, BellRing } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import {
@@ -9,6 +9,7 @@ import {
   useGenerarNotificaciones,
   type NotificacionData,
 } from '@/hooks/useNotificaciones'
+import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
@@ -126,6 +127,13 @@ export function NotificacionesPage(): JSX.Element {
   const marcarTodas = useMarcarTodasLeidas()
   const eliminar = useEliminarNotificacion()
   const generar = useGenerarNotificaciones()
+  const { permission, subscribed, subscribe } = usePushNotifications()
+
+  const handleSuscribirPush = async () => {
+    const ok = await subscribe()
+    if (ok) toast.success('Notificaciones push activadas')
+    else if (permission === 'denied') toast.error('Permiso de notificaciones denegado en el navegador')
+  }
 
   // Generate on mount to get fresh triggers
   useEffect(() => {
@@ -188,6 +196,15 @@ export function NotificacionesPage(): JSX.Element {
           >
             <CheckCheck size={16} />
             {t('notificaciones.markAllRead')}
+          </button>
+        )}
+        {!subscribed && permission !== 'denied' && (
+          <button
+            onClick={handleSuscribirPush}
+            className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-xl border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+          >
+            <BellRing size={14} />
+            Activar alertas
           </button>
         )}
       </div>

@@ -111,8 +111,10 @@ def delete_suscripcion(user_jwt: str, user_id: str, suscripcion_id: str) -> None
 
 def detectar_suscripciones(user_jwt: str, user_id: str) -> list[dict]:
     """Find recurring patterns in last 3 months of egresos (candidates, not created)."""
-    client = get_user_client(user_jwt)
     from datetime import date
+    from collections import defaultdict
+
+    client = get_user_client(user_jwt)
     today = date.today()
     meses: list[tuple[int, int]] = []
     for i in range(3):
@@ -126,7 +128,7 @@ def detectar_suscripciones(user_jwt: str, user_id: str) -> list[dict]:
     try:
         r = (
             client.table("egresos")
-            .select("descripcion,monto,categoria_id,mes,year")
+            .select("descripcion,monto,categoria_id,fecha")
             .eq("user_id", user_id)
             .execute()
         )
@@ -134,25 +136,26 @@ def detectar_suscripciones(user_jwt: str, user_id: str) -> list[dict]:
         _handle_api_error(e)
 
     egresos = r.data or []
-    # Group by description
-    from collections import defaultdict
     by_desc: dict[str, list[dict]] = defaultdict(list)
     for e in egresos:
-        key = (int(e.get("year", 0)), int(e.get("mes", 0)))
+        fecha_str = e.get("fecha", "")
+        try:
+            fecha = date.fromisoformat(str(fecha_str))
+            key = (fecha.year, fecha.month)
+        except (ValueError, TypeError):
+            continue
         if key in meses:
             desc = str(e.get("descripcion", "")).strip().lower()
             if desc:
-                by_desc[desc].append(e)
+                by_desc[desc].append({**e, "_key": key})
 
     candidatos = []
     for desc, items in by_desc.items():
-        # Appears in 2+ different months
-        months_seen = {(int(e.get("year", 0)), int(e.get("mes", 0))) for e in items}
+        months_seen = {item["_key"] for item in items}
         if len(months_seen) >= 2:
             montos = [float(e["monto"]) for e in items]
             avg = sum(montos) / len(montos)
-            # Check monto consistency (within ±10%)
-            if all(abs(m - avg) / avg <= 0.10 for m in montos):
+            if avg > 0 and all(abs(m - avg) / avg <= 0.10 for m in montos):
                 candidatos.append({
                     "id": f"candidate-{desc[:20]}",
                     "nombre": items[0].get("descripcion", desc),

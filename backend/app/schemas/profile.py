@@ -7,7 +7,6 @@ FrecuenciaPago = Literal["quincenal", "bisemanal", "mensual"]
 
 
 class ProfileUpdate(BaseModel):
-    salario_mensual_neto: Optional[float] = Field(None, gt=0)
     mostrar_horas_trabajo: Optional[bool] = None
     onboarding_completed: Optional[bool] = None
     salario_bruto: Optional[Decimal] = Field(None, ge=0)
@@ -21,7 +20,6 @@ class ProfileUpdate(BaseModel):
 
 class ProfileResponse(BaseModel):
     user_id: str
-    salario_mensual_neto: Optional[float]
     mostrar_horas_trabajo: bool
     horas_por_peso: Optional[float]
     onboarding_completed: bool = False

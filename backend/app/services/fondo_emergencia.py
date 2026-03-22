@@ -151,7 +151,7 @@ def _get_salario(client, user_id: str) -> float:
     try:
         r = (
             client.table("profiles")
-            .select("salario_mensual_neto")
+            .select("salario_neto")
             .eq("user_id", user_id)
             .maybe_single()
             .execute()
@@ -160,7 +160,7 @@ def _get_salario(client, user_id: str) -> float:
         return 0.0
     if r is None or not r.data:
         return 0.0
-    sal = r.data.get("salario_mensual_neto")
+    sal = r.data.get("salario_neto")
     return float(sal) if sal else 0.0
 
 
@@ -336,3 +336,4 @@ def retirar(user_jwt: str, user_id: str, monto: float) -> dict:
     resultado = update_fondo(user_jwt, user_id, FondoEmergenciaUpdate(monto_actual=nuevo_monto))
     _crear_transaccion_fondo(client, user_id, "retirar", monto)
     return resultado
+

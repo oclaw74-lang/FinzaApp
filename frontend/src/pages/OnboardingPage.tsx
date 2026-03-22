@@ -76,7 +76,7 @@ export function OnboardingPage(): JSX.Element {
     if (salario) {
       try {
         await updateProfile.mutateAsync({
-          salario_mensual_neto: parseFloat(salario),
+          salario_neto: parseFloat(salario),
         })
       } catch {
         // non-blocking
