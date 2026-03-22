@@ -5,7 +5,6 @@ import {
   Target,
   Bell,
   BookOpen,
-  CreditCard,
   PiggyBank,
   CheckCircle,
   Shield,
@@ -13,10 +12,6 @@ import {
   BarChart3,
   Menu,
   X,
-  Moon,
-  BarChart2,
-  RefreshCw,
-  Lightbulb,
   Star,
   ChevronDown,
   ArrowRight,
@@ -24,6 +19,13 @@ import {
   Instagram,
   Linkedin,
   Youtube,
+  Wallet,
+  Globe,
+  Upload,
+  Repeat2,
+  ShieldCheck,
+  Smartphone,
+  TrendingUp,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 
@@ -861,8 +863,8 @@ export function LandingPage(): JSX.Element {
     return () => obs.disconnect()
   }, [])
 
-  const stat1Count = useCountUp(15, 1400, statsVisible)
-  const stat2Count = useCountUp(6, 1200, statsVisible)
+  const stat1Count = useCountUp(20, 1400, statsVisible)
+  const stat2Count = useCountUp(12, 1200, statsVisible)
   const scoreCount = useCountUp(74, 1600, statsVisible)
 
   const ctaHref = user ? '/dashboard' : '/register'
@@ -897,7 +899,7 @@ export function LandingPage(): JSX.Element {
       bg: 'rgba(151,104,255,0.12)',
     },
     {
-      icon: <CreditCard size={22} />,
+      icon: <Wallet size={22} />,
       title: t('landing.feature4Title'),
       desc: t('landing.feature4Desc'),
       color: '#FFC000',
@@ -924,10 +926,12 @@ export function LandingPage(): JSX.Element {
 
   // ── Secondary features ────────────────────────────────────────────────────
   const extras = [
-    { icon: <Moon size={20} />, title: t('landing.extra1Title'), desc: t('landing.extra1Desc'), color: '#9768ff' },
-    { icon: <BarChart2 size={20} />, title: t('landing.extra2Title'), desc: t('landing.extra2Desc'), color: '#00dfa2' },
-    { icon: <RefreshCw size={20} />, title: t('landing.extra3Title'), desc: t('landing.extra3Desc'), color: '#3d8ef8' },
-    { icon: <Lightbulb size={20} />, title: t('landing.extra4Title'), desc: t('landing.extra4Desc'), color: '#FFC000' },
+    { icon: <Globe size={20} />, title: t('landing.extra1Title'), desc: t('landing.extra1Desc'), color: '#3d8ef8' },
+    { icon: <Upload size={20} />, title: t('landing.extra2Title'), desc: t('landing.extra2Desc'), color: '#00dfa2' },
+    { icon: <Repeat2 size={20} />, title: t('landing.extra3Title'), desc: t('landing.extra3Desc'), color: '#9768ff' },
+    { icon: <ShieldCheck size={20} />, title: t('landing.extra4Title'), desc: t('landing.extra4Desc'), color: '#FFC000' },
+    { icon: <Smartphone size={20} />, title: t('landing.extra5Title'), desc: t('landing.extra5Desc'), color: '#ff4060' },
+    { icon: <TrendingUp size={20} />, title: t('landing.extra6Title'), desc: t('landing.extra6Desc'), color: '#5B9BD5' },
   ]
 
   // ── Alert samples ─────────────────────────────────────────────────────────
@@ -989,6 +993,8 @@ export function LandingPage(): JSX.Element {
     { q: t('landing.faq2Q'), a: t('landing.faq2A') },
     { q: t('landing.faq3Q'), a: t('landing.faq3A') },
     { q: t('landing.faq4Q'), a: t('landing.faq4A') },
+    { q: t('landing.faq5Q'), a: t('landing.faq5A') },
+    { q: t('landing.faq6Q'), a: t('landing.faq6A') },
   ]
 
   // ── Nav links ─────────────────────────────────────────────────────────────
@@ -1243,7 +1249,7 @@ export function LandingPage(): JSX.Element {
                   className="flex flex-wrap gap-x-5 gap-y-2"
                   style={{ animation: 'fadeInUp 0.6s ease 0.4s both' }}
                 >
-                  {[t('landing.trust1'), t('landing.trust2'), t('landing.trust3')].map((item) => (
+                  {[t('landing.trust1'), t('landing.trust2'), t('landing.trust3'), t('landing.trust4')].map((item) => (
                     <div
                       key={item}
                       className="flex items-center gap-1.5 text-xs"
@@ -1394,16 +1400,16 @@ export function LandingPage(): JSX.Element {
                       value: `${stat1Count}+`,
                       label: t('landing.stat1Label'),
                       color: '#3d8ef8',
-                      numericTarget: 15,
+                      numericTarget: 20,
                     },
                     {
                       value: `${stat2Count}`,
                       label: t('landing.stat2Label'),
                       color: '#00dfa2',
-                      numericTarget: 6,
+                      numericTarget: 12,
                     },
                     {
-                      value: '100%',
+                      value: 'PWA',
                       label: t('landing.stat3Label'),
                       color: '#9768ff',
                       numericTarget: null,
@@ -1690,7 +1696,7 @@ export function LandingPage(): JSX.Element {
                 {t('landing.andMore')}
               </h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {extras.map((e, i) => (
                 <div
                   key={i}
