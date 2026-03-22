@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { Plus, Pencil, Trash2, Zap, RefreshCw } from 'lucide-react'
@@ -151,6 +151,15 @@ export function SuscripcionesPage(): JSX.Element {
     setModal(null)
     setEditando(null)
   }
+
+  // Close modal on Escape key
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && modal) closeModal()
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [modal])
 
   return (
     <div className="p-4 md:p-6 space-y-6">
