@@ -192,8 +192,9 @@ def _calc_meta(client, user_id: str, meta_meses: int) -> float:
     presupuestos = _get_presupuestos_mensual(client, user_id)
     cuota_prestamos = _get_cuota_prestamos(client, user_id)
     recurrentes = _get_recurrentes_mensual(client, user_id)
+    suscripciones = _get_suscripciones_mensual(client, user_id)
 
-    base_mensual = presupuestos + cuota_prestamos + recurrentes
+    base_mensual = presupuestos + cuota_prestamos + recurrentes + suscripciones
     return round(base_mensual * meta_meses, 2)
 
 

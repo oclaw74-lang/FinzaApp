@@ -11,6 +11,12 @@ vi.mock('@/hooks/useSuscripciones', () => ({
   useDetectarSuscripciones: vi.fn(),
   useConfirmarDetectadas: vi.fn(),
 }))
+vi.mock('@/hooks/useDualMoneda', () => ({
+  useDualMoneda: vi.fn(() => ({ data: { moneda_principal: 'DOP', moneda_secundaria: null, tasa_cambio: 1 } })),
+}))
+vi.mock('@/hooks/useUserCurrency', () => ({
+  useUserCurrency: vi.fn(() => 'DOP'),
+}))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import {
@@ -37,8 +43,8 @@ function setupMocks(resumen: Partial<SuscripcionResumen> | null = null, loading 
 
 const mockResumen: SuscripcionResumen = {
   suscripciones: [
-    { id: 's-1', nombre: 'Netflix', monto: 300, monto_mensual: 300, frecuencia: 'mensual', moneda: 'DOP', activa: true, auto_detectada: false, fecha_proximo_cobro: null, notas: null },
-    { id: 's-2', nombre: 'Spotify', monto: 150, monto_mensual: 150, frecuencia: 'mensual', moneda: 'DOP', activa: true, auto_detectada: true, fecha_proximo_cobro: null, notas: null },
+    { id: 's-1', nombre: 'Netflix', monto: 300, monto_mensual: 300, frecuencia: 'mensual', moneda: 'DOP', activa: true, auto_detectada: false, dia_del_mes: null, fecha_inicio: null, fecha_proximo_cobro: null, notas: null },
+    { id: 's-2', nombre: 'Spotify', monto: 150, monto_mensual: 150, frecuencia: 'mensual', moneda: 'DOP', activa: true, auto_detectada: true, dia_del_mes: null, fecha_inicio: null, fecha_proximo_cobro: null, notas: null },
   ],
   total_mensual: 450,
   total_anual: 5400,

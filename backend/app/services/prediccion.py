@@ -163,6 +163,16 @@ def get_prediccion_mes(user_jwt: str, user_id: str) -> dict:
             .execute()
         )
 
+        # Credit cards with outstanding balance due this month
+        tarjetas_r = (
+            client.table("tarjetas")
+            .select("saldo_actual,fecha_pago,banco,tipo")
+            .eq("user_id", user_id)
+            .eq("activa", True)
+            .eq("tipo", "credito")
+            .execute()
+        )
+
         # Active savings goals → required monthly contribution
         metas_r = (
             client.table("metas_ahorro")
@@ -237,6 +247,27 @@ def get_prediccion_mes(user_jwt: str, user_id: str) -> dict:
         factor = _FREQ_TO_MONTHLY.get(freq, 1.0)
         sum_suscripciones += monto * factor
 
+    # Credit card outstanding payments due this month
+    sum_tarjetas_pago = 0.0
+    for t in (tarjetas_r.data or []):
+        saldo = float(t.get("saldo_actual") or 0)
+        if saldo <= 0:
+            continue
+        fecha_pago_dia = t.get("fecha_pago")
+        if fecha_pago_dia:
+            try:
+                pago_dia = int(fecha_pago_dia)
+                max_day = monthrange(today.year, today.month)[1]
+                pago_date = date(today.year, today.month, min(pago_dia, max_day))
+                # Include if payment falls within current month (even if past)
+                if pago_date.month == today.month:
+                    sum_tarjetas_pago += saldo
+            except (ValueError, TypeError):
+                pass
+        else:
+            # No payment date set: include full balance as potential obligation
+            sum_tarjetas_pago += saldo
+
     # Required monthly contribution toward active savings goals
     sum_compromisos_ahorro = 0.0
     for meta in (metas_r.data or []):
@@ -278,6 +309,7 @@ def get_prediccion_mes(user_jwt: str, user_id: str) -> dict:
         + sum_cuotas_prestamos
         + sum_suscripciones
         + sum_compromisos_ahorro
+        + sum_tarjetas_pago
     )
 
     # Projected egresos = accrued this month + (3m daily avg × remaining days)
