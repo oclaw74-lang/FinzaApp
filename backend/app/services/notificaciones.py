@@ -874,7 +874,7 @@ def check_notificaciones(user_jwt: str, user_id: str) -> dict:
     try:
         profile_r = (
             client.table("profiles")
-            .select("salario_mensual_neto,fecha_cobro")
+            .select("salario_neto,fecha_cobro")
             .eq("user_id", user_id)
             .maybe_single()
             .execute()
@@ -1131,4 +1131,5 @@ def subscribe_push(
 def get_vapid_public_key() -> str:
     """Return the VAPID public key from settings."""
     return getattr(settings, "VAPID_PUBLIC_KEY", "")
+
 

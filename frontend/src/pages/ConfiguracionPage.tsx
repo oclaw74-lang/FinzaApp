@@ -341,7 +341,6 @@ export function ConfiguracionPage(): JSX.Element {
   const navigate = useNavigate()
   const { data: profile } = useProfile()
   const updateProfile = useUpdateProfile()
-  const [salarioValue, setSalarioValue] = useState('')
   const [mostrarHoras, setMostrarHoras] = useState(false)
   const [paisModalOpen, setPaisModalOpen] = useState(false)
   const [savingPais, setSavingPais] = useState(false)
@@ -376,7 +375,6 @@ export function ConfiguracionPage(): JSX.Element {
   // Sync profile data when loaded (useEffect avoids stale state from render-time mutation)
   useEffect(() => {
     if (profile) {
-      setSalarioValue(profile.salario_mensual_neto != null ? String(profile.salario_mensual_neto) : '')
       setMostrarHoras(profile.mostrar_horas_trabajo ?? false)
       setSalarioBruto(profile.salario_bruto != null ? String(profile.salario_bruto) : '')
       setDescuentosAdicionales(profile.descuentos_adicionales != null ? String(profile.descuentos_adicionales) : '')
@@ -448,13 +446,13 @@ export function ConfiguracionPage(): JSX.Element {
         return
       }
       // Save finances (salary + work hours)
+      const salarioNeto = salarioBruto
+        ? Math.max(0, (parseFloat(salarioBruto) || 0) - (parseFloat(descuentosAdicionales) || 0))
+        : undefined
       await updateProfile.mutateAsync({
-        salario_mensual_neto: salarioValue ? parseFloat(salarioValue) : undefined,
         mostrar_horas_trabajo: mostrarHoras,
         salario_bruto: salarioBruto ? parseFloat(salarioBruto) : undefined,
-        salario_neto: salarioBruto
-          ? Math.max(0, (parseFloat(salarioBruto) || 0) - (parseFloat(descuentosAdicionales) || 0))
-          : undefined,
+        salario_neto: salarioNeto,
         descuentos_adicionales: descuentosAdicionales ? parseFloat(descuentosAdicionales) : undefined,
         frecuencia_pago: frecuenciaPago,
         asignacion_automatica_activa: asignacionActiva,
@@ -710,22 +708,6 @@ export function ConfiguracionPage(): JSX.Element {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
-                  <DollarSign size={14} className="text-[var(--accent)]" />
-                  {t('profile.salarioNeto')}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={salarioValue}
-                  onChange={(e) => setSalarioValue(e.target.value)}
-                  className="finza-input w-full"
-                />
-                <p className="text-xs text-[var(--text-muted)]">{t('profile.salarioHint')}</p>
-              </div>
-              <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[var(--text-primary)]">
                   {t('profile.salarioBruto')}
                 </label>
@@ -756,7 +738,8 @@ export function ConfiguracionPage(): JSX.Element {
               {/* Salario neto — auto-calculated, readonly */}
               {salarioBruto && (
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-[var(--text-primary)]">
+                  <label className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
+                    <DollarSign size={14} className="text-[var(--accent)]" />
                     {t('profile.salarioNeto')}
                   </label>
                   <input
@@ -765,6 +748,7 @@ export function ConfiguracionPage(): JSX.Element {
                     value={Math.max(0, (parseFloat(salarioBruto) || 0) - (parseFloat(descuentosAdicionales) || 0)).toFixed(2)}
                     className="finza-input w-full bg-[var(--surface-raised)] opacity-75 cursor-not-allowed"
                   />
+                  <p className="text-xs text-[var(--text-muted)]">{t('profile.salarioHint')}</p>
                 </div>
               )}
               <div className="space-y-1.5">

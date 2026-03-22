@@ -35,7 +35,7 @@ class TestPrediccionMes:
                 "egresos": [{"monto": "500.00", "categoria_id": "cat-1"}],
                 "presupuestos": [{"monto_limite": "1000.00"}],
                 "categorias": [{"id": "cat-1", "nombre": "Alimentación", "nombre_en": "Food"}],
-                "profiles": {"salario_mensual_neto": "3000.00"},
+                "profiles": {"salario_neto": "3000.00"},
                 "prestamos": [],
                 "suscripciones": [],
                 "metas_ahorro": [],
@@ -163,7 +163,7 @@ class TestPrediccionMes:
                 "egresos": [{"monto": "500.00", "categoria_id": "cat-1"}],
                 "presupuestos": [],
                 "categorias": [{"id": "cat-1", "nombre": "Alimentos", "nombre_en": None}],
-                "profiles": {"salario_mensual_neto": "5000.00"},
+                "profiles": {"salario_neto": "5000.00"},
                 "prestamos": [],
                 "suscripciones": [],
                 "metas_ahorro": [],
@@ -191,7 +191,7 @@ class TestPrediccionMes:
                 "egresos": [],
                 "presupuestos": [],
                 "categorias": [],
-                "profiles": {"salario_mensual_neto": "7500.00"},
+                "profiles": {"salario_neto": "7500.00"},
                 "prestamos": [],
                 "suscripciones": [],
                 "metas_ahorro": [],
@@ -271,7 +271,7 @@ class TestPrediccionMes:
                 "egresos": [{"monto": "500.00", "categoria_id": None}],
                 "presupuestos": [],
                 "categorias": [],
-                "profiles": {"salario_mensual_neto": "100.00"},  # very low salary → deficit
+                "profiles": {"salario_neto": "100.00"},  # very low salary → deficit
                 "prestamos": [],
                 "suscripciones": [],
                 "metas_ahorro": [],
@@ -281,3 +281,4 @@ class TestPrediccionMes:
         mock_get_client.return_value = mock_client
         result = get_prediccion_mes("token", "user-1")
         assert result["balance_final"] < 0
+

@@ -34,27 +34,27 @@ export function SuscripcionesPage(): JSX.Element {
   const [editando, setEditando] = useState<SuscripcionData | null>(null)
   const [candidatos, setCandidatos] = useState<SuscripcionData[]>([])
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set())
-  const [form, setForm] = useState({ nombre: '', monto: '', frecuencia: 'mensual', fecha_proximo_cobro: '' })
+  const [form, setForm] = useState({ nombre: '', monto: '', frecuencia: 'mensual', moneda: 'USD', fecha_proximo_cobro: '' })
 
   const openEditar = (s: SuscripcionData) => {
     setEditando(s)
-    setForm({ nombre: s.nombre, monto: String(s.monto), frecuencia: s.frecuencia, fecha_proximo_cobro: s.fecha_proximo_cobro ?? '' })
+    setForm({ nombre: s.nombre, monto: String(s.monto), frecuencia: s.frecuencia, moneda: s.moneda || 'USD', fecha_proximo_cobro: s.fecha_proximo_cobro ?? '' })
     setModal('editar')
   }
 
   const handleCrear = async () => {
     try {
-      await crear.mutateAsync({ nombre: form.nombre, monto: parseFloat(form.monto), frecuencia: form.frecuencia, fecha_proximo_cobro: form.fecha_proximo_cobro || undefined })
+      await crear.mutateAsync({ nombre: form.nombre, monto: parseFloat(form.monto), frecuencia: form.frecuencia, moneda: form.moneda, fecha_proximo_cobro: form.fecha_proximo_cobro || undefined })
       toast.success(t('suscripciones.created'))
       setModal(null)
-      setForm({ nombre: '', monto: '', frecuencia: 'mensual', fecha_proximo_cobro: '' })
+      setForm({ nombre: '', monto: '', frecuencia: 'mensual', moneda: 'USD', fecha_proximo_cobro: '' })
     } catch (err) { toast.error(getApiErrorMessage(err)) }
   }
 
   const handleActualizar = async () => {
     if (!editando) return
     try {
-      await actualizar.mutateAsync({ id: editando.id, nombre: form.nombre, monto: parseFloat(form.monto), frecuencia: form.frecuencia as SuscripcionData['frecuencia'] })
+      await actualizar.mutateAsync({ id: editando.id, nombre: form.nombre, monto: parseFloat(form.monto), frecuencia: form.frecuencia as SuscripcionData['frecuencia'], moneda: form.moneda })
       toast.success(t('suscripciones.updated'))
       setModal(null)
       setEditando(null)
@@ -91,8 +91,8 @@ export function SuscripcionesPage(): JSX.Element {
   const suscripciones = resumen?.suscripciones ?? []
 
   return (
-    <div className="animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 md:p-6 space-y-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-[var(--text-primary)]">{t('suscripciones.title')}</h1>
           <p className="text-sm text-[var(--text-muted)]">{t('suscripciones.subtitle')}</p>
@@ -111,11 +111,11 @@ export function SuscripcionesPage(): JSX.Element {
 
       {/* KPIs */}
       {isLoading ? (
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-3 gap-3">
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-3 gap-3">
           <div className="finza-card p-4">
             <p className="text-xs text-[var(--text-muted)]">{t('suscripciones.totalMensual')}</p>
             <p className="text-xl font-bold text-[var(--text-primary)] money">{formatCurrency(resumen?.total_mensual ?? 0)}</p>
@@ -177,6 +177,12 @@ export function SuscripcionesPage(): JSX.Element {
               className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-[var(--surface)] text-[var(--text-primary)]" />
             <input type="number" placeholder={t('suscripciones.monto')} value={form.monto} onChange={(e) => setForm((f) => ({ ...f, monto: e.target.value }))}
               className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-[var(--surface)] text-[var(--text-primary)]" />
+            <select value={form.moneda} onChange={(e) => setForm((f) => ({ ...f, moneda: e.target.value }))}
+              className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-[var(--surface)] text-[var(--text-primary)]">
+              <option value="USD">USD — Dólar</option>
+              <option value="DOP">DOP — Peso dominicano</option>
+              <option value="EUR">EUR — Euro</option>
+            </select>
             <select value={form.frecuencia} onChange={(e) => setForm((f) => ({ ...f, frecuencia: e.target.value }))}
               className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-[var(--surface)] text-[var(--text-primary)]">
               {FRECUENCIAS.map((f) => <option key={f} value={f}>{t(`suscripciones.${f}`)}</option>)}

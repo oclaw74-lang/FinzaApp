@@ -14,11 +14,10 @@ _DECIMAL_FIELDS = {
 
 
 def _enrich(row: dict) -> dict:
-    salario = row.get("salario_mensual_neto")
+    salario = row.get("salario_neto")
     horas_por_peso = round(160.0 / float(salario), 6) if salario and float(salario) > 0 else None
     enriched = {
         **row,
-        "salario_mensual_neto": float(salario) if salario is not None else None,
         "horas_por_peso": horas_por_peso,
     }
     for field in _DECIMAL_FIELDS:
@@ -65,9 +64,6 @@ def update_profile(user_jwt: str, user_id: str, data: ProfileUpdate) -> dict:
     if not payload:
         return get_or_create_profile(user_jwt, user_id)
 
-    if "salario_mensual_neto" in payload:
-        payload["salario_mensual_neto"] = str(payload["salario_mensual_neto"])
-
     for field in _DECIMAL_FIELDS:
         if field in payload and payload[field] is not None:
             payload[field] = str(payload[field])
@@ -82,3 +78,4 @@ def update_profile(user_jwt: str, user_id: str, data: ProfileUpdate) -> dict:
         _handle_api_error(e)
 
     return _enrich(r.data[0])
+

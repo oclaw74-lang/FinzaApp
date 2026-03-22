@@ -407,7 +407,7 @@ class TestCheckNotificaciones:
             pytest.skip("Too close to end of month for simple test")
 
         mock_get_client.return_value = make_check_client({
-            "profiles": {"salario_mensual_neto": "5000", "fecha_cobro": dia_cobro},
+            "profiles": {"salario_neto": "5000", "fecha_cobro": dia_cobro},
             "egresos": [],
             "presupuestos": [],
             "prestamos": [],
@@ -655,4 +655,5 @@ class TestSendPushForUser:
         with patch.object(notif_module, "_WEBPUSH_AVAILABLE", True):
             _send_push_for_user(client, "user-1", "Test", "Body")
         client.table.assert_not_called()
+
 

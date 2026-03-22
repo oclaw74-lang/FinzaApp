@@ -251,7 +251,7 @@ describe('OnboardingPage', () => {
 
     await waitFor(() => {
       expect(mockMutateAsync).toHaveBeenCalledWith({
-        salario_mensual_neto: 50000,
+        salario_neto: 50000,
       })
     })
 
@@ -396,3 +396,4 @@ describe('OnboardingPage', () => {
     })
   })
 })
+

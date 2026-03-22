@@ -137,7 +137,7 @@ def get_prediccion_mes(user_jwt: str, user_id: str) -> dict:
         # Profile — salary field
         profile_r = (
             client.table("profiles")
-            .select("salario_mensual_neto")
+            .select("salario_neto")
             .eq("user_id", user_id)
             .maybe_single()
             .execute()
@@ -214,7 +214,7 @@ def get_prediccion_mes(user_jwt: str, user_id: str) -> dict:
     # Salary from profile (or fallback to 3-month income average)
     salario_neto: float | None = None
     if profile_r and profile_r.data:
-        s = profile_r.data.get("salario_mensual_neto")
+        s = profile_r.data.get("salario_neto")
         if s is not None:
             try:
                 salario_neto = float(s)
@@ -374,3 +374,4 @@ def get_prediccion_mes(user_jwt: str, user_id: str) -> dict:
         "sum_compromisos_ahorro": round(sum_compromisos_ahorro, 2),
         "egresos_proyectados": round(egresos_proyectados, 2),
     }
+
