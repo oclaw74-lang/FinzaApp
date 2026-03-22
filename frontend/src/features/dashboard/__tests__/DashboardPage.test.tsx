@@ -19,6 +19,10 @@ vi.mock('@/hooks/useScore', () => ({
   })),
 }))
 
+vi.mock('@/hooks/useTarjetas', () => ({
+  useTarjetas: vi.fn(() => ({ data: [], isLoading: false })),
+}))
+
 vi.mock('@/store/authStore', () => ({
   useAuthStore: vi.fn(),
 }))

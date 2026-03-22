@@ -50,6 +50,10 @@ vi.mock('react-i18next', () => ({
   }),
 }))
 
+vi.mock('@/hooks/useTarjetas', () => ({
+  useTarjetas: vi.fn(() => ({ data: [], isLoading: false })),
+}))
+
 import { useDashboardV2 } from '@/hooks/useDashboardV2'
 import { useScore } from '@/hooks/useScore'
 import { useAuthStore } from '@/store/authStore'
