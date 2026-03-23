@@ -43,7 +43,7 @@ def get_presupuesto_by_id(user_jwt: str, presupuesto_id: str) -> dict:
             .maybe_single()
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Presupuesto no encontrado.")
         return response.data
     except HTTPException:
@@ -66,6 +66,7 @@ def create_presupuesto(user_jwt: str, user_id: str, data: PresupuestoCreate) -> 
                 "mes": mes_num,
                 "year": data.year,
                 "monto_limite": data.monto_limite,
+                "moneda": data.moneda,
             }
             try:
                 resp = client.table("presupuestos").insert(payload).execute()
@@ -91,7 +92,7 @@ def create_presupuesto(user_jwt: str, user_id: str, data: PresupuestoCreate) -> 
                 .maybe_single()
                 .execute()
             )
-            return existing.data or {}
+            return (existing.data if existing else None) or {}
         except APIError:
             return {}
 
@@ -101,6 +102,7 @@ def create_presupuesto(user_jwt: str, user_id: str, data: PresupuestoCreate) -> 
         "mes": data.mes,
         "year": data.year,
         "monto_limite": data.monto_limite,
+        "moneda": data.moneda,
     }
     try:
         response = client.table("presupuestos").insert(payload).execute()
@@ -126,14 +128,17 @@ def update_presupuesto(
     user_jwt: str, presupuesto_id: str, data: PresupuestoUpdate
 ) -> dict:
     client = get_user_client(user_jwt)
+    update_payload: dict = {"monto_limite": data.monto_limite}
+    if data.moneda is not None:
+        update_payload["moneda"] = data.moneda
     try:
         response = (
             client.table("presupuestos")
-            .update({"monto_limite": data.monto_limite})
+            .update(update_payload)
             .eq("id", presupuesto_id)
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Presupuesto no encontrado.")
         return response.data[0]
     except HTTPException:
@@ -152,7 +157,7 @@ def delete_presupuesto(user_jwt: str, presupuesto_id: str) -> None:
             .eq("id", presupuesto_id)
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Presupuesto no encontrado.")
     except HTTPException:
         raise
@@ -331,6 +336,7 @@ def get_estado_presupuestos(user_jwt: str, mes: int, year: int) -> list[dict]:
                     "mes": p["mes"],
                     "year": p["year"],
                     "monto_limite": monto_limite,
+                    "moneda": p.get("moneda", "DOP"),
                     "gasto_actual": gasto_actual,
                     "porcentaje_usado": porcentaje,
                     "alerta": porcentaje >= 80,

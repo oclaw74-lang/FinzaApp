@@ -1,4 +1,5 @@
 from decimal import Decimal
+import logging
 
 from fastapi import HTTPException
 from postgrest import APIError
@@ -6,6 +7,68 @@ from postgrest import APIError
 from app.core.supabase_client import get_user_client
 from app.schemas.meta_ahorro import ContribucionMetaCreate, MetaAhorroCreate, MetaAhorroUpdate
 from app.services.base import _handle_api_error
+
+log = logging.getLogger(__name__)
+
+
+def _get_system_categoria_id(client, nombre: str) -> str | None:
+    """Return the id of a system category by name, or None if not found."""
+    try:
+        resp = (
+            client.table("categorias")
+            .select("id")
+            .eq("nombre", nombre)
+            .eq("es_sistema", True)
+            .maybe_single()
+            .execute()
+        )
+        return resp.data["id"] if (resp and resp.data) else None
+    except Exception:
+        return None
+
+
+def _crear_transaccion_ahorro(
+    client,
+    user_id: str,
+    tipo: str,      # "deposito" | "retiro"
+    monto: Decimal,
+    fecha: str,
+    descripcion: str,
+) -> None:
+    """
+    Create a linked ingreso or egreso for a savings contribution.
+    - deposito → egreso (money leaves cash flow, goes into savings)
+    - retiro   → ingreso (money returns to cash flow from savings)
+    Silently skips if the system category is not found.
+    """
+    try:
+        if tipo == "deposito":
+            cat_id = _get_system_categoria_id(client, "Ahorro / Metas")
+            if not cat_id:
+                return
+            client.table("egresos").insert({
+                "user_id": user_id,
+                "categoria_id": cat_id,
+                "monto": str(monto),
+                "moneda": "DOP",
+                "descripcion": descripcion,
+                "metodo_pago": "efectivo",
+                "fecha": fecha,
+            }).execute()
+        else:  # retiro
+            cat_id = _get_system_categoria_id(client, "Retiro de Ahorro")
+            if not cat_id:
+                return
+            client.table("ingresos").insert({
+                "user_id": user_id,
+                "categoria_id": cat_id,
+                "monto": str(monto),
+                "moneda": "DOP",
+                "descripcion": descripcion,
+                "fecha": fecha,
+            }).execute()
+    except Exception as exc:
+        log.warning("Could not create linked transaction for savings: %s", exc)
 
 
 def get_metas(user_jwt: str, estado: str | None = None) -> list[dict]:
@@ -36,7 +99,7 @@ def get_meta_by_id(user_jwt: str, meta_id: str) -> dict:
             .maybe_single()
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Meta no encontrada.")
         return response.data
     except HTTPException:
@@ -86,7 +149,7 @@ def update_meta(user_jwt: str, meta_id: str, data: MetaAhorroUpdate) -> dict:
             .eq("id", meta_id)
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Meta no encontrada.")
         return response.data[0]
     except HTTPException:
@@ -119,7 +182,7 @@ def delete_meta(user_jwt: str, meta_id: str) -> None:
             .eq("id", meta_id)
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Meta no encontrada.")
     except HTTPException:
         raise
@@ -138,7 +201,7 @@ def get_contribuciones(user_jwt: str, meta_id: str) -> list[dict]:
             .maybe_single()
             .execute()
         )
-        if not meta_check.data:
+        if not (meta_check and meta_check.data):
             raise HTTPException(status_code=404, detail="Meta no encontrada.")
 
         response = (
@@ -158,47 +221,79 @@ def get_contribuciones(user_jwt: str, meta_id: str) -> list[dict]:
 
 def agregar_contribucion(
     user_jwt: str,
+    user_id: str,
     meta_id: str,
     data: ContribucionMetaCreate,
 ) -> dict:
+    """Register a savings contribution and create a linked egreso/ingreso record."""
     client = get_user_client(user_jwt)
     try:
-        client.rpc(
-            "agregar_contribucion_meta",
-            {
-                "p_meta_id": meta_id,
-                "p_monto": float(data.monto),
-                "p_tipo": data.tipo,
-                "p_fecha": str(data.fecha),
-                "p_notas": data.notas or "",
-            },
-        ).execute()
-
-        # Obtener la contribucion recien insertada (la mas reciente de esa meta)
-        contribucion_response = (
-            client.table("contribuciones_meta")
-            .select("*")
-            .eq("meta_id", meta_id)
-            .order("created_at", desc=True)
-            .limit(1)
+        # Verify meta exists and fetch its name (RLS ensures ownership)
+        meta_response = (
+            client.table("metas_ahorro")
+            .select("id, nombre, monto_actual, monto_objetivo, estado")
+            .eq("id", meta_id)
+            .maybe_single()
             .execute()
         )
-        if not contribucion_response.data:
-            raise HTTPException(
-                status_code=500, detail="Contribucion no encontrada tras insercion."
-            )
-        return contribucion_response.data[0]
-    except HTTPException:
-        raise
-    except APIError as e:
-        msg = str(e.message) if e.message else ""
-        if "no encontrada" in msg.lower() or "no pertenece" in msg.lower():
+        if not (meta_response and meta_response.data):
             raise HTTPException(status_code=404, detail="Meta no encontrada.")
-        if "supera el monto actual" in msg.lower():
+
+        meta = meta_response.data
+        monto_actual = Decimal(str(meta["monto_actual"]))
+        monto = Decimal(str(data.monto))
+
+        if data.tipo == "retiro" and monto > monto_actual:
             raise HTTPException(
                 status_code=400,
                 detail="El monto de retiro supera el monto actual de la meta.",
             )
+
+        # Insert contribution
+        contrib_payload = {
+            "meta_id": meta_id,
+            "monto": str(monto),
+            "tipo": data.tipo,
+            "fecha": str(data.fecha),
+            "notas": data.notas or "",
+        }
+        contrib_response = (
+            client.table("contribuciones_meta").insert(contrib_payload).execute()
+        )
+        if not contrib_response.data:
+            raise HTTPException(
+                status_code=500, detail="Contribucion no encontrada tras insercion."
+            )
+
+        # Update monto_actual; mark completed when goal is reached
+        if data.tipo == "deposito":
+            nuevo_monto = monto_actual + monto
+            descripcion = f"Abono a meta: {meta['nombre']}"
+        else:
+            nuevo_monto = max(Decimal("0"), monto_actual - monto)
+            descripcion = f"Retiro de meta: {meta['nombre']}"
+
+        monto_objetivo = Decimal(str(meta["monto_objetivo"]))
+        nuevo_estado = "completada" if nuevo_monto >= monto_objetivo else meta["estado"]
+
+        client.table("metas_ahorro").update(
+            {"monto_actual": str(nuevo_monto), "estado": nuevo_estado}
+        ).eq("id", meta_id).execute()
+
+        # Create linked egreso (deposito) or ingreso (retiro) for cash-flow tracking
+        _crear_transaccion_ahorro(
+            client=client,
+            user_id=user_id,
+            tipo=data.tipo,
+            monto=monto,
+            fecha=str(data.fecha),
+            descripcion=descripcion,
+        )
+
+        return contrib_response.data[0]
+    except HTTPException:
+        raise
+    except APIError as e:
         _handle_api_error(e)
     return {}
 
@@ -217,7 +312,7 @@ def delete_contribucion(
             .maybe_single()
             .execute()
         )
-        if not check.data:
+        if not (check and check.data):
             raise HTTPException(status_code=404, detail="Contribucion no encontrada.")
 
         contribucion = check.data
@@ -235,7 +330,7 @@ def delete_contribucion(
             .maybe_single()
             .execute()
         )
-        if not meta_response.data:
+        if not (meta_response and meta_response.data):
             raise HTTPException(status_code=404, detail="Meta no encontrada.")
 
         meta = meta_response.data

@@ -1,6 +1,7 @@
 export interface CategoriaResponse {
   id: string
   nombre: string
+  nombre_en?: string
   tipo: 'ingreso' | 'egreso' | 'ambos'
   icono: string | null
   color: string | null
@@ -27,6 +28,7 @@ export interface EgresoResponse {
   moneda: 'DOP' | 'USD'
   descripcion: string | null
   metodo_pago: 'efectivo' | 'tarjeta' | 'transferencia' | 'otro'
+  tarjeta_id: string | null
   fecha: string
   notas: string | null
 }

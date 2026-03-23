@@ -126,8 +126,14 @@ def create_prestamo(user_jwt: str, user_id: str, data: PrestamoCreate) -> dict:
     client = get_user_client(user_jwt)
     payload = data.model_dump(exclude_none=True)
     payload["user_id"] = user_id
-    payload["monto_pendiente"] = str(payload["monto_original"])
-    payload["monto_original"] = str(payload["monto_original"])
+
+    monto_original = Decimal(str(payload["monto_original"]))
+    monto_ya_pagado = Decimal(str(payload.get("monto_ya_pagado", "0")))
+    monto_pendiente = max(monto_original - monto_ya_pagado, Decimal("0"))
+
+    payload["monto_original"] = str(monto_original)
+    payload["monto_pendiente"] = str(monto_pendiente)
+    payload["monto_ya_pagado"] = str(monto_ya_pagado)
     payload["fecha_prestamo"] = str(payload["fecha_prestamo"])
     if payload.get("fecha_vencimiento"):
         payload["fecha_vencimiento"] = str(payload["fecha_vencimiento"])
@@ -158,7 +164,7 @@ def get_prestamo(user_jwt: str, user_id: str, prestamo_id: str) -> dict | None:
             .maybe_single()
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             return None
 
         prestamo = response.data
@@ -221,7 +227,7 @@ def delete_prestamo(user_jwt: str, user_id: str, prestamo_id: str) -> dict:
             .eq("user_id", user_id)
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Prestamo no encontrado.")
         return response.data[0]
     except IndexError:
@@ -245,7 +251,7 @@ def get_pagos(
             .maybe_single()
             .execute()
         )
-        if not prestamo_check.data:
+        if not (prestamo_check and prestamo_check.data):
             raise HTTPException(status_code=404, detail="Prestamo no encontrado.")
 
         response = (
@@ -306,51 +312,84 @@ def registrar_pago(
         _handle_api_error(e)
         return {}
 
-    # Auto-create egreso to reflect the payment in the user's balance
+    # Auto-create egreso (yo_debo) or ingreso (me_deben) to reflect the payment
     try:
         # Extract pago_id from RPC result for traceability
         pago_id = result.data.get("pago_id") if isinstance(result.data, dict) else None
 
+        # Fetch prestamo type and details to determine flow direction
         prestamo_r = (
             client.table("prestamos")
-            .select("persona")
+            .select("tipo, persona, descripcion")
             .eq("id", prestamo_id)
             .maybe_single()
             .execute()
         )
-        prestamo_persona = (
-            prestamo_r.data["persona"]
-            if (prestamo_r and prestamo_r.data)
-            else "prestamo"
-        )
+        prestamo_tipo = "yo_debo"
+        prestamo_persona = "prestamo"
+        prestamo_desc = ""
+        if prestamo_r and prestamo_r.data:
+            prestamo_tipo = prestamo_r.data.get("tipo") or "yo_debo"
+            prestamo_persona = prestamo_r.data.get("persona") or "prestamo"
+            prestamo_desc = prestamo_r.data.get("descripcion") or ""
 
-        cat_r = (
-            client.table("categorias")
-            .select("id")
-            .eq("nombre", "Otros Egresos")
-            .is_("deleted_at", "null")
-            .limit(1)
-            .execute()
-        )
-        cat_id = cat_r.data[0]["id"] if cat_r.data else None
+        if prestamo_tipo == "me_deben":
+            # Dinero que me deben → recibir pago = INGRESO
+            cat_r = (
+                client.table("categorias")
+                .select("id")
+                .eq("nombre", "Cobro de Préstamo")
+                .is_("deleted_at", "null")
+                .limit(1)
+                .execute()
+            )
+            cat_id = cat_r.data[0]["id"] if cat_r.data else None
 
-        egreso_payload: dict = {
-            "user_id": user_id,
-            "monto": str(data.monto),
-            "moneda": "DOP",
-            "descripcion": f"Pago prestamo: {prestamo_persona}",
-            "metodo_pago": "transferencia",
-            "fecha": str(data.fecha),
-            "categoria_id": cat_id,
-        }
-        if data.notas:
-            egreso_payload["notas"] = data.notas
-        if pago_id:
-            egreso_payload["pago_prestamo_id"] = str(pago_id)
+            descripcion_ingreso = f"Pago recibido: {prestamo_persona}"
+            if prestamo_desc:
+                descripcion_ingreso += f" — {prestamo_desc}"
 
-        client.table("egresos").insert(egreso_payload).execute()
+            ingreso_payload: dict = {
+                "user_id": user_id,
+                "monto": str(data.monto),
+                "moneda": "DOP",
+                "descripcion": descripcion_ingreso,
+                "fecha": str(data.fecha),
+                "categoria_id": cat_id,
+            }
+            if data.notas:
+                ingreso_payload["notas"] = data.notas
+
+            client.table("ingresos").insert(ingreso_payload).execute()
+        else:
+            # Yo debo → pagar cuota = EGRESO
+            cat_r = (
+                client.table("categorias")
+                .select("id")
+                .eq("nombre", "Pago de Préstamo")
+                .is_("deleted_at", "null")
+                .limit(1)
+                .execute()
+            )
+            cat_id = cat_r.data[0]["id"] if cat_r.data else None
+
+            egreso_payload: dict = {
+                "user_id": user_id,
+                "monto": str(data.monto),
+                "moneda": "DOP",
+                "descripcion": f"Pago prestamo: {prestamo_persona}",
+                "metodo_pago": "transferencia",
+                "fecha": str(data.fecha),
+                "categoria_id": cat_id,
+            }
+            if data.notas:
+                egreso_payload["notas"] = data.notas
+            if pago_id:
+                egreso_payload["pago_prestamo_id"] = str(pago_id)
+
+            client.table("egresos").insert(egreso_payload).execute()
     except Exception:
-        pass  # Do not fail the payment if egreso creation fails (MVP)
+        pass  # Do not fail the payment if egreso/ingreso creation fails (MVP)
 
     return result.data
 
@@ -370,7 +409,7 @@ def delete_pago(
             .maybe_single()
             .execute()
         )
-        if not pago_response.data:
+        if not (pago_response and pago_response.data):
             raise HTTPException(status_code=404, detail="Pago no encontrado.")
 
         pago = pago_response.data
@@ -395,7 +434,7 @@ def delete_pago(
             .maybe_single()
             .execute()
         )
-        if not prestamo_response.data:
+        if not (prestamo_response and prestamo_response.data):
             raise HTTPException(status_code=404, detail="Prestamo no encontrado.")
 
         prestamo = prestamo_response.data

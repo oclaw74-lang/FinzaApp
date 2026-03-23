@@ -1,4 +1,4 @@
-"""Service for tarjeta movements (purchases and payments)."""
+"""Service for tarjeta movements (purchases, payments, and deposits)."""
 from datetime import date, datetime, timezone
 
 from fastapi import HTTPException
@@ -6,6 +6,22 @@ from postgrest import APIError
 
 from app.core.supabase_client import get_user_client
 from app.services.base import _handle_api_error
+
+
+def _get_tarjeta_simple(client, tarjeta_id: str, user_id: str) -> dict | None:
+    """Fetch minimal tarjeta data to validate status before movement registration."""
+    try:
+        response = (
+            client.table("tarjetas")
+            .select("id,bloqueada,activa")
+            .eq("id", tarjeta_id)
+            .eq("user_id", user_id)
+            .maybe_single()
+            .execute()
+        )
+        return (response.data if response else None)
+    except Exception:
+        return None
 
 
 def registrar_movimiento(
@@ -21,6 +37,14 @@ def registrar_movimiento(
 ) -> dict:
     """Register a tarjeta movement (compra or pago) via atomic RPC."""
     client = get_user_client(user_jwt)
+
+    tarjeta = _get_tarjeta_simple(client, tarjeta_id, user_id)
+    if tarjeta and tarjeta.get("bloqueada"):
+        raise HTTPException(
+            status_code=400,
+            detail="La tarjeta está bloqueada. Desbloquéala para registrar movimientos.",
+        )
+
     try:
         result = client.rpc(
             "registrar_movimiento_tarjeta",
@@ -52,6 +76,8 @@ def registrar_movimiento(
         if "saldo insuficiente" in msg.lower():
             raise HTTPException(status_code=400, detail=msg)
         if "excede la deuda" in msg.lower():
+            raise HTTPException(status_code=400, detail=msg)
+        if "deposito en una tarjeta de credito" in msg.lower():
             raise HTTPException(status_code=400, detail=msg)
         _handle_api_error(e)
     return {}
@@ -104,7 +130,7 @@ def delete_movimiento(
             .is_("deleted_at", "null")
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Movimiento no encontrado.")
     except HTTPException:
         raise

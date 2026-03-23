@@ -1,15 +1,18 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useCategorias } from '@/hooks/useCategorias'
+import { useDualMoneda } from '@/hooks/useDualMoneda'
 
 const presupuestoSchema = z.object({
   categoria_id: z.string().min(1, 'Selecciona una categoria'),
   monto_limite: z
     .number({ invalid_type_error: 'Ingresa un monto valido' })
     .positive('El monto limite debe ser mayor a 0'),
+  moneda: z.string().default('DOP'),
   aplicar_todos_los_meses: z.boolean().default(false),
 })
 
@@ -20,6 +23,7 @@ interface PresupuestoFormProps {
   year: number
   categoriaIdInicial?: string
   montoLimiteInicial?: number
+  monedaInicial?: string
   isEditing?: boolean
   errorMessage?: string | null
   onSubmit: (data: PresupuestoFormData) => Promise<void>
@@ -37,14 +41,22 @@ export function PresupuestoForm({
   year,
   categoriaIdInicial,
   montoLimiteInicial,
+  monedaInicial,
   isEditing = false,
   errorMessage,
   onSubmit,
   onCancel,
   isLoading,
 }: PresupuestoFormProps): JSX.Element {
+  const { i18n } = useTranslation()
+  const getCatNombre = (cat: { nombre: string; nombre_en?: string }) =>
+    i18n.language.startsWith('en') && cat.nombre_en ? cat.nombre_en : cat.nombre
   const { data: categorias = [], isLoading: loadingCategorias } =
     useCategorias()
+
+  const { data: dualMoneda } = useDualMoneda()
+  const monedaPrincipal = dualMoneda?.moneda_principal ?? 'DOP'
+  const monedaSecundaria = dualMoneda?.moneda_secundaria ?? null
 
   // Solo categorias de egreso o ambos
   const categoriasEgreso = categorias.filter(
@@ -61,6 +73,7 @@ export function PresupuestoForm({
     defaultValues: {
       categoria_id: categoriaIdInicial ?? '',
       monto_limite: montoLimiteInicial ?? undefined,
+      moneda: monedaInicial ?? 'DOP',
       aplicar_todos_los_meses: false,
     },
   })
@@ -111,7 +124,7 @@ export function PresupuestoForm({
           )}
           {categoriasEgreso.map((cat) => (
             <option key={cat.id} value={cat.id}>
-              {cat.nombre}
+              {getCatNombre(cat)}
             </option>
           ))}
         </select>
@@ -132,6 +145,26 @@ export function PresupuestoForm({
         error={errors.monto_limite?.message}
         {...register('monto_limite', { valueAsNumber: true })}
       />
+
+      {/* Moneda — solo si monedaSecundaria existe */}
+      {monedaSecundaria && (
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="presupuesto-moneda"
+            className="text-sm font-medium text-[var(--text-secondary)]"
+          >
+            Moneda
+          </label>
+          <select
+            id="presupuesto-moneda"
+            className="finza-input w-full"
+            {...register('moneda')}
+          >
+            <option value={monedaPrincipal}>{monedaPrincipal}</option>
+            <option value={monedaSecundaria}>{monedaSecundaria}</option>
+          </select>
+        </div>
+      )}
 
       {/* Aplicar a todos los meses — solo al crear */}
       {!isEditing && (

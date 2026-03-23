@@ -1,5 +1,6 @@
 from calendar import monthrange
 from datetime import date, datetime
+import logging
 
 from fastapi import HTTPException
 from postgrest import APIError
@@ -7,6 +8,8 @@ from postgrest import APIError
 from app.core.supabase_client import get_user_client
 from app.schemas.fondo_emergencia import FondoEmergenciaCreate, FondoEmergenciaUpdate
 from app.services.base import _handle_api_error
+
+log = logging.getLogger(__name__)
 
 # Factors to convert any subscription/recurrente frequency to monthly equivalent
 _FREQ_TO_MONTHLY: dict[str, float] = {
@@ -58,11 +61,41 @@ def _get_promedio_egresos(client, user_id: str) -> float:
             d = datetime.strptime(fecha_str[:10], "%Y-%m-%d")
             key = (d.year, d.month)
             if key in meses_set:
-                totales[key] = totales.get(key, 0.0) + float(e["monto"])
+                totales[key] = totales.get(key, 0.0) + float(e.get("monto") or 0)
 
     if not totales:
         return 0.0
     return sum(totales.values()) / len(meses)
+
+
+def _get_tasa_cambio(client, user_id: str) -> tuple[str, str | None, float]:
+    """Return (moneda_principal, moneda_secundaria, tasa_cambio) from user_config."""
+    try:
+        r = (
+            client.table("user_config")
+            .select("moneda, moneda_secundaria, tasa_cambio")
+            .eq("user_id", user_id)
+            .maybe_single()
+            .execute()
+        )
+    except APIError:
+        return ("DOP", None, 1.0)
+    if r is None or not r.data:
+        return ("DOP", None, 1.0)
+    d = r.data
+    principal = d.get("moneda") or "DOP"
+    secundaria = d.get("moneda_secundaria")
+    tasa = float(d.get("tasa_cambio") or 1.0)
+    return (principal, secundaria, tasa)
+
+
+def _to_main(amount: float, moneda: str, moneda_principal: str, moneda_secundaria: str | None, tasa: float) -> float:
+    """Convert amount to main currency. Returns amount unchanged if moneda == moneda_principal."""
+    if not moneda or moneda == moneda_principal:
+        return amount
+    if moneda_secundaria and moneda == moneda_secundaria and tasa > 0:
+        return amount * tasa
+    return amount
 
 
 def _get_cuota_prestamos(client, user_id: str) -> float:
@@ -100,12 +133,12 @@ def _get_cuota_prestamos(client, user_id: str) -> float:
     return total
 
 
-def _get_suscripciones_mensual(client, user_id: str) -> float:
-    """Sum of active subscriptions normalized to monthly amount."""
+def _get_suscripciones_mensual(client, user_id: str, moneda_principal: str, moneda_secundaria: str | None, tasa: float) -> float:
+    """Sum of active subscriptions normalized to monthly amount (converted to main currency)."""
     try:
         r = (
             client.table("suscripciones")
-            .select("monto,frecuencia")
+            .select("monto,frecuencia,moneda")
             .eq("user_id", user_id)
             .eq("activa", True)
             .execute()
@@ -117,16 +150,18 @@ def _get_suscripciones_mensual(client, user_id: str) -> float:
     for s in r.data or []:
         monto = float(s.get("monto") or 0)
         freq = s.get("frecuencia", "mensual")
-        total += monto * _FREQ_TO_MONTHLY.get(freq, 1.0)
+        moneda = s.get("moneda") or moneda_principal
+        monto_main = _to_main(monto, moneda, moneda_principal, moneda_secundaria, tasa)
+        total += monto_main * _FREQ_TO_MONTHLY.get(freq, 1.0)
     return total
 
 
-def _get_recurrentes_mensual(client, user_id: str) -> float:
-    """Sum of active recurring egresos normalized to monthly amount."""
+def _get_recurrentes_mensual(client, user_id: str, moneda_principal: str, moneda_secundaria: str | None, tasa: float) -> float:
+    """Sum of active recurring egresos normalized to monthly amount (converted to main currency)."""
     try:
         r = (
             client.table("recurrentes")
-            .select("monto,frecuencia")
+            .select("monto,frecuencia,moneda")
             .eq("user_id", user_id)
             .eq("tipo", "egreso")
             .eq("activo", True)
@@ -139,7 +174,9 @@ def _get_recurrentes_mensual(client, user_id: str) -> float:
     for rec in r.data or []:
         monto = float(rec.get("monto") or 0)
         freq = rec.get("frecuencia", "mensual")
-        total += monto * _FREQ_TO_MONTHLY.get(freq, 1.0)
+        moneda = rec.get("moneda") or moneda_principal
+        monto_main = _to_main(monto, moneda, moneda_principal, moneda_secundaria, tasa)
+        total += monto_main * _FREQ_TO_MONTHLY.get(freq, 1.0)
     return total
 
 
@@ -148,7 +185,7 @@ def _get_salario(client, user_id: str) -> float:
     try:
         r = (
             client.table("profiles")
-            .select("salario_mensual_neto")
+            .select("salario_neto")
             .eq("user_id", user_id)
             .maybe_single()
             .execute()
@@ -157,41 +194,57 @@ def _get_salario(client, user_id: str) -> float:
         return 0.0
     if r is None or not r.data:
         return 0.0
-    sal = r.data.get("salario_mensual_neto")
+    sal = r.data.get("salario_neto")
     return float(sal) if sal else 0.0
+
+
+def _get_presupuestos_mensual(client, user_id: str, moneda_principal: str, moneda_secundaria: str | None, tasa: float) -> float:
+    """Sum of all budgeted amounts for the current month (converted to main currency)."""
+    today = date.today()
+    try:
+        r = (
+            client.table("presupuestos")
+            .select("monto_limite,moneda")
+            .eq("user_id", user_id)
+            .eq("mes", today.month)
+            .eq("year", today.year)
+            .execute()
+        )
+    except APIError:
+        return 0.0
+    total = 0.0
+    for p in r.data or []:
+        monto = float(p.get("monto_limite") or 0)
+        moneda = p.get("moneda") or moneda_principal
+        total += _to_main(monto, moneda, moneda_principal, moneda_secundaria, tasa)
+    return total
 
 
 def _calc_meta(client, user_id: str, meta_meses: int) -> float:
     """
-    Comprehensive emergency fund target.
+    Emergency fund target based on committed monthly expenses only.
 
-    base_mensual = max(
-        salario_mensual_neto,          # income replacement (primary if set)
-        promedio_egresos_3_meses,       # historical variable expenses
-        cuota_prestamos + suscripciones_mensual + recurrentes_mensual  # fixed obligations
-    )
+    base_mensual = presupuestos_mensual + recurrentes_mensual + cuota_prestamos + suscripciones
 
     meta_calculada = base_mensual * meta_meses
     """
-    promedio_egresos = _get_promedio_egresos(client, user_id)
+    moneda_principal, moneda_secundaria, tasa = _get_tasa_cambio(client, user_id)
+    presupuestos = _get_presupuestos_mensual(client, user_id, moneda_principal, moneda_secundaria, tasa)
     cuota_prestamos = _get_cuota_prestamos(client, user_id)
-    suscripciones = _get_suscripciones_mensual(client, user_id)
-    recurrentes = _get_recurrentes_mensual(client, user_id)
-    salario = _get_salario(client, user_id)
+    recurrentes = _get_recurrentes_mensual(client, user_id, moneda_principal, moneda_secundaria, tasa)
+    suscripciones = _get_suscripciones_mensual(client, user_id, moneda_principal, moneda_secundaria, tasa)
 
-    obligaciones_fijas = cuota_prestamos + suscripciones + recurrentes
-
-    candidates = [promedio_egresos, obligaciones_fijas]
-    if salario > 0:
-        candidates.append(salario)
-
-    base_mensual = max(candidates)
+    base_mensual = presupuestos + cuota_prestamos + recurrentes + suscripciones
     return round(base_mensual * meta_meses, 2)
 
 
 def _enrich(row: dict, client, user_id: str) -> dict:
-    meta_calculada = _calc_meta(client, user_id, row["meta_meses"])
-    monto_actual = float(row["monto_actual"])
+    try:
+        meta_calculada = _calc_meta(client, user_id, row.get("meta_meses", 3))
+    except Exception as exc:
+        log.warning("_calc_meta failed: %s", exc)
+        meta_calculada = 0.0
+    monto_actual = float(row.get("monto_actual") or 0)
     porcentaje = min(monto_actual / meta_calculada * 100, 100.0) if meta_calculada > 0 else 0.0
     return {
         **row,
@@ -242,30 +295,86 @@ def update_fondo(user_jwt: str, user_id: str, data: FondoEmergenciaUpdate) -> di
     if not payload:
         raise HTTPException(status_code=422, detail="No fields to update.")
     try:
+        client.table("fondo_emergencia").update(payload).eq("user_id", user_id).execute()
+    except APIError as e:
+        _handle_api_error(e)
+    # Fetch updated row (update() does not return rows in this SDK version)
+    try:
         r = (
             client.table("fondo_emergencia")
-            .update(payload)
+            .select("*")
             .eq("user_id", user_id)
+            .maybe_single()
             .execute()
         )
     except APIError as e:
         _handle_api_error(e)
-    if not r.data:
+    if r is None or not r.data:
         raise HTTPException(status_code=404, detail="Fondo de emergencia no encontrado.")
-    return _enrich(r.data[0], client, user_id)
+    return _enrich(r.data, client, user_id)
+
+
+def _crear_transaccion_fondo(client, user_id: str, tipo: str, monto: float) -> None:
+    """
+    Create a linked egreso (depositar) or ingreso (retirar) for the emergency fund.
+    Silently skips if the system category is not found.
+    """
+    try:
+        cat_nombre = "Ahorro / Metas" if tipo == "depositar" else "Retiro de Ahorro"
+        resp = (
+            client.table("categorias")
+            .select("id")
+            .eq("nombre", cat_nombre)
+            .eq("es_sistema", True)
+            .maybe_single()
+            .execute()
+        )
+        cat_id = resp.data["id"] if (resp and resp.data) else None
+        if not cat_id:
+            return
+
+        hoy = str(date.today())
+        if tipo == "depositar":
+            client.table("egresos").insert({
+                "user_id": user_id,
+                "categoria_id": cat_id,
+                "monto": str(monto),
+                "moneda": "DOP",
+                "descripcion": "Abono a fondo de emergencia",
+                "metodo_pago": "efectivo",
+                "fecha": hoy,
+            }).execute()
+        else:
+            client.table("ingresos").insert({
+                "user_id": user_id,
+                "categoria_id": cat_id,
+                "monto": str(monto),
+                "moneda": "DOP",
+                "descripcion": "Retiro de fondo de emergencia",
+                "fecha": hoy,
+            }).execute()
+    except Exception as exc:
+        log.warning("Could not create linked transaction for fondo emergencia: %s", exc)
 
 
 def depositar(user_jwt: str, user_id: str, monto: float) -> dict:
+    client = get_user_client(user_jwt)
     fondo = get_or_none(user_jwt, user_id)
     if fondo is None:
         raise HTTPException(status_code=404, detail="Fondo de emergencia no encontrado.")
     nuevo_monto = fondo["monto_actual"] + monto
-    return update_fondo(user_jwt, user_id, FondoEmergenciaUpdate(monto_actual=nuevo_monto))
+    resultado = update_fondo(user_jwt, user_id, FondoEmergenciaUpdate(monto_actual=nuevo_monto))
+    _crear_transaccion_fondo(client, user_id, "depositar", monto)
+    return resultado
 
 
 def retirar(user_jwt: str, user_id: str, monto: float) -> dict:
+    client = get_user_client(user_jwt)
     fondo = get_or_none(user_jwt, user_id)
     if fondo is None:
         raise HTTPException(status_code=404, detail="Fondo de emergencia no encontrado.")
     nuevo_monto = max(0.0, fondo["monto_actual"] - monto)
-    return update_fondo(user_jwt, user_id, FondoEmergenciaUpdate(monto_actual=nuevo_monto))
+    resultado = update_fondo(user_jwt, user_id, FondoEmergenciaUpdate(monto_actual=nuevo_monto))
+    _crear_transaccion_fondo(client, user_id, "retirar", monto)
+    return resultado
+

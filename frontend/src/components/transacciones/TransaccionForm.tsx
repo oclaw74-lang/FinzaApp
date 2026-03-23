@@ -1,11 +1,16 @@
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { useCategorias } from '@/hooks/useCategorias'
 import { useTarjetas } from '@/hooks/useTarjetas'
 import { useMonedas } from '@/hooks/useCatalogos'
+import { useUserCurrency } from '@/hooks/useUserCurrency'
+import { useDualMoneda } from '@/hooks/useDualMoneda'
+import { cn } from '@/lib/utils'
 
 const ingresoSchema = z.object({
   categoria_id: z.string().uuid('Selecciona una categoria'),
@@ -61,6 +66,9 @@ export function TransaccionForm({
   isLoading,
   submitLabel,
 }: TransaccionFormProps): JSX.Element {
+  const { i18n } = useTranslation()
+  const getCatNombre = (cat: { nombre: string; nombre_en?: string }) =>
+    i18n.language.startsWith('en') && cat.nombre_en ? cat.nombre_en : cat.nombre
   const schema = tipo === 'ingreso' ? ingresoSchema : egresoSchema
   const { data: todasCategorias = [], isLoading: loadingCategorias } = useCategorias()
   const categorias = todasCategorias.filter(
@@ -68,17 +76,25 @@ export function TransaccionForm({
   )
   const { data: tarjetas = [] } = useTarjetas()
   const { data: monedas = [] } = useMonedas()
+  const userCurrency = useUserCurrency()
+  const { data: dualMoneda } = useDualMoneda()
   const tarjetasActivas = tarjetas.filter((t) => t.activa)
+
+  const hasSecondary = !!dualMoneda?.moneda_secundaria
+  const activeCurrencies = hasSecondary
+    ? [userCurrency, dualMoneda!.moneda_secundaria as string]
+    : []
 
   const {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      moneda: 'DOP',
+      moneda: userCurrency,
       fecha: new Date().toISOString().split('T')[0],
       ...(tipo === 'egreso' && { metodo_pago: 'efectivo' }),
       ...defaultValues,
@@ -86,6 +102,7 @@ export function TransaccionForm({
   })
 
   const metodoPagoValue = useWatch({ control, name: 'metodo_pago' as never }) as string | undefined
+  const monedaValue = useWatch({ control, name: 'moneda' as never }) as string | undefined
 
   const handleFormSubmit = handleSubmit((data) =>
     onSubmit(data as IngresoFormData | EgresoFormData)
@@ -108,7 +125,7 @@ export function TransaccionForm({
           <option value="">Selecciona una categoria...</option>
           {categorias.map((cat) => (
             <option key={cat.id} value={cat.id}>
-              {cat.nombre}
+              {getCatNombre(cat)}
             </option>
           ))}
         </select>
@@ -133,28 +150,49 @@ export function TransaccionForm({
           <label htmlFor="moneda" className="text-sm font-medium text-[var(--text-secondary)]">
             Moneda
           </label>
-          <select id="moneda" {...register('moneda')} className="finza-input w-full" aria-label="Moneda">
-            {monedas.length > 0
-              ? monedas.map((m) => (
-                  <option key={m.codigo} value={m.codigo}>
-                    {m.simbolo} {m.codigo} — {m.nombre}
-                  </option>
-                ))
-              : (
-                <>
-                  <option value="DOP">RD$ DOP — Peso Dominicano</option>
-                  <option value="USD">$ USD — Dólar Estadounidense</option>
-                </>
-              )
-            }
-          </select>
+          {hasSecondary ? (
+            // Compact toggle for primary + secondary currencies
+            <div className="flex gap-2" role="group" aria-label="Seleccionar moneda">
+              {activeCurrencies.map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  className={cn(
+                    'px-4 py-1.5 rounded-full text-sm font-medium border transition-all',
+                    (monedaValue ?? userCurrency) === code
+                      ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                      : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50'
+                  )}
+                  onClick={() => setValue('moneda' as never, code as never)}
+                  aria-pressed={(monedaValue ?? userCurrency) === code}
+                >
+                  {code}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <select id="moneda" {...register('moneda')} className="finza-input w-full" aria-label="Moneda">
+              {monedas.length > 0
+                ? monedas.map((m) => (
+                    <option key={m.codigo} value={m.codigo}>
+                      {m.simbolo} {m.codigo} — {m.nombre}
+                    </option>
+                  ))
+                : (
+                  <>
+                    <option value="DOP">RD$ DOP — Peso Dominicano</option>
+                    <option value="USD">$ USD — Dólar Estadounidense</option>
+                  </>
+                )
+              }
+            </select>
+          )}
         </div>
       </div>
 
       {/* Fecha */}
-      <Input
+      <DatePicker
         label="Fecha"
-        type="date"
         error={errors.fecha?.message as string | undefined}
         {...register('fecha')}
       />

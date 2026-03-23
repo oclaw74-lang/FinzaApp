@@ -98,7 +98,7 @@ def _calc_presupuesto(client, user_id: str, mes: int, year: int) -> int:
 
 
 def _calc_deuda(client, user_id: str) -> int:
-    """Debt-to-income ratio. Debt < 30% monthly income = 25pts."""
+    """Debt-to-income ratio + credit card utilization. Max 25pts."""
     today = date.today()
     try:
         prestamos_r = (
@@ -106,6 +106,14 @@ def _calc_deuda(client, user_id: str) -> int:
             .select("monto_pendiente")
             .eq("user_id", user_id)
             .eq("estado", "activo")
+            .execute()
+        )
+        tarjetas_r = (
+            client.table("tarjetas")
+            .select("saldo_actual,limite_credito,tipo")
+            .eq("user_id", user_id)
+            .eq("activa", True)
+            .eq("tipo", "credito")
             .execute()
         )
         fecha_inicio_hoy, fecha_fin_hoy = _fecha_rango(today.year, today.month)
@@ -123,17 +131,37 @@ def _calc_deuda(client, user_id: str) -> int:
     deuda_total = sum(float(r["monto_pendiente"]) for r in (prestamos_r.data or []))
     ingreso_mensual = sum(float(r["monto"]) for r in (ingresos_r.data or []))
 
+    # Credit card utilization penalty (0-12.5 pts deducted from 25)
+    tarjetas = tarjetas_r.data or []
+    utilizacion_pts = 0
+    if tarjetas:
+        total_saldo = sum(float(t.get("saldo_actual") or 0) for t in tarjetas)
+        total_limite = sum(float(t.get("limite_credito") or 0) for t in tarjetas if t.get("limite_credito"))
+        if total_limite > 0:
+            utilizacion = total_saldo / total_limite
+            if utilizacion > 0.30:
+                # Penalty: up to 12 pts for 100% utilization
+                utilizacion_pts = int(min((utilizacion - 0.30) / 0.70 * 12, 12))
+
+    if deuda_total <= 0 and not tarjetas:
+        return 25  # no debt, no cards = max score
+
     if deuda_total <= 0:
-        return 25  # no debt = max score
+        # Only credit card utilization affects score
+        return max(0, 25 - utilizacion_pts)
+
     if ingreso_mensual <= 0:
         return 0
 
     ratio = deuda_total / ingreso_mensual
     if ratio <= 0.30:
-        return 25
-    if ratio >= 2.0:
-        return 0
-    return int(max(0, (2.0 - ratio) / (2.0 - 0.30) * 25))
+        base = 25
+    elif ratio >= 2.0:
+        base = 0
+    else:
+        base = int(max(0, (2.0 - ratio) / (2.0 - 0.30) * 25))
+
+    return max(0, base - utilizacion_pts)
 
 
 def _calc_emergencia(client, user_id: str) -> int:

@@ -62,7 +62,7 @@ def get_egreso(user_jwt: str, egreso_id: str, user_id: str) -> dict | None:
             .maybe_single()
             .execute()
         )
-        return response.data
+        return response.data if response else None
     except APIError as e:
         _handle_api_error(e)
 
@@ -108,7 +108,7 @@ def delete_egreso(user_jwt: str, egreso_id: str, user_id: str) -> dict:
             .eq("user_id", user_id)
             .execute()
         )
-        if not response.data:
+        if not (response and response.data):
             raise HTTPException(status_code=404, detail="Egreso no encontrado.")
         return response.data[0]
     except IndexError:

@@ -1,5 +1,6 @@
 export type TipoPrestamo = 'me_deben' | 'yo_debo'
-export type EstadoPrestamo = 'activo' | 'pagado' | 'vencido'
+export type EstadoPrestamo = 'activo' | 'pagado' | 'vencido' | 'cancelado'
+export type AcreeedorTipo = 'persona' | 'banco'
 
 export interface PagoPrestamo {
   id: string
@@ -46,9 +47,11 @@ export interface TablaAmortizacionResponse {
 export interface Prestamo {
   id: string
   tipo: TipoPrestamo
+  acreedor_tipo: AcreeedorTipo
   persona: string
   monto_original: number
   monto_pendiente: number
+  monto_ya_pagado: number
   moneda: string
   fecha_prestamo: string
   fecha_vencimiento?: string
@@ -66,7 +69,8 @@ export interface Prestamo {
 
 export interface PrestamoCreate {
   tipo: TipoPrestamo
-  persona: string
+  acreedor_tipo?: AcreeedorTipo
+  persona?: string
   monto_original: number
   moneda?: string
   fecha_prestamo: string
@@ -75,9 +79,11 @@ export interface PrestamoCreate {
   notas?: string
   tasa_interes?: number | null
   plazo_meses?: number | null
+  monto_ya_pagado?: number
 }
 
 export interface PrestamoUpdate {
+  acreedor_tipo?: AcreeedorTipo
   persona?: string
   monto_original?: number
   moneda?: string

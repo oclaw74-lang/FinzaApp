@@ -7,6 +7,7 @@ export interface RecurrenteResponse {
   tipo: TipoRecurrente
   descripcion: string
   monto: number
+  moneda: string
   categoria_id: string | null
   frecuencia: FrecuenciaRecurrente
   dia_del_mes: number | null
@@ -26,6 +27,7 @@ export interface RecurrenteCreate {
   tipo: TipoRecurrente
   descripcion: string
   monto: number
+  moneda?: string
   categoria_id?: string | null
   frecuencia: FrecuenciaRecurrente
   dia_del_mes?: number | null

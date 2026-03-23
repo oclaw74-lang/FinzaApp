@@ -3,30 +3,36 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Camera, DollarSign, Clock, Tag, Trash2, Plus, Globe, X } from 'lucide-react'
+import { Camera, DollarSign, Clock, Tag, Trash2, Plus, Globe, X, AlertTriangle, Zap, Sun, Moon, Monitor } from 'lucide-react'
 import * as Icons from 'lucide-react'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
-import { usePaises } from '@/hooks/useCatalogos'
+import { usePaises, useMonedas } from '@/hooks/useCatalogos'
+import { useDualMoneda, useUpdateDualMoneda } from '@/hooks/useDualMoneda'
 import {
   useCategorias,
   useCreateCategoria,
   useDeleteCategoria,
 } from '@/hooks/useCategorias'
+import { useMetas } from '@/hooks/useMetas'
+import { useFondoEmergencia } from '@/hooks/useFondoEmergencia'
 import { supabase } from '@/lib/supabase'
+import { getApiErrorMessage } from '@/lib/apiError'
 import { useAuthStore } from '@/store/authStore'
 import { useThemeStore } from '@/store/themeStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ToggleGroup } from '@/components/ui/toggle-group'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
-import i18n from '@/i18n'
 import type { CategoriaResponse } from '@/types/transacciones'
+import { ImportarPage } from '@/pages/ImportarPage'
+import type { FrecuenciaPago } from '@/types/profile'
 
-type Tab = 'profile' | 'appearance' | 'security' | 'categorias'
+type Tab = 'profile' | 'appearance' | 'security' | 'categorias' | 'importar'
 
 // TODO: i18n when zod supports dynamic messages
 const profileSchema = z.object({
@@ -137,7 +143,9 @@ function NuevaCategoriaForm({ onDone }: NuevaCategoriaFormProps): JSX.Element {
 }
 
 function CategoriasTab({ navigate }: CategoriasTabProps): JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const getCatNombre = (cat: { nombre: string; nombre_en?: string }) =>
+    i18n.language.startsWith('en') && cat.nombre_en ? cat.nombre_en : cat.nombre
   const { data: categorias = [], isLoading, isError } = useCategorias()
   const deleteCategoria = useDeleteCategoria()
   const [showForm, setShowForm] = useState(false)
@@ -215,7 +223,7 @@ function CategoriasTab({ navigate }: CategoriasTabProps): JSX.Element {
                 <div className="w-8 h-8 rounded-lg bg-[var(--surface-raised)] flex items-center justify-center flex-shrink-0">
                   <IconComp size={15} className="text-[var(--text-muted)]" />
                 </div>
-                <span className="flex-1 text-sm text-[var(--text-primary)] truncate">{cat.nombre}</span>
+                <span className="flex-1 text-sm text-[var(--text-primary)] truncate">{getCatNombre(cat)}</span>
                 {getTipoBadge(cat.tipo, t)}
                 {cat.es_sistema && (
                   <span className="text-[10px] text-[var(--text-muted)] px-1.5 py-0.5 rounded bg-[var(--surface-raised)]">
@@ -227,7 +235,7 @@ function CategoriasTab({ navigate }: CategoriasTabProps): JSX.Element {
                     type="button"
                     onClick={() => handleDelete(cat)}
                     className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors flex-shrink-0"
-                    aria-label={`Eliminar ${cat.nombre}`}
+                    aria-label={`Eliminar ${getCatNombre(cat)}`}
                   >
                     <Trash2 size={13} />
                   </button>
@@ -326,23 +334,54 @@ function PaisModal({ currentPaisCodigo, onClose, onSave, isSaving }: PaisModalPr
 }
 
 export function ConfiguracionPage(): JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user } = useAuthStore()
   const { theme, setTheme, language, setLanguage } = useThemeStore()
   const [activeTab, setActiveTab] = useState<Tab>('profile')
   const navigate = useNavigate()
   const { data: profile } = useProfile()
   const updateProfile = useUpdateProfile()
-  const [salarioValue, setSalarioValue] = useState('')
   const [mostrarHoras, setMostrarHoras] = useState(false)
   const [paisModalOpen, setPaisModalOpen] = useState(false)
   const [savingPais, setSavingPais] = useState(false)
+  // Extended salary fields
+  const [salarioBruto, setSalarioBruto] = useState('')
+  const [descuentosAdicionales, setDescuentosAdicionales] = useState('')
+  const [frecuenciaPago, setFrecuenciaPago] = useState<FrecuenciaPago>('mensual')
+  // Auto savings fields
+  const [asignacionActiva, setAsignacionActiva] = useState(false)
+  const [pctMetas, setPctMetas] = useState('')
+  const [pctFondo, setPctFondo] = useState('')
+
+  const { data: metas = [] } = useMetas()
+  const { data: fondo } = useFondoEmergencia()
+  const { data: monedas = [] } = useMonedas()
+  const tieneSavingsTarget = metas.some((m) => m.estado === 'activa') || !!fondo
+
+  // Dual moneda state
+  const dualMoneda = useDualMoneda()
+  const updateDualMoneda = useUpdateDualMoneda()
+  const [monedaSecundaria, setMonedaSecundaria] = useState<string>('')
+  const [tasaCambio, setTasaCambio] = useState<string>('')
+
+  // Sync dual moneda from server
+  useEffect(() => {
+    if (dualMoneda.data) {
+      setMonedaSecundaria(dualMoneda.data.moneda_secundaria ?? '')
+      setTasaCambio(dualMoneda.data.tasa_cambio != null ? String(dualMoneda.data.tasa_cambio) : '')
+    }
+  }, [dualMoneda.data])
 
   // Sync profile data when loaded (useEffect avoids stale state from render-time mutation)
   useEffect(() => {
     if (profile) {
-      setSalarioValue(profile.salario_mensual_neto != null ? String(profile.salario_mensual_neto) : '')
       setMostrarHoras(profile.mostrar_horas_trabajo ?? false)
+      setSalarioBruto(profile.salario_bruto != null ? String(profile.salario_bruto) : '')
+      setDescuentosAdicionales(profile.descuentos_adicionales != null ? String(profile.descuentos_adicionales) : '')
+      setFrecuenciaPago(profile.frecuencia_pago ?? 'mensual')
+      setAsignacionActiva(profile.asignacion_automatica_activa ?? false)
+      setPctMetas(profile.porcentaje_ahorro_metas != null ? String(profile.porcentaje_ahorro_metas) : '')
+      setPctFondo(profile.porcentaje_ahorro_fondo != null ? String(profile.porcentaje_ahorro_fondo) : '')
     }
   }, [profile])
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
@@ -407,18 +446,31 @@ export function ConfiguracionPage(): JSX.Element {
         return
       }
       // Save finances (salary + work hours)
+      const salarioNeto = salarioBruto
+        ? Math.max(0, (parseFloat(salarioBruto) || 0) - (parseFloat(descuentosAdicionales) || 0))
+        : undefined
       await updateProfile.mutateAsync({
-        salario_mensual_neto: salarioValue ? parseFloat(salarioValue) : undefined,
         mostrar_horas_trabajo: mostrarHoras,
+        salario_bruto: salarioBruto ? parseFloat(salarioBruto) : undefined,
+        salario_neto: salarioNeto,
+        descuentos_adicionales: descuentosAdicionales ? parseFloat(descuentosAdicionales) : undefined,
+        frecuencia_pago: frecuenciaPago,
+        asignacion_automatica_activa: asignacionActiva,
+        porcentaje_ahorro_metas: pctMetas ? parseFloat(pctMetas) : undefined,
+        porcentaje_ahorro_fondo: pctFondo ? parseFloat(pctFondo) : undefined,
+      })
+      // Save secondary currency alongside profile
+      await updateDualMoneda.mutateAsync({
+        moneda_secundaria: monedaSecundaria || null,
+        ...(monedaSecundaria && tasaCambio ? { tasa_cambio: parseFloat(tasaCambio) } : {}),
       })
       toast.success(t('settings.profileSaved'))
-    } catch {
-      toast.error(t('common.error'))
+    } catch (err) {
+      toast.error(getApiErrorMessage(err))
     }
   }
 
-  const handleSavePais = async (paisCodigo: string, monedaCodigo: string, nombrePais: string): Promise<void> => {
-    setSavingPais(true)
+  const handleSavePais = async (paisCodigo: string, monedaCodigo: string, nombrePais: string): Promise<void> => {    setSavingPais(true)
     try {
       const { error } = await supabase.auth.updateUser({
         data: {
@@ -445,6 +497,7 @@ export function ConfiguracionPage(): JSX.Element {
     { id: 'appearance', label: t('settings.appearance') },
     { id: 'security', label: t('settings.security') },
     { id: 'categorias', label: t('settings.categorias') },
+    { id: 'importar', label: t('settings.importar') },
   ]
 
   const userName = metadata.full_name ?? user?.email?.split('@')[0] ?? 'Usuario'
@@ -541,13 +594,84 @@ export function ConfiguracionPage(): JSX.Element {
               </label>
               <select
                 className="finza-input w-full"
-                {...profileForm.register('currency')}
+                value={profileForm.watch('currency')}
+                onChange={(e) => profileForm.setValue('currency', e.target.value, { shouldDirty: true })}
               >
-                <option value="DOP">Peso Dominicano (RD$)</option>
-                <option value="USD">Dolar Americano ($)</option>
-                <option value="EUR">Euro (EUR)</option>
+                {monedas.length > 0
+                  ? monedas.map((m) => (
+                      <option key={m.codigo} value={m.codigo}>
+                        {m.codigo} — {m.nombre}
+                      </option>
+                    ))
+                  : (
+                    <>
+                      <option value="DOP">DOP — Peso Dominicano</option>
+                      <option value="USD">USD — Dólar Americano</option>
+                      <option value="EUR">EUR — Euro</option>
+                    </>
+                  )}
               </select>
             </div>
+
+            {/* Secondary currency — inline with profile */}
+            <div className="space-y-1.5">
+              <label htmlFor="moneda-secundaria" className="text-sm font-medium text-[var(--text-primary)]">
+                {t('settings.segundaMoneda')}
+              </label>
+              <select
+                id="moneda-secundaria"
+                value={monedaSecundaria}
+                onChange={(e) => {
+                  setMonedaSecundaria(e.target.value)
+                  if (!e.target.value) setTasaCambio('')
+                }}
+                className="finza-input w-full"
+                aria-label={t('settings.segundaMoneda')}
+              >
+                <option value="">{t('settings.ninguna')}</option>
+                {monedas.length > 0
+                  ? monedas.map((m) => (
+                      <option key={m.codigo} value={m.codigo}>
+                        {m.codigo} — {m.nombre}
+                      </option>
+                    ))
+                  : (
+                    <>
+                      <option value="USD">USD — Dólar Americano</option>
+                      <option value="EUR">EUR — Euro</option>
+                      <option value="DOP">DOP — Peso Dominicano</option>
+                    </>
+                  )}
+              </select>
+            </div>
+
+            {/* Exchange rate — only when secondary currency is selected */}
+            {monedaSecundaria && (
+              <div className="space-y-1.5">
+                <label htmlFor="tasa-cambio" className="text-sm font-medium text-[var(--text-primary)]">
+                  {t('settings.tasaCambio')} — 1 {monedaSecundaria} ={' '}
+                  <span className="text-[var(--accent)]">__</span>{' '}
+                  {dualMoneda.data?.moneda_principal ?? profileForm.getValues('currency') ?? 'DOP'}
+                </label>
+                <input
+                  id="tasa-cambio"
+                  type="number"
+                  min="0.000001"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={tasaCambio}
+                  onChange={(e) => setTasaCambio(e.target.value)}
+                  className="finza-input w-full"
+                  aria-label={t('settings.tasaCambio')}
+                />
+                {dualMoneda.data?.tasa_cambio_actualizada_at && (
+                  <p className="text-xs text-[var(--text-muted)]">
+                    {t('settings.ultimaActualizacion')}:{' '}
+                    {new Date(dualMoneda.data.tasa_cambio_actualizada_at).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Pais y moneda — display + boton cambiar */}
             <div className="space-y-1.5">
@@ -577,25 +701,74 @@ export function ConfiguracionPage(): JSX.Element {
 
           </form>
 
-          {/* Finances section (salary + work hours) */}
-          <div className="border-t border-[var(--border)] pt-6 space-y-5">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
-                <DollarSign size={15} className="text-[var(--accent)]" />
-                {t('profile.salario')}
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                value={salarioValue}
-                onChange={(e) => setSalarioValue(e.target.value)}
-                className="finza-input w-full"
-              />
-              <p className="text-xs text-[var(--text-muted)]">{t('profile.salarioHint')}</p>
+          {/* Salary information section */}
+          <div className="border-t border-[var(--border)] pt-6 space-y-4">
+            <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-2">
+              <DollarSign size={13} className="text-[var(--accent)]" />
+              {t('profile.infoSalarial')}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-[var(--text-primary)]">
+                  {t('profile.salarioBruto')}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={salarioBruto}
+                  onChange={(e) => setSalarioBruto(e.target.value)}
+                  className="finza-input w-full"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-[var(--text-primary)]">
+                  {t('profile.descuentosAdicionales')}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={descuentosAdicionales}
+                  onChange={(e) => setDescuentosAdicionales(e.target.value)}
+                  className="finza-input w-full"
+                />
+              </div>
+              {/* Salario neto — auto-calculated, readonly */}
+              {salarioBruto && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
+                    <DollarSign size={14} className="text-[var(--accent)]" />
+                    {t('profile.salarioNeto')}
+                  </label>
+                  <input
+                    type="number"
+                    readOnly
+                    value={Math.max(0, (parseFloat(salarioBruto) || 0) - (parseFloat(descuentosAdicionales) || 0)).toFixed(2)}
+                    className="finza-input w-full bg-[var(--surface-raised)] opacity-75 cursor-not-allowed"
+                  />
+                  <p className="text-xs text-[var(--text-muted)]">{t('profile.salarioHint')}</p>
+                </div>
+              )}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-[var(--text-primary)]">
+                  {t('profile.frecuenciaPago')}
+                </label>
+                <select
+                  value={frecuenciaPago}
+                  onChange={(e) => setFrecuenciaPago(e.target.value as FrecuenciaPago)}
+                  className="finza-input w-full"
+                >
+                  <option value="mensual">{t('profile.frecMensual')}</option>
+                  <option value="quincenal">{t('profile.frecQuincenal')}</option>
+                  <option value="bisemanal">{t('profile.frecBisemanal')}</option>
+                </select>
+              </div>
             </div>
 
+            {/* Mostrar horas de trabajo — dentro de información salarial */}
             <div className="flex items-center justify-between p-3 rounded-xl border border-[var(--border)] dark:border-white/[0.08] dark:bg-white/[0.05]">
               <div className="flex items-center gap-2">
                 <Clock size={15} className="text-[var(--accent)]" />
@@ -625,10 +798,108 @@ export function ConfiguracionPage(): JSX.Element {
             </div>
           </div>
 
-          {/* Single save button for all profile + finances */}
+          {/* Auto savings allocation section — only shown when user has active goals or emergency fund */}
+          {tieneSavingsTarget && (
+            <div className="border-t border-[var(--border)] pt-6 space-y-4">
+              <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-2">
+                <Zap size={13} className="text-[var(--accent)]" />
+                {t('profile.asignacionAutomatica')}
+              </p>
+
+              {/* Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-xl border border-[var(--border)] dark:border-white/[0.08] dark:bg-white/[0.05]">
+                <div>
+                  <p className="text-sm font-medium text-[var(--text-primary)]">{t('profile.asignacionActivar')}</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5 max-w-xs">{t('profile.asignacionDesc')}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAsignacionActiva((v) => !v)}
+                  className={cn(
+                    'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
+                    asignacionActiva ? 'bg-[#3d8ef8]' : 'bg-[var(--border-strong)]'
+                  )}
+                  aria-label="Toggle asignacion automatica"
+                >
+                  <span
+                    className={cn(
+                      'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200',
+                      asignacionActiva ? 'left-[21px]' : 'left-[3px]'
+                    )}
+                  />
+                </button>
+              </div>
+
+              {/* Percentage inputs, only shown when active */}
+              {asignacionActiva && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-[var(--text-primary)]">
+                        {t('profile.pctAhorroMetas')}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          placeholder="0"
+                          value={pctMetas}
+                          onChange={(e) => setPctMetas(e.target.value)}
+                          className="finza-input w-full pr-8"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-muted)]">%</span>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-[var(--text-primary)]">
+                        {t('profile.pctAhorroFondo')}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          placeholder="0"
+                          value={pctFondo}
+                          onChange={(e) => setPctFondo(e.target.value)}
+                          className="finza-input w-full pr-8"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-muted)]">%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Total summary */}
+                  {(() => {
+                    const total = (parseFloat(pctMetas) || 0) + (parseFloat(pctFondo) || 0)
+                    const excede = total > 100
+                    return (
+                      <div className={cn(
+                        'flex items-center gap-2 px-3 py-2 rounded-lg text-sm',
+                        excede
+                          ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                          : 'bg-[var(--surface-raised)] text-[var(--text-muted)]'
+                      )}>
+                        {excede && <AlertTriangle size={14} className="flex-shrink-0" />}
+                        <span>
+                          {t('profile.totalAhorro')}: <strong>{total.toFixed(1)}%</strong>
+                          {excede && ` — ${t('profile.advertenciaPct')}`}
+                        </span>
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Single save button for all profile + finances + segunda moneda */}
           <Button
             onClick={handleSaveAll}
-            isLoading={profileForm.formState.isSubmitting || updateProfile.isPending}
+            isLoading={profileForm.formState.isSubmitting || updateProfile.isPending || updateDualMoneda.isPending}
             className="w-full"
           >
             {t('common.save')}
@@ -649,86 +920,64 @@ export function ConfiguracionPage(): JSX.Element {
       {/* Tab: Appearance (theme + language) */}
       {activeTab === 'appearance' && (
         <div className="space-y-4">
-          <div
-            className="rounded-[20px] overflow-hidden card-glass"
-          >
-            {/* Row: Modo oscuro */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
-              <div>
-                <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
-                  {t('settings.darkMode')}
-                </h4>
-                <p className="text-[12px] text-[var(--text-muted)]">{t('settings.darkModeDesc')}</p>
-              </div>
-              <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className={cn(
-                  'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
-                  theme === 'dark' ? 'bg-[#3d8ef8]' : 'bg-[var(--border-strong)]'
-                )}
-                aria-label="Toggle modo oscuro"
-              >
-                <span
-                  className={cn(
-                    'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200',
-                    theme === 'dark' ? 'left-[21px]' : 'left-[3px]'
-                  )}
-                />
-              </button>
+          {/* Theme ToggleGroup */}
+          <div className="card-glass p-6 space-y-4">
+            <div>
+              <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
+                {t('settings.theme')}
+              </h4>
+              <p className="text-[12px] text-[var(--text-muted)] mt-0.5">
+                {t('settings.themeDesc')}
+              </p>
             </div>
-
-            {/* Row: Modo claro */}
-            <div className="flex items-center justify-between px-5 py-4">
-              <div>
-                <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
-                  {t('settings.lightMode')}
-                </h4>
-                <p className="text-[12px] text-[#657a9e]">{t('settings.lightModeDesc')}</p>
-              </div>
-              <button
-                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-                className={cn(
-                  'relative w-[42px] h-6 rounded-full transition-colors duration-200 flex-shrink-0',
-                  theme === 'light' ? 'bg-[#3d8ef8]' : 'bg-[var(--border-strong)]'
-                )}
-                aria-label="Toggle modo claro"
-              >
-                <span
-                  className={cn(
-                    'absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200',
-                    theme === 'light' ? 'left-[21px]' : 'left-[3px]'
-                  )}
-                />
-              </button>
-            </div>
+            <ToggleGroup
+              value={theme}
+              onValueChange={(val) => setTheme(val as 'light' | 'dark' | 'system')}
+              options={[
+                {
+                  value: 'light',
+                  label: t('settings.lightMode'),
+                  icon: <Sun size={15} />,
+                  title: t('settings.lightMode'),
+                },
+                {
+                  value: 'dark',
+                  label: t('settings.darkMode'),
+                  icon: <Moon size={15} />,
+                  title: t('settings.darkMode'),
+                },
+                {
+                  value: 'system',
+                  label: t('settings.systemMode'),
+                  icon: <Monitor size={15} />,
+                  title: t('settings.systemMode'),
+                },
+              ]}
+              className="w-full"
+              size="md"
+            />
           </div>
 
-          {/* Language selector */}
+          {/* Language ToggleGroup */}
           <div className="card-glass p-6 space-y-4">
-            <p className="text-sm text-[var(--text-muted)]">{t('settings.changeLanguage')}</p>
-            <div className="space-y-3">
-              {[
-                { code: 'es', label: 'Espanol', flag: 'ES' },
-                { code: 'en', label: 'English', flag: 'EN' },
-              ].map(({ code, label, flag }) => (
-                <button
-                  key={code}
-                  onClick={() => handleLangChange(code as 'es' | 'en')}
-                  className={cn(
-                    'w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200',
-                    language === code
-                      ? 'border-finza-blue bg-finza-blue/5'
-                      : 'border-border hover:border-finza-blue/40'
-                  )}
-                >
-                  <span className="text-xl font-bold text-[var(--text-muted)] w-8">{flag}</span>
-                  <span className="font-medium text-[var(--text-primary)]">{label}</span>
-                  {language === code && (
-                    <div className="ml-auto w-2 h-2 rounded-full bg-finza-blue" />
-                  )}
-                </button>
-              ))}
+            <div>
+              <h4 className="text-[13px] font-semibold text-[var(--text-primary)]">
+                {t('settings.changeLanguage')}
+              </h4>
+              <p className="text-[12px] text-[var(--text-muted)] mt-0.5">
+                {t('settings.changeLanguageDesc')}
+              </p>
             </div>
+            <ToggleGroup
+              value={language}
+              onValueChange={(val) => handleLangChange(val as 'es' | 'en')}
+              options={[
+                { value: 'es', label: 'Español', title: 'Español' },
+                { value: 'en', label: 'English', title: 'English' },
+              ]}
+              className="w-full"
+              size="md"
+            />
           </div>
         </div>
       )}
@@ -747,6 +996,9 @@ export function ConfiguracionPage(): JSX.Element {
       {activeTab === 'categorias' && (
         <CategoriasTab navigate={navigate} />
       )}
+
+      {/* Tab: Importar */}
+      {activeTab === 'importar' && <ImportarPage />}
 
       {/* Password Modal */}
       {passwordModalOpen && (

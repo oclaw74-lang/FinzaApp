@@ -8,6 +8,8 @@ vi.mock('@/hooks/useTarjetas', () => ({
   useCreateTarjeta: vi.fn(),
   useUpdateTarjeta: vi.fn(),
   useDeleteTarjeta: vi.fn(),
+  useBloquearTarjeta: vi.fn(),
+  useTarjetasPagoPendiente: vi.fn(),
 }))
 vi.mock('@/hooks/useMovimientosTarjeta', () => ({
   useMovimientosTarjeta: vi.fn(),
@@ -22,11 +24,19 @@ vi.mock('@/hooks/useCatalogos', () => ({
   useMonedas: vi.fn(),
   usePaises: vi.fn(),
 }))
+vi.mock('@/hooks/useEstadosCuenta', () => ({
+  useEstadosCuenta: vi.fn(() => ({ data: [], isLoading: false })),
+  useUploadEstadoCuenta: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+  useDeleteEstadoCuenta: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+}))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 vi.mock('@/store/authStore', () => ({
   useAuthStore: vi.fn(() => ({
     user: { user_metadata: { pais_codigo: 'DO' } },
   })),
+}))
+vi.mock('@/hooks/useDualMoneda', () => ({
+  useDualMoneda: vi.fn(() => ({ data: { moneda_principal: 'DOP', moneda_secundaria: null, tasa_cambio: null } })),
 }))
 
 import {
@@ -34,6 +44,8 @@ import {
   useCreateTarjeta,
   useUpdateTarjeta,
   useDeleteTarjeta,
+  useBloquearTarjeta,
+  useTarjetasPagoPendiente,
 } from '@/hooks/useTarjetas'
 import {
   useMovimientosTarjeta,
@@ -55,10 +67,14 @@ const mockCredito: Tarjeta = {
   saldo_actual: 15000,
   limite_credito: 50000,
   disponible: 35000,
+  moneda: 'DOP',
+  saldo_secundario: 0,
+  limite_secundario: 0,
   fecha_corte: 15,
   fecha_pago: 5,
   color: null,
   activa: true,
+  bloqueada: false,
   titular: 'Test User',
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
@@ -74,10 +90,14 @@ const mockDebito: Tarjeta = {
   saldo_actual: 8000,
   limite_credito: null,
   disponible: null,
+  moneda: 'DOP',
+  saldo_secundario: 0,
+  limite_secundario: 0,
   fecha_corte: null,
   fecha_pago: null,
   color: null,
   activa: true,
+  bloqueada: false,
   titular: 'Test User',
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
@@ -117,6 +137,12 @@ function setupMocks(
   vi.mocked(useCreateTarjeta).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useCreateTarjeta>)
   vi.mocked(useUpdateTarjeta).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useUpdateTarjeta>)
   vi.mocked(useDeleteTarjeta).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useDeleteTarjeta>)
+  vi.mocked(useBloquearTarjeta).mockReturnValue({ mutateAsync, isPending: false } as unknown as ReturnType<typeof useBloquearTarjeta>)
+  vi.mocked(useTarjetasPagoPendiente).mockReturnValue({
+    data: [],
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<typeof useTarjetasPagoPendiente>)
   vi.mocked(useMovimientosTarjeta).mockReturnValue({
     data: [],
     isLoading: false,

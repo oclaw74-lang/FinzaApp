@@ -1,5 +1,5 @@
 import uuid
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel
 
@@ -9,6 +9,7 @@ class KPIs(BaseModel):
     total_egresos: float
     balance: float
     ahorro_estimado: float
+    total_ahorrado: float
 
 
 class CategoriaBreakdown(BaseModel):
@@ -61,6 +62,7 @@ class ResumenFinanciero(BaseModel):
     egresos_mes_anterior: float
     variacion_ingresos_pct: float
     variacion_egresos_pct: float
+    total_ahorrado: float
 
 
 class PresupuestoEstadoDashboard(BaseModel):
@@ -106,5 +108,6 @@ class DashboardV2Response(BaseModel):
     prestamos_activos: PrestamosActivosDashboard
     ultimas_transacciones: list[TransaccionReciente]
     egresos_por_categoria: list[EgresoCategoria]
+    moneda_conversion_info: Optional[dict] = None
 
     model_config = {"from_attributes": True}

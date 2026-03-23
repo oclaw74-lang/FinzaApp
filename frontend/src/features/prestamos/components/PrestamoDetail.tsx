@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Pencil, Trash2, Plus, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react'
+import { X, Pencil, Trash2, Plus, ChevronDown, ChevronUp, CheckCircle2, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { formatMoney, formatDate, cn } from '@/lib/utils'
 import { PagoForm } from './PagoForm'
 import type { PagoFormData } from './PagoForm'
-import { useDeletePago, useRegistrarPago, usePrestamoDetalle, useTablaAmortizacion } from '@/hooks/usePrestamos'
+import { useDeletePago, useRegistrarPago, usePrestamoDetalle, useTablaAmortizacion, useUpdatePrestamo } from '@/hooks/usePrestamos'
 import type { Prestamo, EstadoPrestamo } from '@/types/prestamo'
 import { getApiErrorMessage } from '@/lib/apiError'
 
@@ -20,11 +20,12 @@ interface PrestamoDetailProps {
   onDelete: (id: string) => void
 }
 
-function estadoLabel(estado: EstadoPrestamo): string {
+function estadoLabel(estado: EstadoPrestamo, t: (key: string) => string): string {
   const map: Record<EstadoPrestamo, string> = {
-    activo: 'Activo',
-    pagado: 'Pagado',
-    vencido: 'Vencido',
+    activo: t('prestamos.status.activo'),
+    pagado: t('prestamos.status.pagado'),
+    vencido: t('prestamos.status.vencido'),
+    cancelado: t('prestamos.status.cancelado'),
   }
   return map[estado]
 }
@@ -34,6 +35,7 @@ function estadoColor(estado: EstadoPrestamo): string {
     activo: 'text-finza-blue',
     pagado: 'text-prosperity-green',
     vencido: 'text-alert-red',
+    cancelado: 'text-[var(--text-muted)]',
   }
   return map[estado]
 }
@@ -51,7 +53,9 @@ export function PrestamoDetail({
   const { data: prestamo, isLoading, isError } = usePrestamoDetalle(prestamoId)
   const registrarPago = useRegistrarPago(prestamoId)
   const deletePago = useDeletePago(prestamoId)
+  const updatePrestamo = useUpdatePrestamo()
   const [tablaExpanded, setTablaExpanded] = useState(false)
+  const [cancelando, setCancelando] = useState(false)
 
   const displayPrestamo = prestamo ?? prestamoCache
 
@@ -76,8 +80,22 @@ export function PrestamoDetail({
   }
 
   const handleDeletePago = async (pagoId: string): Promise<void> => {
-    if (window.confirm('Eliminar este pago?')) {
+    if (window.confirm(t('prestamos.detail.pagoConfirm'))) {
       await deletePago.mutateAsync(pagoId)
+    }
+  }
+
+  const handleCancelar = async (): Promise<void> => {
+    if (!window.confirm(t('prestamos.detail.cancelarConfirm'))) return
+    try {
+      setCancelando(true)
+      await updatePrestamo.mutateAsync({ id: prestamoId, estado: 'cancelado' })
+      toast.success(t('prestamos.detail.cancelarExito'))
+      onClose()
+    } catch (error) {
+      toast.error(getApiErrorMessage(error))
+    } finally {
+      setCancelando(false)
     }
   }
 
@@ -85,7 +103,7 @@ export function PrestamoDetail({
     return createPortal(
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
-        <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-xl p-6 animate-pulse">
+        <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-3xl p-6 animate-pulse">
           <div className="h-6 w-48 bg-[var(--surface-raised)] rounded mb-4" />
           <div className="space-y-3">
             <div className="h-4 w-full bg-[var(--surface-raised)] rounded" />
@@ -102,10 +120,10 @@ export function PrestamoDetail({
     return createPortal(
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
-        <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-xl p-6">
-          <p className="text-sm text-[var(--text-muted)]">No se pudo cargar el detalle del prestamo.</p>
+        <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-3xl p-6">
+          <p className="text-sm text-[var(--text-muted)]">{t('prestamos.detail.noCargar')}</p>
           <Button variant="secondary" size="sm" onClick={onClose} className="mt-4">
-            Cerrar
+            {t('common.close')}
           </Button>
         </div>
       </div>,
@@ -137,15 +155,15 @@ export function PrestamoDetail({
       aria-label={`Detalle de prestamo con ${displayPrestamo.persona}`}
     >
       <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
-      <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-xl max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-[var(--surface)] dark:border dark:border-white/[0.08] rounded-card w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
           <div>
             <h2 className="text-xl font-bold text-[var(--text-primary)]">{displayPrestamo.persona}</h2>
             <p className="text-sm text-[var(--text-muted)]">
-              {isTipoDeben ? 'Me deben' : 'Yo debo'} &middot;{' '}
+              {isTipoDeben ? t('prestamos.detail.meDeben') : t('prestamos.detail.yoDebo')} &middot;{' '}
               <span className={cn('font-medium', estadoColor(displayPrestamo.estado))}>
-                {estadoLabel(displayPrestamo.estado)}
+                {estadoLabel(displayPrestamo.estado, t)}
               </span>
             </p>
           </div>
@@ -153,7 +171,7 @@ export function PrestamoDetail({
             type="button"
             onClick={onClose}
             className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-            aria-label="Cerrar detalle"
+            aria-label={t('prestamos.detail.cerrar')}
           >
             <X size={20} />
           </button>
@@ -164,7 +182,7 @@ export function PrestamoDetail({
           <div>
             <div className="flex justify-between items-end mb-2">
               <div>
-                <p className="text-xs text-[var(--text-muted)]">Pendiente</p>
+                <p className="text-xs text-[var(--text-muted)]">{t('prestamos.detail.pendiente')}</p>
                 <p
                   className="text-3xl font-bold money"
                   style={{ color: isTipoDeben ? '#00B050' : '#FF0000' }}
@@ -173,7 +191,7 @@ export function PrestamoDetail({
                 </p>
                 {hasAmortizacion && displayPrestamo.total_intereses != null && (
                   <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                    Total con intereses:{' '}
+                    {t('prestamos.detail.totalConIntereses')}{' '}
                     <span className="font-medium text-[var(--text-primary)]">
                       {formatMoney(
                         displayPrestamo.monto_original + displayPrestamo.total_intereses,
@@ -184,7 +202,7 @@ export function PrestamoDetail({
                 )}
               </div>
               <div className="text-right">
-                <p className="text-xs text-[var(--text-muted)]">Original</p>
+                <p className="text-xs text-[var(--text-muted)]">{t('prestamos.detail.original')}</p>
                 <p className="text-lg font-semibold text-[var(--text-primary)]">
                   {formatMoney(displayPrestamo.monto_original, displayPrestamo.moneda)}
                 </p>
@@ -196,7 +214,7 @@ export function PrestamoDetail({
               aria-valuenow={porcentajePagado}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label={`${porcentajePagado}% pagado`}
+              aria-label={t('prestamos.detail.porcentajePagado', { pct: porcentajePagado })}
             >
               <div
                 className="h-full rounded-full transition-all"
@@ -206,18 +224,20 @@ export function PrestamoDetail({
                 }}
               />
             </div>
-            <p className="text-xs text-[var(--text-muted)] mt-1">{porcentajePagado}% pagado</p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">
+              {t('prestamos.detail.porcentajePagado', { pct: porcentajePagado })}
+            </p>
           </div>
 
           {/* Datos */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-xs text-[var(--text-muted)]">Fecha prestamo</p>
+              <p className="text-xs text-[var(--text-muted)]">{t('prestamos.detail.fechaPrestamo')}</p>
               <p className="text-[var(--text-primary)]">{formatDate(displayPrestamo.fecha_prestamo)}</p>
             </div>
             {displayPrestamo.fecha_vencimiento && (
               <div>
-                <p className="text-xs text-[var(--text-muted)]">Fecha vencimiento</p>
+                <p className="text-xs text-[var(--text-muted)]">{t('prestamos.detail.fechaVencimiento')}</p>
                 <p
                   className={cn(
                     'text-[var(--text-primary)]',
@@ -231,13 +251,13 @@ export function PrestamoDetail({
               </div>
             )}
             <div>
-              <p className="text-xs text-[var(--text-muted)]">Moneda</p>
+              <p className="text-xs text-[var(--text-muted)]">{t('prestamos.detail.moneda')}</p>
               <p className="text-[var(--text-primary)]">{displayPrestamo.moneda}</p>
             </div>
             {displayPrestamo.plazo_meses != null && (
               <div>
-                <p className="text-xs text-[var(--text-muted)]">Plazo</p>
-                <p className="text-[var(--text-primary)]">{displayPrestamo.plazo_meses} meses</p>
+                <p className="text-xs text-[var(--text-muted)]">{t('prestamos.detail.plazo')}</p>
+                <p className="text-[var(--text-primary)]">{displayPrestamo.plazo_meses} {t('prestamos.detail.meses')}</p>
               </div>
             )}
           </div>
@@ -247,25 +267,25 @@ export function PrestamoDetail({
             <div className="bg-[var(--surface-raised)] rounded-xl p-4 grid grid-cols-2 gap-3">
               {displayPrestamo.tasa_interes != null && (
                 <div>
-                  <p className="text-xs text-[var(--text-muted)]">Tasa de interés</p>
-                  <p className="text-sm font-semibold text-[var(--warning)]">{displayPrestamo.tasa_interes}% anual</p>
+                  <p className="text-xs text-[var(--text-muted)]">{t('prestamos.form.tasaInteres')}</p>
+                  <p className="text-sm font-semibold text-[var(--warning)]">{displayPrestamo.tasa_interes}{t('prestamos.detail.anual')}</p>
                 </div>
               )}
               {displayPrestamo.cuota_mensual != null && (
                 <div>
-                  <p className="text-xs text-[var(--text-muted)]">Cuota mensual</p>
+                  <p className="text-xs text-[var(--text-muted)]">{t('prestamos.cuota')}</p>
                   <p className="text-sm font-semibold text-[var(--text-primary)]">{formatMoney(displayPrestamo.cuota_mensual, displayPrestamo.moneda)}</p>
                 </div>
               )}
               {displayPrestamo.total_intereses != null && (
                 <div>
-                  <p className="text-xs text-[var(--text-muted)]">Total intereses</p>
+                  <p className="text-xs text-[var(--text-muted)]">{t('prestamos.totalIntereses')}</p>
                   <p className="text-sm font-semibold text-[var(--danger)]">{formatMoney(displayPrestamo.total_intereses, displayPrestamo.moneda)}</p>
                 </div>
               )}
               {displayPrestamo.proximo_pago != null && (
                 <div>
-                  <p className="text-xs text-[var(--text-muted)]">Próximo pago</p>
+                  <p className="text-xs text-[var(--text-muted)]">{t('prestamos.proximoPago')}</p>
                   <p className="text-sm font-semibold text-[var(--text-primary)]">{formatDate(displayPrestamo.proximo_pago)}</p>
                 </div>
               )}
@@ -274,13 +294,13 @@ export function PrestamoDetail({
 
           {displayPrestamo.descripcion && (
             <div>
-              <p className="text-xs text-[var(--text-muted)] mb-1">Descripcion</p>
+              <p className="text-xs text-[var(--text-muted)] mb-1">{t('prestamos.detail.descripcion')}</p>
               <p className="text-sm text-[var(--text-primary)]">{displayPrestamo.descripcion}</p>
             </div>
           )}
           {displayPrestamo.notas && (
             <div>
-              <p className="text-xs text-[var(--text-muted)] mb-1">Notas</p>
+              <p className="text-xs text-[var(--text-muted)] mb-1">{t('prestamos.detail.notas')}</p>
               <p className="text-sm text-[var(--text-secondary)] bg-[var(--surface-raised)] rounded-lg p-3">{displayPrestamo.notas}</p>
             </div>
           )}
@@ -288,7 +308,7 @@ export function PrestamoDetail({
           {/* Historial de pagos */}
           {displayPrestamo.pagos && displayPrestamo.pagos.length > 0 && (
             <div>
-              <p className="text-sm font-semibold text-[var(--text-secondary)] mb-3">Historial de pagos</p>
+              <p className="text-sm font-semibold text-[var(--text-secondary)] mb-3">{t('prestamos.detail.historialPagos')}</p>
               <div className="space-y-2">
                 {displayPrestamo.pagos.map((pago) => (
                   <div
@@ -301,9 +321,9 @@ export function PrestamoDetail({
                       </p>
                       {pago.monto_capital != null && pago.monto_interes != null && (
                         <p className="text-xs text-[var(--text-muted)]">
-                          {formatMoney(pago.monto_capital, displayPrestamo.moneda)} capital
+                          {formatMoney(pago.monto_capital, displayPrestamo.moneda)} {t('prestamos.detail.capital')}
                           {' + '}
-                          {formatMoney(pago.monto_interes, displayPrestamo.moneda)} interes
+                          {formatMoney(pago.monto_interes, displayPrestamo.moneda)} {t('prestamos.detail.interes')}
                         </p>
                       )}
                       {pago.notas && (
@@ -316,7 +336,7 @@ export function PrestamoDetail({
                         type="button"
                         onClick={() => handleDeletePago(pago.id)}
                         className="text-[var(--text-subtle)] hover:text-alert-red transition-colors"
-                        aria-label="Eliminar pago"
+                        aria-label={t('prestamos.detail.eliminarPago')}
                       >
                         <Trash2 size={13} />
                       </button>
@@ -330,7 +350,7 @@ export function PrestamoDetail({
           {/* Formulario pago inline */}
           {showPagoForm && displayPrestamo.estado !== 'pagado' && (
             <div className="border border-[var(--border)] bg-[var(--surface-raised)] rounded-lg p-4">
-              <p className="text-sm font-semibold text-[var(--text-secondary)] mb-3">Registrar pago</p>
+              <p className="text-sm font-semibold text-[var(--text-secondary)] mb-3">{t('prestamos.detail.registrarPago')}</p>
               <PagoForm
                 montoPendiente={Number(displayPrestamo.monto_pendiente)}
                 onSubmit={handleRegistrarPago}
@@ -344,7 +364,7 @@ export function PrestamoDetail({
           {hasAmortizacion && (
             <div>
               <p className="text-sm font-semibold text-[var(--text-secondary)] mb-3">
-                Tabla de amortizacion
+                {t('prestamos.detail.tablaAmortizacion')}
               </p>
 
               {loadingAmortizacion ? (
@@ -358,25 +378,25 @@ export function PrestamoDetail({
                   {/* Resumen cards */}
                   <div className="grid grid-cols-2 gap-2 mb-4">
                     <div className="bg-[var(--surface-raised)] rounded-xl p-3">
-                      <p className="text-xs text-[var(--text-muted)]">Capital pagado</p>
+                      <p className="text-xs text-[var(--text-muted)]">{t('prestamos.detail.capitalPagado')}</p>
                       <p className="text-sm font-bold text-green-500 dark:text-finza-green tabular-nums mt-0.5">
                         {formatMoney(amortizacion.resumen.total_pagado_capital, displayPrestamo.moneda)}
                       </p>
                     </div>
                     <div className="bg-[var(--surface-raised)] rounded-xl p-3">
-                      <p className="text-xs text-[var(--text-muted)]">Intereses pagados</p>
+                      <p className="text-xs text-[var(--text-muted)]">{t('prestamos.detail.interesesPagados')}</p>
                       <p className="text-sm font-bold tabular-nums mt-0.5" style={{ color: 'var(--warning)' }}>
                         {formatMoney(amortizacion.resumen.total_pagado_intereses, displayPrestamo.moneda)}
                       </p>
                     </div>
                     <div className="bg-[var(--surface-raised)] rounded-xl p-3">
-                      <p className="text-xs text-[var(--text-muted)]">Capital pendiente</p>
+                      <p className="text-xs text-[var(--text-muted)]">{t('prestamos.detail.capitalPendiente')}</p>
                       <p className="text-sm font-bold text-finza-blue tabular-nums mt-0.5">
                         {formatMoney(amortizacion.resumen.monto_pendiente, displayPrestamo.moneda)}
                       </p>
                     </div>
                     <div className="bg-[var(--surface-raised)] rounded-xl p-3">
-                      <p className="text-xs text-[var(--text-muted)]">Total intereses proyectados</p>
+                      <p className="text-xs text-[var(--text-muted)]">{t('prestamos.detail.totalInteresesProyectados')}</p>
                       <p className="text-sm font-bold text-[var(--text-muted)] tabular-nums mt-0.5">
                         {formatMoney(amortizacion.resumen.total_intereses_proyectados, displayPrestamo.moneda)}
                       </p>
@@ -384,7 +404,10 @@ export function PrestamoDetail({
                   </div>
 
                   <p className="text-xs text-[var(--text-muted)] mb-2">
-                    {amortizacion.resumen.cuotas_pagadas} de {amortizacion.resumen.cuotas_totales} cuotas pagadas
+                    {t('prestamos.detail.cuotasPagadas', {
+                      pagadas: amortizacion.resumen.cuotas_pagadas,
+                      totales: amortizacion.resumen.cuotas_totales,
+                    })}
                   </p>
 
                   {/* Toggle tabla completa */}
@@ -396,8 +419,8 @@ export function PrestamoDetail({
                   >
                     {tablaExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                     {tablaExpanded
-                      ? 'Ocultar tabla'
-                      : `Ver tabla completa (${amortizacion.resumen.cuotas_totales} cuotas)`}
+                      ? t('prestamos.detail.ocultarTabla')
+                      : t('prestamos.detail.verTabla', { cuotas: amortizacion.resumen.cuotas_totales })}
                   </button>
 
                   {tablaExpanded && (
@@ -405,13 +428,13 @@ export function PrestamoDetail({
                       <table className="w-full text-xs">
                         <thead>
                           <tr className="bg-[var(--surface-raised)] border-b border-[var(--border)]">
-                            <th className="px-3 py-2 text-left text-[var(--text-muted)] font-semibold">#</th>
-                            <th className="px-3 py-2 text-left text-[var(--text-muted)] font-semibold">Fecha</th>
-                            <th className="px-3 py-2 text-right text-[var(--text-muted)] font-semibold">Cuota</th>
-                            <th className="px-3 py-2 text-right text-[var(--text-muted)] font-semibold">Capital</th>
-                            <th className="px-3 py-2 text-right text-[var(--text-muted)] font-semibold">Interes</th>
-                            <th className="px-3 py-2 text-right text-[var(--text-muted)] font-semibold">Saldo</th>
-                            <th className="px-3 py-2 text-center text-[var(--text-muted)] font-semibold">Estado</th>
+                            <th className="px-3 py-2 text-left text-[var(--text-muted)] font-semibold">{t('prestamos.detail.colNum')}</th>
+                            <th className="px-3 py-2 text-left text-[var(--text-muted)] font-semibold">{t('prestamos.detail.colFecha')}</th>
+                            <th className="px-3 py-2 text-right text-[var(--text-muted)] font-semibold">{t('prestamos.detail.colCuota')}</th>
+                            <th className="px-3 py-2 text-right text-[var(--text-muted)] font-semibold">{t('prestamos.detail.colCapital')}</th>
+                            <th className="px-3 py-2 text-right text-[var(--text-muted)] font-semibold">{t('prestamos.detail.colInteres')}</th>
+                            <th className="px-3 py-2 text-right text-[var(--text-muted)] font-semibold">{t('prestamos.detail.colSaldo')}</th>
+                            <th className="px-3 py-2 text-center text-[var(--text-muted)] font-semibold">{t('prestamos.detail.colEstado')}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -454,9 +477,9 @@ export function PrestamoDetail({
                                   {cuota.pagado ? (
                                     <CheckCircle2 size={14} className="mx-auto text-green-500 dark:text-finza-green" />
                                   ) : isProxima ? (
-                                    <span className="inline-block w-2 h-2 rounded-full bg-blue-500" aria-label="Proximo" />
+                                    <span className="inline-block w-2 h-2 rounded-full bg-blue-500" aria-label={t('prestamos.row.cuota')} />
                                   ) : (
-                                    <span className="inline-block w-2 h-2 rounded-full bg-[var(--border)]" aria-label="Pendiente" />
+                                    <span className="inline-block w-2 h-2 rounded-full bg-[var(--border)]" aria-label={t('prestamos.status.pendiente')} />
                                   )}
                                 </td>
                               </tr>
@@ -481,7 +504,7 @@ export function PrestamoDetail({
               onClick={() => setShowPagoForm(true)}
             >
               <Plus size={15} className="mr-1" />
-              Registrar pago
+              {t('prestamos.detail.registrarPago')}
             </Button>
           )}
           <div className="flex gap-2 ml-auto">
@@ -491,15 +514,27 @@ export function PrestamoDetail({
               onClick={() => onEdit(displayPrestamo)}
             >
               <Pencil size={15} className="mr-1" />
-              Editar
+              {t('common.edit')}
             </Button>
+            {displayPrestamo.estado === 'activo' && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleCancelar}
+                isLoading={cancelando}
+                className="text-[var(--text-muted)]"
+              >
+                <XCircle size={15} className="mr-1" />
+                {t('prestamos.detail.cancelar')}
+              </Button>
+            )}
             <Button
               variant="danger"
               size="sm"
               onClick={() => onDelete(displayPrestamo.id)}
             >
               <Trash2 size={15} className="mr-1" />
-              Eliminar
+              {t('common.delete')}
             </Button>
           </div>
         </div>

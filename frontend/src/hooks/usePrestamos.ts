@@ -8,6 +8,12 @@ const DASHBOARD_KEYS = [
   ['comparativa'],
 ] as const
 
+const invalidateDashboard = (queryClient: ReturnType<typeof useQueryClient>) => {
+  DASHBOARD_KEYS.forEach(key =>
+    queryClient.invalidateQueries({ queryKey: key, refetchType: 'all' })
+  )
+}
+
 import type {
   Prestamo,
   PrestamoCreate,
@@ -70,7 +76,7 @@ export function useCreatePrestamo() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prestamos'] })
-      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
+      invalidateDashboard(queryClient)
     },
   })
 }
@@ -84,7 +90,7 @@ export function useUpdatePrestamo() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prestamos'] })
-      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
+      invalidateDashboard(queryClient)
     },
   })
 }
@@ -97,7 +103,7 @@ export function useDeletePrestamo() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prestamos'] })
-      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
+      invalidateDashboard(queryClient)
     },
   })
 }
@@ -115,7 +121,7 @@ export function useRegistrarPago(prestamoId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prestamos'] })
       queryClient.invalidateQueries({ queryKey: ['egresos'] })
-      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
+      invalidateDashboard(queryClient)
     },
   })
 }
@@ -140,7 +146,7 @@ export function useDeletePago(prestamoId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prestamos'] })
-      DASHBOARD_KEYS.forEach(key => queryClient.invalidateQueries({ queryKey: key }))
+      invalidateDashboard(queryClient)
     },
   })
 }

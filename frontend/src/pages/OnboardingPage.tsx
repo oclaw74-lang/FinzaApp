@@ -1,25 +1,54 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { Globe, DollarSign, CheckCircle, Sparkles } from 'lucide-react'
+import { Globe, DollarSign, CheckCircle, Sparkles, CreditCard } from 'lucide-react'
 import { toast } from 'sonner'
 import { useUpdateProfile } from '@/hooks/useProfile'
 import { usePaises } from '@/hooks/useCatalogos'
+import { useCreateTarjeta } from '@/hooks/useTarjetas'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+import type { RedTarjeta, Tarjeta } from '@/types/tarjeta'
 
-const TOTAL_STEPS = 3
+const TOTAL_STEPS = 4
+
+interface DebitCardForm {
+  banco: string
+  ultimos_digitos: string
+  red: RedTarjeta
+  saldo_actual: string
+}
+
+interface DebitCardFormErrors {
+  banco?: string
+  ultimos_digitos?: string
+  saldo_actual?: string
+}
+
+const DEFAULT_CARD_FORM: DebitCardForm = {
+  banco: '',
+  ultimos_digitos: '',
+  red: 'visa',
+  saldo_actual: '',
+}
 
 export function OnboardingPage(): JSX.Element {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const updateProfile = useUpdateProfile()
+  const createTarjeta = useCreateTarjeta()
   const { data: paises = [], isLoading: paisesLoading } = usePaises()
 
   const [step, setStep] = useState(1)
   const [selectedPais, setSelectedPais] = useState('DO')
   const [salario, setSalario] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Debit card step state
+  const [cardForm, setCardForm] = useState<DebitCardForm>(DEFAULT_CARD_FORM)
+  const [addedCards, setAddedCards] = useState<Tarjeta[]>([])
+  const [cardError, setCardError] = useState('')
+  const [formErrors, setFormErrors] = useState<DebitCardFormErrors>({})
 
   const progressPct = Math.round(((step - 1) / (TOTAL_STEPS - 1)) * 100)
 
@@ -47,12 +76,56 @@ export function OnboardingPage(): JSX.Element {
     if (salario) {
       try {
         await updateProfile.mutateAsync({
-          salario_mensual_neto: parseFloat(salario),
+          salario_neto: parseFloat(salario),
         })
       } catch {
         // non-blocking
       }
     }
+    handleNext()
+  }
+
+  const validateCardForm = (): boolean => {
+    const errors: DebitCardFormErrors = {}
+    if (!cardForm.banco.trim()) {
+      errors.banco = 'Requerido'
+    }
+    if (!/^\d{4}$/.test(cardForm.ultimos_digitos)) {
+      errors.ultimos_digitos = 'Debe tener 4 dígitos'
+    }
+    const saldo = parseFloat(cardForm.saldo_actual)
+    if (cardForm.saldo_actual === '' || isNaN(saldo) || saldo < 0) {
+      errors.saldo_actual = 'Ingresa un monto válido'
+    }
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleAddCard = async () => {
+    if (!validateCardForm()) return
+    setCardError('')
+    try {
+      const card = await createTarjeta.mutateAsync({
+        banco: cardForm.banco.trim(),
+        tipo: 'debito',
+        red: cardForm.red,
+        ultimos_digitos: cardForm.ultimos_digitos,
+        saldo_actual: parseFloat(cardForm.saldo_actual),
+      })
+      setAddedCards((prev) => [...prev, card])
+      setCardForm(DEFAULT_CARD_FORM)
+      setFormErrors({})
+    } catch {
+      setCardError(t('onboarding.tarjetaError'))
+    }
+  }
+
+  const handleContinueFromCard = () => {
+    if (addedCards.length === 0) {
+      setCardError(t('onboarding.tarjetaRequerida'))
+      return
+    }
+    setCardError('')
     handleNext()
   }
 
@@ -69,7 +142,7 @@ export function OnboardingPage(): JSX.Element {
     }
   }
 
-  const stepIcons = [Globe, DollarSign, CheckCircle]
+  const stepIcons = [Globe, DollarSign, CreditCard, CheckCircle]
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -231,8 +304,213 @@ export function OnboardingPage(): JSX.Element {
               </div>
             )}
 
-            {/* STEP 3 — Listo */}
+            {/* STEP 3 — Tarjeta de débito */}
             {step === 3 && (
+              <div className="animate-fade-in">
+                <div className="text-center mb-5">
+                  <CreditCard
+                    size={32}
+                    className="text-[var(--accent)] mx-auto mb-2"
+                    aria-hidden="true"
+                  />
+                  <p className="text-xl font-bold text-[var(--text-primary)] mb-1">
+                    {t('onboarding.tarjetaDebito')}
+                  </p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    {t('onboarding.tarjetaDebitoSubtitulo')}
+                  </p>
+                </div>
+
+                {/* Added cards list */}
+                {addedCards.length > 0 && (
+                  <div className="space-y-2 mb-4" aria-label="Tarjetas agregadas">
+                    {addedCards.map((card) => (
+                      <div
+                        key={card.id}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[var(--success-muted)] border border-[var(--success)]/20"
+                      >
+                        <CheckCircle
+                          size={16}
+                          className="text-[var(--success)] flex-shrink-0"
+                          aria-hidden="true"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-medium text-[var(--text-primary)]">
+                            {card.banco}
+                          </span>
+                          <span className="text-xs text-[var(--text-muted)] ml-2">
+                            •••• {card.ultimos_digitos}
+                          </span>
+                          <span className="text-xs text-[var(--text-muted)] ml-1 uppercase">
+                            {card.red}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Card form */}
+                <div className="space-y-3 mb-3">
+                  {/* Banco */}
+                  <div>
+                    <label
+                      htmlFor="onboarding-banco"
+                      className="block text-sm font-medium text-[var(--text-secondary)] mb-1"
+                    >
+                      {t('onboarding.bancoLabel')}
+                    </label>
+                    <input
+                      id="onboarding-banco"
+                      type="text"
+                      placeholder="Ej: Banco Popular"
+                      value={cardForm.banco}
+                      onChange={(e) =>
+                        setCardForm((f) => ({ ...f, banco: e.target.value }))
+                      }
+                      className="finza-input w-full"
+                    />
+                    {formErrors.banco && (
+                      <p className="text-xs text-[var(--error)] mt-1" role="alert">
+                        {formErrors.banco}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Últimos 4 dígitos */}
+                    <div>
+                      <label
+                        htmlFor="onboarding-digitos"
+                        className="block text-sm font-medium text-[var(--text-secondary)] mb-1"
+                      >
+                        {t('onboarding.ultimosDigitosLabel')}
+                      </label>
+                      <input
+                        id="onboarding-digitos"
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={4}
+                        placeholder="1234"
+                        value={cardForm.ultimos_digitos}
+                        onChange={(e) =>
+                          setCardForm((f) => ({
+                            ...f,
+                            ultimos_digitos: e.target.value.replace(/\D/g, '').slice(0, 4),
+                          }))
+                        }
+                        className="finza-input w-full"
+                      />
+                      {formErrors.ultimos_digitos && (
+                        <p className="text-xs text-[var(--error)] mt-1" role="alert">
+                          {formErrors.ultimos_digitos}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Red */}
+                    <div>
+                      <label
+                        htmlFor="onboarding-red"
+                        className="block text-sm font-medium text-[var(--text-secondary)] mb-1"
+                      >
+                        {t('onboarding.redLabel')}
+                      </label>
+                      <select
+                        id="onboarding-red"
+                        value={cardForm.red}
+                        onChange={(e) =>
+                          setCardForm((f) => ({ ...f, red: e.target.value as RedTarjeta }))
+                        }
+                        className="finza-input w-full"
+                      >
+                        <option value="visa">VISA</option>
+                        <option value="mastercard">MASTERCARD</option>
+                        <option value="amex">AMEX</option>
+                        <option value="discover">DISCOVER</option>
+                        <option value="otro">OTRO</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Saldo actual */}
+                  <div>
+                    <label
+                      htmlFor="onboarding-saldo"
+                      className="block text-sm font-medium text-[var(--text-secondary)] mb-1"
+                    >
+                      {t('onboarding.saldoLabel')}
+                    </label>
+                    <input
+                      id="onboarding-saldo"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={cardForm.saldo_actual}
+                      onChange={(e) =>
+                        setCardForm((f) => ({ ...f, saldo_actual: e.target.value }))
+                      }
+                      className="finza-input w-full"
+                    />
+                    {formErrors.saldo_actual && (
+                      <p className="text-xs text-[var(--error)] mt-1" role="alert">
+                        {formErrors.saldo_actual}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tipo locked badge */}
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--surface-raised)] mb-4">
+                  <CreditCard size={13} className="text-[var(--text-muted)]" aria-hidden="true" />
+                  <span className="text-xs text-[var(--text-muted)]">
+                    {t('onboarding.tipoDebitoLocked')}
+                  </span>
+                </div>
+
+                {/* Global card error */}
+                {cardError && (
+                  <p
+                    className="text-sm text-[var(--error)] mb-3 text-center"
+                    role="alert"
+                  >
+                    {cardError}
+                  </p>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleAddCard}
+                    disabled={createTarjeta.isPending}
+                    className="flex-1 py-2.5 rounded-xl border border-[var(--accent)] text-sm text-[var(--accent)] font-semibold hover:bg-[var(--accent)]/5 transition-colors disabled:opacity-50"
+                  >
+                    {createTarjeta.isPending
+                      ? t('onboarding.agregando')
+                      : addedCards.length > 0
+                      ? t('onboarding.agregarOtra')
+                      : t('onboarding.agregarTarjeta')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleContinueFromCard}
+                    aria-disabled={addedCards.length === 0}
+                    className={cn(
+                      'flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors',
+                      addedCards.length === 0
+                        ? 'bg-[var(--accent)]/40 text-white cursor-not-allowed'
+                        : 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]'
+                    )}
+                  >
+                    {t('onboarding.continuar')}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4 — Listo */}
+            {step === 4 && (
               <div className="animate-fade-in text-center">
                 <div className="mb-6">
                   <div className="w-16 h-16 rounded-full bg-[var(--success-muted)] flex items-center justify-center mx-auto mb-4">
@@ -260,6 +538,16 @@ export function OnboardingPage(): JSX.Element {
                       <CheckCircle size={14} className="text-[var(--success)]" />
                       <span>
                         {t('onboarding.salarioLabel')}: {parseFloat(salario).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  {addedCards.length > 0 && (
+                    <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                      <CheckCircle size={14} className="text-[var(--success)]" />
+                      <span>
+                        {addedCards.length === 1
+                          ? t('onboarding.tarjetaVinculada')
+                          : t('onboarding.tarjetasVinculadas', { count: addedCards.length })}
                       </span>
                     </div>
                   )}

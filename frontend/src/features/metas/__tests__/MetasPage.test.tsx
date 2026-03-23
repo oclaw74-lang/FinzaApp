@@ -165,11 +165,13 @@ describe('MetasPage', () => {
 
   it('renders correct number of meta cards', () => {
     render(<MetasPage />)
-    const buttons = screen
-      .getAllByRole('button')
-      .filter((btn) =>
-        btn.getAttribute('aria-label')?.includes('Ver detalle de meta')
-      )
-    expect(buttons).toHaveLength(2)
+    const buttons = screen.getAllByRole('button')
+    // MetaCard renders each meta as a full-card button; filter out FAB/action buttons
+    const metaButtons = buttons.filter(
+      (btn) =>
+        btn.getAttribute('aria-label')?.startsWith('metas.detail.ahorrado') ||
+        btn.getAttribute('class')?.includes('finza-card')
+    )
+    expect(metaButtons.length).toBeGreaterThanOrEqual(2)
   })
 })

@@ -25,7 +25,7 @@ export function FondoEmergenciaPage(): JSX.Element {
 
   const [modal, setModal] = useState<ModalMode>(null)
   const [monto, setMonto] = useState('')
-  const [metaMeses, setMetaMeses] = useState<1 | 3 | 6>(3)
+  const [metaMeses, setMetaMeses] = useState<3 | 6 | 12>(3)
   const [notas, setNotas] = useState('')
 
   const handleCrear = async () => {
@@ -64,7 +64,7 @@ export function FondoEmergenciaPage(): JSX.Element {
     }
   }
 
-  const handleChangeMeta = async (meses: 1 | 3 | 6) => {
+  const handleChangeMeta = async (meses: 3 | 6 | 12) => {
     if (!fondo) return
     try {
       await actualizar.mutateAsync({ meta_meses: meses })
@@ -131,7 +131,10 @@ export function FondoEmergenciaPage(): JSX.Element {
 
             {/* Subtitle */}
             <p className="text-sm text-[var(--text-muted)] mb-5">
-              Cobertura para ~{fondo.meta_meses} {fondo.meta_meses === 1 ? t('fondoEmergencia.mes') : t('fondoEmergencia.meses')} de gastos
+              {t('fondoEmergencia.coberturaDesc', {
+                meses: fondo.meta_meses,
+                unidad: fondo.meta_meses === 1 ? t('fondoEmergencia.mes') : t('fondoEmergencia.mesesShort'),
+              })}
             </p>
 
             {/* Progress bar */}
@@ -147,7 +150,7 @@ export function FondoEmergenciaPage(): JSX.Element {
 
             {/* Meta row */}
             <div className="flex justify-between text-xs text-[var(--text-muted)]">
-              <span>{fondo.porcentaje.toFixed(1)}% de la meta</span>
+              <span>{t('fondoEmergencia.porcentajeMeta', { pct: (fondo.porcentaje ?? 0).toFixed(1) })}</span>
               {fondo.meta_calculada && fondo.meta_calculada > fondo.monto_actual && (
                 <span>{t('fondoEmergencia.remaining')} {formatCurrency(fondo.meta_calculada - fondo.monto_actual)}</span>
               )}
@@ -176,7 +179,7 @@ export function FondoEmergenciaPage(): JSX.Element {
           <div className="card-glass p-4 mb-4">
             <p className="text-xs text-[var(--text-muted)] mb-2">{t('fondoEmergencia.metaMeses')}</p>
             <div className="flex gap-2">
-              {([1, 3, 6] as const).map((m) => (
+              {([3, 6, 12] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => handleChangeMeta(m)}
@@ -187,7 +190,7 @@ export function FondoEmergenciaPage(): JSX.Element {
                       : 'bg-surface-raised text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                   )}
                 >
-                  {m === 1 ? t('fondoEmergencia.meta1mes') : `${m} ${t('fondoEmergencia.meses')}`}
+                  {m} {t('fondoEmergencia.meses')}
                 </button>
               ))}
             </div>
@@ -222,12 +225,12 @@ export function FondoEmergenciaPage(): JSX.Element {
             <label className="block text-xs text-[var(--text-muted)] mb-1">{t('fondoEmergencia.metaMeses')}</label>
             <select
               value={metaMeses}
-              onChange={(e) => setMetaMeses(Number(e.target.value) as 1 | 3 | 6)}
+              onChange={(e) => setMetaMeses(Number(e.target.value) as 3 | 6 | 12)}
               className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-[var(--surface)] text-[var(--text-primary)] mb-3"
             >
-              <option value={1}>1 mes</option>
               <option value={3}>3 meses</option>
               <option value={6}>6 meses</option>
+              <option value={12}>12 meses</option>
             </select>
             <label className="block text-xs text-[var(--text-muted)] mb-1">{t('fondoEmergencia.notasOpcional')}</label>
             <input

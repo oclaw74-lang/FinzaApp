@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from postgrest import APIError
 
 from app.core.supabase_client import get_user_client
+from app.services.dual_moneda import get_dual_moneda_config
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,30 @@ MONTH_LABELS = [
     "Ene", "Feb", "Mar", "Abr", "May", "Jun",
     "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
 ]
+
+
+def _apply_currency_conversion(
+    records: list[dict],
+    moneda_secundaria: str | None,
+    tasa_cambio: float | None,
+) -> list[dict]:
+    """
+    Return records with monto converted to primary currency where needed.
+
+    If a record has moneda == moneda_secundaria, multiply its monto by
+    tasa_cambio so all amounts are expressed in the primary currency.
+    Records are not mutated; a shallow copy with updated monto is returned.
+    """
+    if not moneda_secundaria or not tasa_cambio or tasa_cambio <= 0:
+        return records
+
+    result = []
+    for r in records:
+        if r.get("moneda") == moneda_secundaria:
+            r = dict(r)
+            r["monto"] = float(r["monto"]) * tasa_cambio
+        result.append(r)
+    return result
 
 
 def _fetch_month_totals(
@@ -110,6 +135,20 @@ def get_dashboard(
             .execute()
         )
 
+        # --- Savings totals for total_ahorrado accumulator ---
+        resp_metas_saldo = (
+            client.table("metas_ahorro")
+            .select("monto_actual")
+            .execute()
+        )
+        resp_fondo_saldo = (
+            client.table("fondo_emergencia")
+            .select("monto_actual")
+            .eq("user_id", user_id)
+            .maybe_single()
+            .execute()
+        )
+
         ingresos = resp_ingresos.data or []
         egresos = resp_egresos.data or []
 
@@ -118,6 +157,14 @@ def get_dashboard(
         total_egresos = sum(float(r["monto"]) for r in egresos)
         balance = total_ingresos - total_egresos
         ahorro_estimado = max(balance, 0.0)
+
+        total_metas = sum(float(r["monto_actual"]) for r in (resp_metas_saldo.data or []))
+        total_fondo = (
+            float(resp_fondo_saldo.data.get("monto_actual") or 0)
+            if resp_fondo_saldo and resp_fondo_saldo.data
+            else 0.0
+        )
+        total_ahorrado = total_metas + total_fondo
 
         # --- Category breakdown ---
         breakdown = _build_breakdown(ingresos, "ingreso", total_ingresos)
@@ -174,6 +221,7 @@ def get_dashboard(
                 "total_egresos": total_egresos,
                 "balance": balance,
                 "ahorro_estimado": ahorro_estimado,
+                "total_ahorrado": total_ahorrado,
             },
             "categoria_breakdown": breakdown,
             "monthly_trend": trend,
@@ -280,7 +328,7 @@ def get_dashboard_v2(
         # --- Current month transactions ---
         resp_ingresos = (
             client.table("ingresos")
-            .select("id, monto, descripcion, fecha, categoria_id, categorias(nombre)")
+            .select("id, monto, moneda, descripcion, fecha, categoria_id, categorias(nombre)")
             .eq("user_id", user_id)
             .is_("deleted_at", "null")
             .gte("fecha", primer_dia)
@@ -289,7 +337,7 @@ def get_dashboard_v2(
         )
         resp_egresos = (
             client.table("egresos")
-            .select("id, monto, descripcion, fecha, categoria_id, categorias(nombre)")
+            .select("id, monto, moneda, descripcion, fecha, categoria_id, categorias(nombre)")
             .eq("user_id", user_id)
             .is_("deleted_at", "null")
             .gte("fecha", primer_dia)
@@ -344,6 +392,15 @@ def get_dashboard_v2(
             .execute()
         )
 
+        # --- Fondo de emergencia saldo ---
+        resp_fondo_v2 = (
+            client.table("fondo_emergencia")
+            .select("monto_actual")
+            .eq("user_id", user_id)
+            .maybe_single()
+            .execute()
+        )
+
     except APIError as e:
         logger.error("Supabase APIError en dashboard_v2: code=%s message=%s", e.code, e.message)
         code = e.code or ""
@@ -355,11 +412,33 @@ def get_dashboard_v2(
             raise HTTPException(status_code=status, detail=str(e.message))
         raise HTTPException(status_code=500, detail="Error interno del servidor.")
 
-    ingresos = resp_ingresos.data or []
-    egresos = resp_egresos.data or []
+    # --- Dual-moneda: fetch config and apply conversion ---
+    try:
+        dm_config = get_dual_moneda_config(user_jwt, user_id)
+    except Exception:
+        logger.warning("Could not fetch dual-moneda config for user %s; skipping conversion.", user_id)
+        dm_config = None
+
+    moneda_secundaria = dm_config.moneda_secundaria if dm_config else None
+    tasa_cambio = float(dm_config.tasa_cambio) if (dm_config and dm_config.tasa_cambio) else None
+
+    ingresos_raw = resp_ingresos.data or []
+    egresos_raw = resp_egresos.data or []
+
+    ingresos = _apply_currency_conversion(ingresos_raw, moneda_secundaria, tasa_cambio)
+    egresos = _apply_currency_conversion(egresos_raw, moneda_secundaria, tasa_cambio)
     presupuestos = resp_presupuestos.data or []
     metas = resp_metas.data or []
     prestamos = resp_prestamos.data or []
+
+    # --- total_ahorrado: current balance across all metas + emergency fund ---
+    total_metas_v2 = sum(float(m.get("monto_actual") or 0) for m in metas)
+    total_fondo_v2 = (
+        float(resp_fondo_v2.data.get("monto_actual") or 0)
+        if resp_fondo_v2 and resp_fondo_v2.data
+        else 0.0
+    )
+    total_ahorrado_v2 = total_metas_v2 + total_fondo_v2
 
     # --- Resumen financiero ---
     ingresos_mes = sum(float(r["monto"]) for r in ingresos)
@@ -436,6 +515,15 @@ def get_dashboard_v2(
     # --- Egresos por categoria ---
     egresos_por_categoria = _build_egresos_por_categoria(egresos, egresos_mes)
 
+    # --- Moneda conversion info (only when dual-currency is active) ---
+    moneda_conversion_info = None
+    if dm_config and moneda_secundaria and tasa_cambio and tasa_cambio > 0:
+        moneda_conversion_info = {
+            "moneda_principal": dm_config.moneda_principal,
+            "moneda_secundaria": moneda_secundaria,
+            "tasa_cambio": tasa_cambio,
+        }
+
     return {
         "resumen_financiero": {
             "ingresos_mes": ingresos_mes,
@@ -446,6 +534,7 @@ def get_dashboard_v2(
             "egresos_mes_anterior": egresos_mes_anterior,
             "variacion_ingresos_pct": variacion_ingresos_pct,
             "variacion_egresos_pct": variacion_egresos_pct,
+            "total_ahorrado": total_ahorrado_v2,
         },
         "presupuestos_estado": presupuestos_estado,
         "metas_activas": metas_activas,
@@ -456,4 +545,5 @@ def get_dashboard_v2(
         },
         "ultimas_transacciones": ultimas_transacciones,
         "egresos_por_categoria": egresos_por_categoria,
+        "moneda_conversion_info": moneda_conversion_info,
     }

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TransaccionModal } from '@/components/transacciones/TransaccionModal'
 import { useEgresos, useCreateEgreso, useUpdateEgreso, useDeleteEgreso } from '@/hooks/useEgresos'
+import { useTarjetas } from '@/hooks/useTarjetas'
 import { getApiErrorMessage } from '@/lib/apiError'
 import { useCategorias } from '@/hooks/useCategorias'
 import { formatCurrency, formatDate, MESES, cn } from '@/lib/utils'
@@ -36,6 +37,7 @@ export function EgresosPage(): JSX.Element {
 
   const { data, isLoading } = useEgresos({ page: 1, page_size: 200 })
   const { data: categorias = [] } = useCategorias()
+  const { data: tarjetas = [] } = useTarjetas()
   const createEgreso = useCreateEgreso()
   const updateEgreso = useUpdateEgreso()
   const deleteEgreso = useDeleteEgreso()
@@ -44,6 +46,10 @@ export function EgresosPage(): JSX.Element {
   const categoriasMap = useMemo(
     () => Object.fromEntries(categorias.map((c) => [c.id, c.nombre])),
     [categorias]
+  )
+  const tarjetasMap = useMemo(
+    () => Object.fromEntries(tarjetas.map((t) => [t.id, t])),
+    [tarjetas]
   )
 
   const filteredItems = useMemo(() => {
@@ -259,6 +265,7 @@ export function EgresosPage(): JSX.Element {
               {filteredItems.map((item, i) => {
                 const catName = categoriasMap[item.categoria_id] ?? ''
                 const initial = catName.charAt(0).toUpperCase() || 'E'
+                const tarjeta = item.tarjeta_id ? tarjetasMap[item.tarjeta_id] : null
                 return (
                   <tr
                     key={item.id}
@@ -279,9 +286,20 @@ export function EgresosPage(): JSX.Element {
                         >
                           {initial}
                         </div>
-                        <span className="text-sm font-medium text-[var(--text-primary)]">
-                          {item.descripcion ?? catName ?? '\u2014'}
-                        </span>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm font-medium text-[var(--text-primary)]">
+                            {item.descripcion ?? catName ?? '\u2014'}
+                          </span>
+                          {tarjeta && item.metodo_pago === 'tarjeta' && (
+                            <span
+                              className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full w-fit"
+                              style={{ color: 'var(--accent)', backgroundColor: 'var(--accent-muted, rgba(99,102,241,0.12))' }}
+                              title={t('egresos.pagadoConTarjeta')}
+                            >
+                              💳 {tarjeta.banco} ***{tarjeta.ultimos_digitos}
+                            </span>
+                          )}
+                        </div>
                         {(item as EgresoResponse & { is_impulso?: boolean }).is_impulso === true && (
                           <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
                             style={{ color: 'var(--warning)', backgroundColor: 'var(--warning-muted)' }}>

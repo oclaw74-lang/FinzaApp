@@ -6,9 +6,11 @@ import type { Prestamo } from '@/types/prestamo'
 const mockPrestamoActivo: Prestamo = {
   id: 'pre-1',
   tipo: 'me_deben',
+  acreedor_tipo: 'persona',
   persona: 'Juan Perez',
   monto_original: 10000,
   monto_pendiente: 6000,
+  monto_ya_pagado: 4000,
   moneda: 'DOP',
   fecha_prestamo: '2026-01-10',
   fecha_vencimiento: '2026-12-31',
@@ -88,7 +90,7 @@ describe('PrestamoRow', () => {
   it('calls onClick with the prestamo when clicked', () => {
     const handleClick = vi.fn()
     render(<PrestamoRow prestamo={mockPrestamoActivo} onClick={handleClick} />)
-    screen.getByRole('button', { name: /ver detalle/i }).click()
+    screen.getByRole('button').click()
     expect(handleClick).toHaveBeenCalledWith(mockPrestamoActivo)
   })
 

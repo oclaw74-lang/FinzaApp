@@ -9,6 +9,8 @@ class SuscripcionCreate(BaseModel):
     frecuencia: str
     moneda: str = "DOP"
     categoria_id: Optional[str] = None
+    dia_del_mes: Optional[int] = Field(None, ge=1, le=31)
+    fecha_inicio: Optional[str] = None
     fecha_proximo_cobro: Optional[str] = None
     notas: Optional[str] = None
 
@@ -19,6 +21,8 @@ class SuscripcionUpdate(BaseModel):
     frecuencia: Optional[str] = None
     moneda: Optional[str] = None
     categoria_id: Optional[str] = None
+    dia_del_mes: Optional[int] = Field(None, ge=1, le=31)
+    fecha_inicio: Optional[str] = None
     fecha_proximo_cobro: Optional[str] = None
     activa: Optional[bool] = None
     notas: Optional[str] = None
@@ -45,8 +49,10 @@ class SuscripcionResponse(BaseModel):
     moneda: str
     activa: bool
     auto_detectada: bool
-    fecha_proximo_cobro: Optional[str]
-    notas: Optional[str]
+    dia_del_mes: Optional[int] = None
+    fecha_inicio: Optional[str] = None
+    fecha_proximo_cobro: Optional[str] = None
+    notas: Optional[str] = None
     categoria_id: Optional[str] = None
 
     model_config = {"from_attributes": True}

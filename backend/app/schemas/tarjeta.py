@@ -23,6 +23,10 @@ class TarjetaCreate(BaseModel):
     fecha_pago: Optional[int] = Field(default=None, ge=1, le=31)
     color: Optional[str] = None
     activa: bool = True
+    bloqueada: bool = False
+    moneda: str = "DOP"
+    saldo_secundario: float = 0.0
+    limite_secundario: float = 0.0
 
     @field_validator("banco")
     @classmethod
@@ -62,7 +66,7 @@ class TarjetaCreate(BaseModel):
 
 class TarjetaUpdate(BaseModel):
     banco: Optional[str] = None
-    banco_id: Optional[str] = None
+    banco_id: Optional[uuid.UUID] = None
     banco_custom: Optional[str] = None
     titular: Optional[str] = None
     tipo: Optional[TipoTarjeta] = None
@@ -73,11 +77,16 @@ class TarjetaUpdate(BaseModel):
     fecha_pago: Optional[int] = Field(default=None, ge=1, le=31)
     color: Optional[str] = None
     activa: Optional[bool] = None
+    bloqueada: Optional[bool] = None
+    moneda: Optional[str] = None
+    saldo_secundario: Optional[float] = None
+    limite_secundario: Optional[float] = None
 
+    # Allow clearing banco by passing null banco_id; allow empty-string banco in updates
     @field_validator("banco")
     @classmethod
     def banco_not_empty(cls, v: Optional[str]) -> Optional[str]:
-        if v is not None and not v.strip():
+        if v is not None and v.strip() == "" and v != "":
             raise ValueError("El banco no puede estar vacio.")
         return v.strip() if v else v
 
@@ -104,11 +113,11 @@ class TarjetaUpdate(BaseModel):
 
 
 class MovimientoTarjetaCreate(BaseModel):
-    tipo: Literal["compra", "pago"]
+    tipo: Literal["compra", "pago", "deposito"]
     monto: Decimal = Field(gt=0)
     descripcion: Optional[str] = None
     fecha: date
-    categoria_id: Optional[uuid.UUID] = None  # only relevant for compras
+    categoria_id: Optional[uuid.UUID] = None  # optional for all tipos
     notas: Optional[str] = None
 
 
@@ -120,6 +129,7 @@ class MovimientoTarjetaResponse(BaseModel):
     descripcion: Optional[str] = None
     fecha: date
     egreso_id: Optional[uuid.UUID] = None
+    ingreso_id: Optional[uuid.UUID] = None
     notas: Optional[str] = None
     created_at: datetime
 
@@ -142,6 +152,10 @@ class TarjetaResponse(BaseModel):
     fecha_pago: Optional[int] = None
     color: Optional[str] = None
     activa: bool
+    bloqueada: bool = False
     disponible: Optional[float] = None  # computed: limite_credito - saldo_actual
+    moneda: str = "DOP"
+    saldo_secundario: float = 0.0
+    limite_secundario: float = 0.0
 
     model_config = {"from_attributes": True}

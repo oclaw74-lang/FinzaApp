@@ -1,3 +1,5 @@
+from calendar import monthrange
+from datetime import date
 from fastapi import HTTPException
 from postgrest import APIError
 
@@ -15,6 +17,24 @@ FRECUENCIA_FACTOR: dict[str, float] = {
 
 def _monto_mensual(monto: float, frecuencia: str) -> float:
     return round(monto * FRECUENCIA_FACTOR.get(frecuencia, 1.0), 2)
+
+
+def _next_fecha_from_dia(dia: int) -> str:
+    """Calculate the next occurrence of a given day-of-month from today."""
+    today = date.today()
+    # Clamp day to valid range for this month
+    max_day = monthrange(today.year, today.month)[1]
+    safe_day = min(dia, max_day)
+    candidate = today.replace(day=safe_day)
+    if candidate <= today:
+        # Move to next month
+        if today.month == 12:
+            next_month, next_year = 1, today.year + 1
+        else:
+            next_month, next_year = today.month + 1, today.year
+        max_next = monthrange(next_year, next_month)[1]
+        candidate = date(next_year, next_month, min(dia, max_next))
+    return candidate.isoformat()
 
 
 def _enrich(row: dict) -> dict:
@@ -54,6 +74,10 @@ def get_resumen(user_jwt: str, user_id: str) -> dict:
 
 def create_suscripcion(user_jwt: str, user_id: str, data: SuscripcionCreate) -> dict:
     client = get_user_client(user_jwt)
+    # Auto-calculate next charge date from dia_del_mes if provided
+    fecha_cobro = data.fecha_proximo_cobro
+    if data.dia_del_mes and data.frecuencia == "mensual" and not fecha_cobro:
+        fecha_cobro = _next_fecha_from_dia(data.dia_del_mes)
     payload = {
         "user_id": user_id,
         "nombre": data.nombre,
@@ -61,7 +85,9 @@ def create_suscripcion(user_jwt: str, user_id: str, data: SuscripcionCreate) -> 
         "frecuencia": data.frecuencia,
         "moneda": data.moneda,
         "categoria_id": str(data.categoria_id) if data.categoria_id else None,
-        "fecha_proximo_cobro": data.fecha_proximo_cobro,
+        "dia_del_mes": data.dia_del_mes,
+        "fecha_inicio": data.fecha_inicio,
+        "fecha_proximo_cobro": fecha_cobro,
         "notas": data.notas,
     }
     try:
@@ -76,6 +102,9 @@ def update_suscripcion(user_jwt: str, user_id: str, suscripcion_id: str, data: S
     payload = {k: v for k, v in data.model_dump().items() if v is not None}
     if "monto" in payload:
         payload["monto"] = str(payload["monto"])
+    # Recalculate fecha_proximo_cobro if dia_del_mes changed
+    if "dia_del_mes" in payload and data.frecuencia in (None, "mensual") and "fecha_proximo_cobro" not in payload:
+        payload["fecha_proximo_cobro"] = _next_fecha_from_dia(payload["dia_del_mes"])
     if not payload:
         raise HTTPException(status_code=422, detail="No fields to update.")
     try:
@@ -88,7 +117,7 @@ def update_suscripcion(user_jwt: str, user_id: str, suscripcion_id: str, data: S
         )
     except APIError as e:
         _handle_api_error(e)
-    if not r.data:
+    if not (r and r.data):
         raise HTTPException(status_code=404, detail="Suscripcion no encontrada.")
     return _enrich(r.data[0])
 
@@ -105,14 +134,16 @@ def delete_suscripcion(user_jwt: str, user_id: str, suscripcion_id: str) -> None
         )
     except APIError as e:
         _handle_api_error(e)
-    if not r.data:
+    if not (r and r.data):
         raise HTTPException(status_code=404, detail="Suscripcion no encontrada.")
 
 
 def detectar_suscripciones(user_jwt: str, user_id: str) -> list[dict]:
     """Find recurring patterns in last 3 months of egresos (candidates, not created)."""
-    client = get_user_client(user_jwt)
     from datetime import date
+    from collections import defaultdict
+
+    client = get_user_client(user_jwt)
     today = date.today()
     meses: list[tuple[int, int]] = []
     for i in range(3):
@@ -126,7 +157,7 @@ def detectar_suscripciones(user_jwt: str, user_id: str) -> list[dict]:
     try:
         r = (
             client.table("egresos")
-            .select("descripcion,monto,categoria_id,mes,year")
+            .select("descripcion,monto,categoria_id,fecha")
             .eq("user_id", user_id)
             .execute()
         )
@@ -134,25 +165,26 @@ def detectar_suscripciones(user_jwt: str, user_id: str) -> list[dict]:
         _handle_api_error(e)
 
     egresos = r.data or []
-    # Group by description
-    from collections import defaultdict
     by_desc: dict[str, list[dict]] = defaultdict(list)
     for e in egresos:
-        key = (int(e.get("year", 0)), int(e.get("mes", 0)))
+        fecha_str = e.get("fecha", "")
+        try:
+            fecha = date.fromisoformat(str(fecha_str))
+            key = (fecha.year, fecha.month)
+        except (ValueError, TypeError):
+            continue
         if key in meses:
             desc = str(e.get("descripcion", "")).strip().lower()
             if desc:
-                by_desc[desc].append(e)
+                by_desc[desc].append({**e, "_key": key})
 
     candidatos = []
     for desc, items in by_desc.items():
-        # Appears in 2+ different months
-        months_seen = {(int(e.get("year", 0)), int(e.get("mes", 0))) for e in items}
+        months_seen = {item["_key"] for item in items}
         if len(months_seen) >= 2:
             montos = [float(e["monto"]) for e in items]
             avg = sum(montos) / len(montos)
-            # Check monto consistency (within ±10%)
-            if all(abs(m - avg) / avg <= 0.10 for m in montos):
+            if avg > 0 and all(abs(m - avg) / avg <= 0.10 for m in montos):
                 candidatos.append({
                     "id": f"candidate-{desc[:20]}",
                     "nombre": items[0].get("descripcion", desc),

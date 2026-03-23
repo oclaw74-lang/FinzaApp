@@ -5,6 +5,7 @@ export interface Presupuesto {
   mes: number
   year: number
   monto_limite: number
+  moneda: string
   created_at: string
   updated_at: string
 }
@@ -14,11 +15,13 @@ export interface PresupuestoCreate {
   mes: number
   year: number
   monto_limite: number
+  moneda?: string
   aplicar_todos_los_meses?: boolean
 }
 
 export interface PresupuestoUpdate {
   monto_limite: number
+  moneda?: string
 }
 
 export interface PresupuestoEstado {
@@ -28,6 +31,7 @@ export interface PresupuestoEstado {
   mes: number
   year: number
   monto_limite: number
+  moneda?: string
   gasto_actual: number
   porcentaje_usado: number
   alerta: boolean

@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { getApiErrorMessage } from '@/lib/apiError'
 import { PrestamoResumenCards } from '@/features/prestamos/components/PrestamoResumenCards'
 import { PrestamoRow } from '@/features/prestamos/components/PrestamoRow'
 import { PrestamoModal } from '@/features/prestamos/components/PrestamoModal'
@@ -66,8 +67,8 @@ export function PrestamosPage(): JSX.Element {
   const deletePrestamo = useDeletePrestamo()
 
   const prestamosOrdenados = [...prestamos].sort((a, b) => {
-    const prioridad = { vencido: 0, activo: 1, pagado: 2 }
-    return prioridad[a.estado] - prioridad[b.estado]
+    const prioridad: Record<string, number> = { vencido: 0, activo: 1, pagado: 2, cancelado: 3 }
+    return (prioridad[a.estado] ?? 4) - (prioridad[b.estado] ?? 4)
   })
 
   const handleCreate = async (data: PrestamoFormData): Promise<void> => {
@@ -92,10 +93,8 @@ export function PrestamosPage(): JSX.Element {
     try {
       await updatePrestamo.mutateAsync({
         id: prestamoEditando.id,
+        acreedor_tipo: data.acreedor_tipo,
         persona: data.persona,
-        monto_original: data.monto_original,
-        moneda: data.moneda,
-        fecha_prestamo: data.fecha_prestamo,
         fecha_vencimiento: data.fecha_vencimiento || undefined,
         descripcion: data.descripcion || undefined,
         notas: data.notas || undefined,
@@ -104,8 +103,8 @@ export function PrestamosPage(): JSX.Element {
       })
       setPrestamoEditando(null)
       toast.success(t('prestamos.updated'))
-    } catch {
-      toast.error(t('common.error'))
+    } catch (err) {
+      toast.error(getApiErrorMessage(err))
     }
   }
 

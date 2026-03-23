@@ -22,6 +22,8 @@ export function useCreateSuscripcion() {
       frecuencia: string
       moneda?: string
       categoria_id?: string
+      dia_del_mes?: number | null
+      fecha_inicio?: string | null
       fecha_proximo_cobro?: string
       notas?: string
     }) => {

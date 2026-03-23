@@ -73,6 +73,7 @@
     --finza-t2: #657a9e;
     --finza-border: rgba(255,255,255,0.06);
     --finza-glass: rgba(8,15,30,0.6);
+    --calendar-icon-filter: invert(1);
   }
   * { border-color: var(--border); }
   body {
@@ -270,6 +271,18 @@ html.dark body::after {
     box-shadow: 0 0 0 2px rgba(54, 96, 146, 0.35);
   }
 
+  /* Native date/time inputs: calendar picker icon adapts to theme */
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    opacity: 0.6;
+    cursor: pointer;
+    filter: var(--calendar-icon-filter, none);
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator:hover,
+  input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
+
   /* ===== Primary button premium ===== */
   .finza-btn {
     @apply inline-flex items-center justify-center rounded-xl font-medium text-white
@@ -425,3 +438,13 @@ html.dark body::after {
     background: rgba(255,64,96,0.04) !important;
   }
 }
+
+/* scrollbar-hide utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+

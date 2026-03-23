@@ -54,7 +54,7 @@ def get_categoria(user_jwt: str, categoria_id: str) -> dict | None:
             .maybe_single()
             .execute()
         )
-        return response.data
+        return response.data if response else None
     except APIError as e:
         _handle_api_error(e)
 
@@ -73,31 +73,72 @@ def create_categoria(user_jwt: str, user_id: str, data: dict) -> dict:
 
 def update_categoria(user_jwt: str, categoria_id: str, data: dict) -> dict | None:
     client = get_user_client(user_jwt)
+
+    # Protect system categories from modification
     try:
-        response = (
-            client.table("categorias").update(data).eq("id", categoria_id).execute()
+        check_r = (
+            client.table("categorias")
+            .select("es_sistema")
+            .eq("id", categoria_id)
+            .is_("deleted_at", "null")
+            .maybe_single()
+            .execute()
         )
-        return response.data[0] if response.data else None
-    except IndexError:
-        raise HTTPException(status_code=404, detail="Categoria no encontrada.")
+        if check_r and check_r.data and check_r.data.get("es_sistema"):
+            raise HTTPException(
+                status_code=403,
+                detail="Las categorías de sistema no pueden ser modificadas.",
+            )
+    except HTTPException:
+        raise
+    except APIError as e:
+        _handle_api_error(e)
+
+    try:
+        client.table("categorias").update(data).eq("id", categoria_id).execute()
+    except APIError as e:
+        _handle_api_error(e)
+    # Fetch updated row
+    try:
+        r = client.table("categorias").select("*").eq("id", categoria_id).is_("deleted_at", "null").maybe_single().execute()
+        return r.data if r and r.data else None
     except APIError as e:
         _handle_api_error(e)
 
 
 def delete_categoria(user_jwt: str, user_id: str, categoria_id: str) -> dict:
     client = get_user_client(user_jwt)
+
+    # Protect system categories from deletion
     try:
-        response = (
+        check_r = (
             client.table("categorias")
-            .update({"deleted_at": datetime.now(timezone.utc).isoformat()})
+            .select("es_sistema")
             .eq("id", categoria_id)
-            .eq("user_id", user_id)
+            .is_("deleted_at", "null")
+            .maybe_single()
             .execute()
         )
-        if not response.data:
+        if check_r and check_r.data and check_r.data.get("es_sistema"):
+            raise HTTPException(
+                status_code=403,
+                detail="Las categorías de sistema no pueden ser eliminadas.",
+            )
+    except HTTPException:
+        raise
+    except APIError as e:
+        _handle_api_error(e)
+
+    try:
+        client.table("categorias").update({"deleted_at": datetime.now(timezone.utc).isoformat()}).eq("id", categoria_id).eq("user_id", user_id).execute()
+    except APIError as e:
+        _handle_api_error(e)
+    try:
+        r = client.table("categorias").select("*").eq("id", categoria_id).maybe_single().execute()
+        if not r or not r.data:
             raise HTTPException(status_code=404, detail="Categoria no encontrada.")
-        return response.data[0]
-    except IndexError:
-        raise HTTPException(status_code=404, detail="Categoria no encontrada.")
+        return r.data
+    except HTTPException:
+        raise
     except APIError as e:
         _handle_api_error(e)

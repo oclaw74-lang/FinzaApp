@@ -19,16 +19,18 @@ import {
   LogOut,
   Sun,
   Moon,
+  Monitor,
   Languages,
   MessageSquare,
+  Repeat2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUiStore } from '@/store/uiStore'
 import { useAuthStore } from '@/store/authStore'
 import { useThemeStore } from '@/store/themeStore'
 import { useTranslation } from 'react-i18next'
-import i18n from '@/i18n'
 import { Avatar } from '@/components/ui/avatar'
+import { ToggleGroup } from '@/components/ui/toggle-group'
 import { useQuery } from '@tanstack/react-query'
 import { apiClient as api } from '@/lib/api'
 
@@ -63,6 +65,7 @@ const navGroups: NavGroup[] = [
       { to: '/tarjetas', icon: CreditCard, labelKey: 'nav.tarjetas' },
       { to: '/metas', icon: Target, labelKey: 'nav.metas' },
       { to: '/recurrentes', icon: RefreshCw, labelKey: 'nav.recurrentes' },
+      { to: '/suscripciones', icon: Repeat2, labelKey: 'nav.suscripciones' },
       { to: '/fondo-emergencia', icon: Shield, labelKey: 'nav.fondoEmergencia' },
     ],
   },
@@ -294,27 +297,52 @@ export function Sidebar(): JSX.Element {
         </nav>
 
         {/* Quick settings */}
-        <div className="mx-2 mb-2 flex items-center gap-1.5">
-          <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 dark:text-white/50 hover:text-slate-800 dark:hover:text-white/80 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
-            title={theme === 'dark' ? t('settings.lightMode') : t('settings.darkMode')}
-          >
-            {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
-            {!sidebarCollapsed && <span>{theme === 'dark' ? 'Claro' : 'Oscuro'}</span>}
-          </button>
-          <button
-            onClick={() => {
-              const newLang = language === 'es' ? 'en' : 'es'
-              setLanguage(newLang)
-              i18n.changeLanguage(newLang)
-            }}
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 dark:text-white/50 hover:text-slate-800 dark:hover:text-white/80 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
-            title={t('settings.changeLanguage')}
-          >
-            <Languages size={13} />
-            {!sidebarCollapsed && <span>{language === 'es' ? 'EN' : 'ES'}</span>}
-          </button>
+        <div className="mx-2 mb-2">
+          {!sidebarCollapsed ? (
+            <div className="space-y-1.5">
+              {/* Theme ToggleGroup */}
+              <ToggleGroup
+                value={theme}
+                onValueChange={(val) => setTheme(val as 'light' | 'dark' | 'system')}
+                options={[
+                  { value: 'light', label: t('settings.light'), icon: <Sun size={11} />, title: t('settings.lightMode') },
+                  { value: 'dark', label: t('settings.dark'), icon: <Moon size={11} />, title: t('settings.darkMode') },
+                  { value: 'system', label: 'Auto', icon: <Monitor size={11} />, title: t('settings.systemMode') },
+                ]}
+                className="w-full"
+                size="sm"
+              />
+              {/* Language ToggleGroup */}
+              <ToggleGroup
+                value={language}
+                onValueChange={(val) => setLanguage(val as 'es' | 'en')}
+                options={[
+                  { value: 'es', label: 'ES', title: 'Español' },
+                  { value: 'en', label: 'EN', title: 'English' },
+                ]}
+                className="w-full"
+                size="sm"
+              />
+            </div>
+          ) : (
+            /* Collapsed: icon-only buttons */
+            <div className="flex flex-col gap-1 items-center">
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark')}
+                className="flex items-center justify-center w-11 h-8 rounded-lg text-slate-500 dark:text-white/50 hover:text-slate-800 dark:hover:text-white/80 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                title={theme === 'dark' ? t('settings.lightMode') : theme === 'light' ? t('settings.systemMode') : t('settings.darkMode')}
+              >
+                {theme === 'dark' ? <Sun size={13} /> : theme === 'system' ? <Monitor size={13} /> : <Moon size={13} />}
+              </button>
+              <button
+                onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
+                className="flex items-center justify-center w-11 h-8 rounded-lg text-slate-500 dark:text-white/50 hover:text-slate-800 dark:hover:text-white/80 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+                title={t('settings.changeLanguage')}
+              >
+                <Languages size={13} />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* User section */}

@@ -3,16 +3,18 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, computed_field, field_validator
+from pydantic import BaseModel, computed_field, field_validator, model_validator
 
 
 TipoPrestamo = Literal["me_deben", "yo_debo"]
-EstadoPrestamo = Literal["activo", "pagado", "vencido"]
+EstadoPrestamo = Literal["activo", "pagado", "vencido", "cancelado"]
+AcreeedorTipo = Literal["persona", "banco"]
 
 
 class PrestamoCreate(BaseModel):
     tipo: TipoPrestamo
-    persona: str
+    acreedor_tipo: AcreeedorTipo = "persona"
+    persona: str | None = None  # person name or bank name
     monto_original: Decimal
     moneda: str = "DOP"
     fecha_prestamo: date
@@ -21,6 +23,7 @@ class PrestamoCreate(BaseModel):
     notas: str | None = None
     tasa_interes: Decimal | None = None  # % annual, e.g. 18.5
     plazo_meses: int | None = None        # number of installments
+    monto_ya_pagado: Decimal = Decimal("0")  # for historical loans already partially paid
 
     @field_validator("monto_original")
     @classmethod
@@ -29,15 +32,23 @@ class PrestamoCreate(BaseModel):
             raise ValueError("El monto debe ser mayor a 0.")
         return v
 
-    @field_validator("persona")
+    @field_validator("monto_ya_pagado")
     @classmethod
-    def persona_must_not_be_empty(cls, v: str) -> str:
-        if not v.strip():
-            raise ValueError("El nombre de la persona no puede estar vacio.")
-        return v.strip()
+    def monto_ya_pagado_must_be_non_negative(cls, v: Decimal) -> Decimal:
+        if v < 0:
+            raise ValueError("El monto ya pagado no puede ser negativo.")
+        return v
+
+    @model_validator(mode="after")
+    def validate_persona_not_empty(self) -> "PrestamoCreate":
+        if not self.persona or not self.persona.strip():
+            raise ValueError("El nombre del acreedor no puede estar vacio.")
+        self.persona = self.persona.strip()
+        return self
 
 
 class PrestamoUpdate(BaseModel):
+    acreedor_tipo: AcreeedorTipo | None = None
     persona: str | None = None
     fecha_vencimiento: date | None = None
     descripcion: str | None = None
@@ -87,9 +98,11 @@ class PrestamoResponse(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID
     tipo: str
+    acreedor_tipo: str = "persona"
     persona: str
     monto_original: Decimal
     monto_pendiente: Decimal
+    monto_ya_pagado: Decimal = Decimal("0")
     moneda: str
     fecha_prestamo: date
     fecha_vencimiento: date | None

@@ -9,6 +9,20 @@ vi.mock('@/hooks/useProfile', () => ({
   useUpdateProfile: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
 }))
 
+// Mock useDualMoneda to prevent QueryClient error
+vi.mock('@/hooks/useDualMoneda', () => ({
+  useDualMoneda: vi.fn(() => ({ data: null, isLoading: false })),
+  useUpdateDualMoneda: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+}))
+
+// Mock useMetas and useFondoEmergencia (used in savings distribution section)
+vi.mock('@/hooks/useMetas', () => ({
+  useMetas: vi.fn(() => ({ data: [], isLoading: false })),
+}))
+vi.mock('@/hooks/useFondoEmergencia', () => ({
+  useFondoEmergencia: vi.fn(() => ({ data: null, isLoading: false })),
+}))
+
 // Mock useCatalogos
 vi.mock('@/hooks/useCatalogos', () => ({
   usePaises: vi.fn(() => ({
@@ -123,7 +137,7 @@ describe('ConfiguracionPage', () => {
   it('switches to appearance tab on click', () => {
     renderPage()
     fireEvent.click(screen.getByText('settings.appearance'))
-    expect(screen.getByText('settings.darkModeDesc')).toBeInTheDocument()
+    expect(screen.getByText('settings.theme')).toBeInTheDocument()
   })
 
   it('appearance tab shows light and dark mode cards', () => {
@@ -136,7 +150,7 @@ describe('ConfiguracionPage', () => {
   it('clicking dark mode toggle calls setTheme with dark', () => {
     renderPage()
     fireEvent.click(screen.getByText('settings.appearance'))
-    fireEvent.click(screen.getByLabelText('Toggle modo oscuro'))
+    fireEvent.click(screen.getByTitle('settings.darkMode'))
     expect(mockSetTheme).toHaveBeenCalledWith('dark')
   })
 
@@ -149,7 +163,7 @@ describe('ConfiguracionPage', () => {
   it('appearance tab shows Espanol and English options', () => {
     renderPage()
     fireEvent.click(screen.getByText('settings.appearance'))
-    expect(screen.getByText('Espanol')).toBeInTheDocument()
+    expect(screen.getByText('Español')).toBeInTheDocument()
     expect(screen.getByText('English')).toBeInTheDocument()
   })
 

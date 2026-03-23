@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useDashboardV2 } from '@/hooks/useDashboardV2'
 import { useScore } from '@/hooks/useScore'
 import { useAuthStore } from '@/store/authStore'
+import { useTarjetas } from '@/hooks/useTarjetas'
 import { MetaProgressItem } from '@/features/dashboard/components/v2/MetaProgressItem'
 import { BudgetProgressBar } from '@/features/presupuestos/components/BudgetProgressBar'
 import { ChartFlujoMensual } from '@/features/dashboard/components/ChartFlujoMensual'
@@ -68,6 +69,8 @@ export function DashboardPage(): JSX.Element {
 
   const { data, isLoading, isError, error } = useDashboardV2({ mes, year })
   const { data: scoreData, isLoading: scoreLoading } = useScore()
+  const { data: tarjetas = [] } = useTarjetas()
+  const tarjetasCredito = tarjetas.filter((t) => t.tipo === 'credito' && t.activa)
 
   const ingresos = data?.resumen_financiero.ingresos_mes ?? 0
   const egresos = data?.resumen_financiero.egresos_mes ?? 0
@@ -266,6 +269,17 @@ export function DashboardPage(): JSX.Element {
           </>
         )}
       </div>
+
+      {/* Conversion note — shown when secondary currency is active */}
+      {data?.moneda_conversion_info?.moneda_secundaria && data.moneda_conversion_info.tasa_cambio != null && (
+        <p className="text-xs text-[var(--text-muted)] -mt-4 mb-2">
+          {t('dashboard.conversionNota', {
+            monedaSecundaria: data.moneda_conversion_info.moneda_secundaria,
+            monedaPrincipal: data.moneda_conversion_info.moneda_principal,
+            tasa: data.moneda_conversion_info.tasa_cambio,
+          })}
+        </p>
+      )}
 
       {/* Prediccion + Score row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
@@ -506,6 +520,49 @@ export function DashboardPage(): JSX.Element {
               </div>
             )}
           </div>
+
+          {/* Tarjetas de crédito */}
+          {tarjetasCredito.length > 0 && (
+            <div className="finza-card dark:bg-[rgba(8,15,30,0.6)] dark:backdrop-blur-xl dark:border-white/[0.06]">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                  Tarjetas de crédito
+                </p>
+                <button onClick={() => navigate('/tarjetas')} className="text-xs text-[var(--accent)] hover:underline flex items-center gap-1">
+                  Ver todas <ChevronRight size={10} />
+                </button>
+              </div>
+              <div className="space-y-3">
+                {tarjetasCredito.slice(0, 3).map((t) => {
+                  const limite = t.limite_credito ?? 0
+                  const saldo = t.saldo_actual ?? 0
+                  const utilizacion = limite > 0 ? Math.min(saldo / limite * 100, 100) : 0
+                  const disponible = Math.max(limite - saldo, 0)
+                  const colorClass = utilizacion > 80 ? 'text-[var(--danger)]' : utilizacion > 50 ? 'text-[var(--warning)]' : 'text-[var(--success)]'
+                  return (
+                    <div key={t.id}>
+                      <div className="flex items-center justify-between text-sm mb-1">
+                        <span className="font-medium text-[var(--text-primary)] truncate">
+                          {t.banco} ···{t.ultimos_digitos}
+                        </span>
+                        <span className={`text-xs font-bold ${colorClass}`}>{utilizacion.toFixed(0)}%</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-[var(--surface-raised)] overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${utilizacion > 80 ? 'bg-[var(--danger)]' : utilizacion > 50 ? 'bg-[var(--warning)]' : 'bg-[var(--success)]'}`}
+                          style={{ width: `${utilizacion}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-[11px] text-[var(--text-muted)] mt-0.5">
+                        <span>Usado: {formatMoney(saldo)}</span>
+                        <span>Disponible: {formatMoney(disponible)}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Presupuestos */}
           <div className="finza-card dark:bg-[rgba(8,15,30,0.6)] dark:backdrop-blur-xl dark:border-white/[0.06]">
